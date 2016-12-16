@@ -9,13 +9,13 @@ int main(int argc, char* argv[])
 
     gamewin.initWindow();
     std::cout << "starting init OpenGL\n";
-    gamewin.initOpenGL();
+    gamewin.initOpenGL(800,600);
 
     std::cout << "Beginning game\n";
     int retCode = gamewin.BeginGame();
 
     if (!gamewin.Shutdown())
-        return -1;
+        return 1;
 
     return retCode;
 }

@@ -1,4 +1,5 @@
 #include "GameWin.h"
+#include <GL/glut.h>
 
 bool GameWin::ctxErrorOccurred = false;
 
@@ -11,6 +12,25 @@ GameWin::GameWin()
     
     gameRunning = true;
     ctx = nullptr;
+
+    vertices[0] = 0.5f;
+    vertices[1] = -0.5f;
+    vertices[2] = 0.0f;
+    vertices[3] = 1.0f;
+    vertices[4] = 0.0f;
+    vertices[5] = 0.0f;
+    vertices[6] = -0.5f;
+    vertices[7] = -0.5f;
+    vertices[8] = 0.0f;
+    vertices[9] = 0.0f;
+    vertices[10] = 1.0f;
+    vertices[11] = 0.0f;
+    vertices[12] = 0.0f;
+    vertices[13] = 0.5f;
+    vertices[14] = 0.0f;
+    vertices[15] = 0.0f;
+    vertices[16] = 0.0f;
+    vertices[17] = 1.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -37,7 +57,7 @@ bool GameWin::initWindow()
 //-----------------------------------------------------------------------------
 // Name : initOpenGL ()
 //-----------------------------------------------------------------------------
-bool GameWin::initOpenGL()
+bool GameWin::initOpenGL(int width, int height)
 {
     std::cout << "initOpenGL\n";
       // Get a matching FB config
@@ -130,7 +150,7 @@ bool GameWin::initOpenGL()
     
     std::cout << "Creating window\n";
     win = XCreateWindow( display, RootWindow( display, vi->screen ), 
-                              0, 0, 800, 600, 0, vi->depth, InputOutput, 
+                              0, 0, width, height, 0, vi->depth, InputOutput,
                               vi->visual, 
                               CWBorderPixel|CWColormap|CWEventMask, &swa );
     
@@ -143,7 +163,7 @@ bool GameWin::initOpenGL()
     // Done with the visual info data
     XFree( vi );
 
-    XStoreName( display, win, "GL 3.0 Window" );
+    XStoreName( display, win, "GL 3.3 Window" );
     
     std::cout << "Mapping window\n";
     XMapWindow( display, win );  
@@ -181,7 +201,7 @@ bool GameWin::initOpenGL()
         int context_attribs[] =
         {
             GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-            GLX_CONTEXT_MINOR_VERSION_ARB, 0,
+            GLX_CONTEXT_MINOR_VERSION_ARB, 3,
             //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
             None
         };
@@ -238,7 +258,25 @@ bool GameWin::initOpenGL()
     // register interest in the delete window message
     wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display, win, &wmDeleteMessage, 1);
-    
+
+    glewInit();
+
+    glGenVertexArrays(1, &VA0);
+    glGenBuffers(1, &VB0);
+    glBindVertexArray(VA0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VB0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW );
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    ourShader = new Shader("shader.vs", "shader.frag");
 }
 
 //-----------------------------------------------------------------------------
@@ -290,9 +328,16 @@ int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
 //-----------------------------------------------------------------------------
 void GameWin::drawing(Display* display, Window win)
 {
-    clock.draw();
-    
+    //clock.draw();
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
     //glFlush();
+
+    ourShader->Use();
+    glBindVertexArray(VA0);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+
     glXSwapBuffers (display, win);
 }
 
@@ -331,7 +376,7 @@ void GameWin::reshape(int width, int height)
     }
 	
     // 6) definnig the boundary of the model using gluOrtho2D
-    //gluOrtho2D(left,right, bottom,top);
+    gluOrtho2D(left,right, bottom,top);
 }
 
 //-----------------------------------------------------------------------------
@@ -357,7 +402,7 @@ int GameWin::BeginGame()
             {
                 XWindowAttributes gwa;
                 
-                std::cout << "restroing!!! \n";
+               // std::cout << "restroing!!! \n";
                 
                 XGetWindowAttributes(display, win, &gwa);
                 reshape(gwa.width, gwa.height);
@@ -378,6 +423,12 @@ int GameWin::BeginGame()
 //-----------------------------------------------------------------------------
 bool GameWin::Shutdown()
 {
+    // Properly de-allocate all resources once they've outlived their purpose
+    glDeleteVertexArrays(1, &VA0);
+    glDeleteBuffers(1, &VB0);
+
+    delete ourShader;
+
     glXMakeCurrent( display, 0, 0 );
     glXDestroyContext( display, ctx );
 
