@@ -7,10 +7,17 @@
 #include<GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <glm/glm.hpp>
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <sstream>
+
 #include "timer.h"
 #include "clock.h"
 #include "Shader.h"
+#include "Font.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -19,17 +26,17 @@ typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXC
 class GameWin
 {
 public:
-    GameWin           ();
-    virtual ~GameWin();
+    GameWin             ();
+    virtual ~GameWin    ();
     
-    bool initWindow ();
-    bool initOpenGL (int width, int height);
+    bool initWindow     ();
+    bool initOpenGL     (int width, int height);
     
-    void drawing(Display* display, Window win);
-    void reshape(int width, int height);
+    void drawing        (Display* display, Window win);
+    void reshape        (int width, int height);
     
-    int  BeginGame  ();
-    bool Shutdown   ();
+    int  BeginGame      ();
+    bool Shutdown       ();
     
     static bool isExtensionSupported    (const char *extList, const char *extension);
     static int  ctxErrorHandler         (Display *dpy, XErrorEvent *ev );
@@ -51,9 +58,15 @@ private:
     
     Clock clock;
 
-    Shader* ourShader;
+    Shader* meshShader;
+    Shader* textShader;
+
     GLuint VB0, VA0;
     GLfloat vertices[18];
+
+    mkFont font_;
+
+    glm::mat4 projection;
 };
 
 #endif  //_GAMEWIN_H

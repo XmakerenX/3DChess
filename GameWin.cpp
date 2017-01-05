@@ -31,6 +31,7 @@ GameWin::GameWin()
     vertices[15] = 0.0f;
     vertices[16] = 0.0f;
     vertices[17] = 1.0f;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -261,6 +262,8 @@ bool GameWin::initOpenGL(int width, int height)
 
     glewInit();
 
+    std::cout<<std::dec;
+
     glGenVertexArrays(1, &VA0);
     glGenBuffers(1, &VB0);
     glBindVertexArray(VA0);
@@ -276,7 +279,15 @@ bool GameWin::initOpenGL(int width, int height)
 
     glBindVertexArray(0);
 
-    ourShader = new Shader("shader.vs", "shader.frag");
+    meshShader = new Shader("shader.vs", "shader.frag");
+    textShader = new Shader("text.vs", "text.frag");
+
+    font_.Init();
+    font_.newInit();
+
+    int err = glGetError();
+    if (err != GL_NO_ERROR)
+        std::cout <<"ERROR bitches\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -329,15 +340,37 @@ int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
 void GameWin::drawing(Display* display, Window win)
 {
     //clock.draw();
+    //glEnable(GL_CULL_FACE);
+    //TODO: Move this  to some where sane
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     //glFlush();
 
-    ourShader->Use();
+    meshShader->Use();
     glBindVertexArray(VA0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
 
+    textShader->Use();
+    glUniformMatrix4fv(glGetUniformLocation(textShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    std::stringstream ss;
+    ss << timer.getFPS();
+
+    font_.RenderText(textShader, ss.str(),0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.RenderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.RenderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 450.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.RenderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.RenderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.RenderText(ourShader, "woot!!!", 0.s0f, 0.0f, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
+    int err = glGetError();
+    if (err != GL_NO_ERROR)
+        std::cout <<"ERROR bitches\n";
+
+    //glFlush();
     glXSwapBuffers (display, win);
 }
 
@@ -354,11 +387,11 @@ void GameWin::reshape(int width, int height)
     right=1.5;
     top=1.5;
     bottom=-1.5;
-	
+
     // 1)update viewport
     glViewport(0, 0, width, height);
     // 2) clear the transformation matrices (load identity)
-    glLoadIdentity();
+    //glLoadIdentity();
     // 3) compute the aspect ratio
     AR = (width / (float)height);
 	
@@ -366,17 +399,19 @@ void GameWin::reshape(int width, int height)
     if (AR >= 1)
     {
         left *= AR;
-	right *= AR;
+        right *= AR;
     }
     // 5) else i.e. AR<1 update the top, bottom
     else
     {
         top /= AR;
-	bottom /= AR;
+        bottom /= AR;
     }
 	
-    // 6) definnig the boundary of the model using gluOrtho2D
-    gluOrtho2D(left,right, bottom,top);
+    // 6) defining the boundary of the model using gluOrtho2D
+    projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
+    //gluOrtho2D(left,right, bottom,top);
+    std::cout <<"Ortho2D\n";    
 }
 
 //-----------------------------------------------------------------------------
@@ -387,8 +422,8 @@ int GameWin::BeginGame()
     while (gameRunning) 
     {
         XEvent event;
-            
-        // Did we receive a message, or are we idling ?
+
+         // Did we receive a message, or are we idling ?
         while (XPending(display) > 0)
         {
             XNextEvent(display, &event);
@@ -427,7 +462,8 @@ bool GameWin::Shutdown()
     glDeleteVertexArrays(1, &VA0);
     glDeleteBuffers(1, &VB0);
 
-    delete ourShader;
+    delete meshShader;
+    delete textShader;
 
     glXMakeCurrent( display, 0, 0 );
     glXDestroyContext( display, ctx );

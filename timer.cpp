@@ -46,7 +46,7 @@ Timer::Timer(void)
 	m_FrameRate		= 0;
 	m_FPSFrameCount		= 0;
 	m_FPSTimeElapsed	= 0.0f;
-        m_cap = false;
+    m_cap = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -92,20 +92,20 @@ void Timer::frameAdvanced()
             // Calculate Frame Rate
             m_FPSFrameCount++;
             //std::cout << "m_FPSFrameCount++ \n";
-            if (m_FPSFrameCount == 60)
-                m_cap = true;
+           if (m_FPSFrameCount == 600)
+               m_cap = true;
         }
         //m_FPSFrameCount++;
-	m_FPSTimeElapsed += curTimeDelta;
+        m_FPSTimeElapsed += curTimeDelta;
         //std::cout << "TimeElapsed: " << m_FPSTimeElapsed << "\n";
 
 	if ( m_FPSTimeElapsed > 1.0f) 
 	{
-                //std::cout << "frameCount: " << m_FPSFrameCount << "\n";
-		m_FrameRate		= m_FPSFrameCount;
+        m_FrameRate		= m_FPSFrameCount;
+        //std::cout << "frameCount: " << m_FPSFrameCount << "\n";
 		m_FPSFrameCount		= 0;
 		m_FPSTimeElapsed	= 0.0f;
-                m_cap = false;
+        m_cap = false;
 	} // End If Second Elapsed
 
 }
