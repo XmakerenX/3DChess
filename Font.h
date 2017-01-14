@@ -27,6 +27,11 @@ struct NewCharacter {
     unsigned char* buffer;
 };
 
+struct FontString {
+    GLuint texName;
+    GLfloat width;
+};
+
 class mkFont
 {
 public:
@@ -42,8 +47,10 @@ public:
 private:
     std::map<GLchar, Character> Characters_;
     std::map<GLchar, NewCharacter> NewCharacters_;
-    std::map<std::string, GLuint> fontTexures_;
+    std::map<std::string, FontString> fontTexures_;
     GLuint VAO,VBO;
+    GLuint indices[6];
+
 };
 
 #endif  //_FONT_H
