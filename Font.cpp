@@ -1,4 +1,5 @@
 #include "Font.h"
+#include <fontconfig/fontconfig.h>
 
 //-----------------------------------------------------------------------------
 // Name : mkFont (constructor)
@@ -14,14 +15,24 @@ mkFont::mkFont()
 //-----------------------------------------------------------------------------
 mkFont::~mkFont()
 {
+    for (auto it = NewCharacters_.begin(); it != NewCharacters_.end(); it++)
+    {
+        NewCharacter& ch = it->second;
+        delete[] ch.buffer;
+        ch.buffer = nullptr;
+    }
 
+    for (auto it = fontTexures_.begin(); it != fontTexures_.end(); it++)
+    {
+        FontString& f = it->second;
+        glDeleteTextures(1,&f.texName);
+    }
 }
 
-
 //-----------------------------------------------------------------------------
-// Name : Init
+// Name : init
 //-----------------------------------------------------------------------------
-int mkFont::Init()
+int mkFont::init()
 {
     // FreeType
      FT_Library ft;
@@ -115,9 +126,19 @@ int mkFont::Init()
      glBindBuffer(GL_ARRAY_BUFFER, 0);
      glBindVertexArray(0);
 
+     indices[0] = 0;
+     indices[1] = 1;
+     indices[2] = 2;
+     indices[3] = 0;
+     indices[4] = 3;
+     indices[5] = 2;
+
      return 0;
 }
 
+//-----------------------------------------------------------------------------
+// Name : newInit
+//-----------------------------------------------------------------------------
 int mkFont::newInit()
 {
     // FreeType
@@ -234,24 +255,13 @@ int mkFont::newInit()
      FT_Done_Face(face);
      FT_Done_FreeType(ft);
 
-     // Configure VAO/VBO for texture quads
-     //glGenVertexArrays(1, &VAO);
-     //glGenBuffers(1, &VBO);
-     //glBindVertexArray(VAO);
-     //glBindBuffer(GL_ARRAY_BUFFER, VBO);
-     //glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-     //glEnableVertexAttribArray(0);
-     //glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-     //glBindBuffer(GL_ARRAY_BUFFER, 0);
-     //glBindVertexArray(0);
-
      return 0;
 }
 
 //-----------------------------------------------------------------------------
-// Name : RenderText
+// Name : renderText
 //-----------------------------------------------------------------------------
-void mkFont::RenderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
+void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
 {
     // Activate corresponding render state
     shader->Use();
@@ -297,9 +307,9 @@ void mkFont::RenderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
 }
 
 //-----------------------------------------------------------------------------
-// Name : RenderTextBatched
+// Name : renderTextBatched
 //-----------------------------------------------------------------------------
-void mkFont::RenderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
+void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
 {
     // Activate corresponding render state
     shader->Use();
@@ -309,185 +319,185 @@ void mkFont::RenderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
 
     // Iterate through all characters
     std::string::const_iterator c;
-    GLfloat xpos = x /*+ NewCharacters_[*(text.begin())].Bearing.x * scale*/;
+    GLfloat xpos = x;
     GLfloat ypos = y;
-    GLfloat w = 0;
     GLfloat h = 0;
 
-    GLuint ww = 0;
-    GLuint hh = 0;
-
-    static GLuint textureID = -1;
+    GLuint textureID;
 
     if (fontTexures_.count(text) == 0)
-
-    for (c = text.begin(); c!= text.end(); c++)
     {
-        NewCharacter ch = NewCharacters_[*c];
+        GLfloat w = 0;
 
-        if (*c == 'q')
+        GLuint ww = 0;
+        GLuint hh = 0;
+
+        for (c = text.begin(); c!= text.end(); c++)
         {
-            int w =5;
+            NewCharacter ch = NewCharacters_[*c];
+
+            if (ch.Bearing.x >= 0)
+                ww += abs(ch.Bearing.x);
+
+            ww += ch.Size.x;
+            hh += ch.Size.y;
+
+            ww += (ch.Advance >> 6) - ch.Size.x - ch.Bearing.x;
         }
 
-        if (ch.Bearing.x >= 0)
-            ww += abs(ch.Bearing.x);
-        ww += ch.Size.x;
-        hh += ch.Size.y;
+        c = text.begin();
+        int sizeY = (NewCharacters_[*c]).Size.y;
+        sizeY *= ww;
+        unsigned char * buffer = new unsigned char[sizeY];
 
-        ww += (ch.Advance >> 6) - ch.Size.x - ch.Bearing.x;
+        int count = 0;
+        int j = 0;
 
-//        if ( (c+1) != text.end())
-//        {
-//            NewCharacter cc = NewCharacters_[*(c+1)];
+        for (c = text.begin(); c != text.end(); c++)
+        {
+            NewCharacter ch = NewCharacters_[*c];
 
-//            if (cc.Bearing.x < 0)
-//                ww += cc.Bearing.x;
-//        }
+           int extraWidth = 0;
+           if (ch.Bearing.x >= 0)
+               extraWidth = abs(ch.Bearing.x);
+
+            int advance = (ch.Advance >> 6) - ch.Bearing.x - ch.Size.x;
+            if (ch.Bearing.x < 0)
+                j + ch.Bearing.x;
+
+            for (int k = 0; k < extraWidth; k++)
+            {
+                for (int i = 0; i < ch.Size.y; i++)
+                {
+                    buffer[ (i * ww) + j] = 0;
+                    count++;
+                }
+                j++;
+            }
+
+            for (int l =0; l < ch.Size.x; l++)
+            {
+                for (int k = 0; k < ch.Size.y; k++)
+                {
+                    //buffer[ (k * ch.Size.y) + j] = ch.buffer[(k * ch.Size.y) + l];
+                    buffer[ (k * ww) + j] = ch.buffer[(k * ch.Size.x) + l];
+                    //buffer[ (k * ww) + j] = 0;
+                    count++;
+                }
+                j++;
+            }
+
+            for (int l = 0; l < advance; l++)
+            {
+                for (int i = 0; i < ch.Size.y; i++)
+                {
+                    buffer[ (i * ww) + j] = 0;
+                    count++;
+                }
+                j++;
+            }
+
+            if (ch.Bearing.x >= 0)
+                w += abs(ch.Bearing.x) * scale;
+
+            w += ch.Size.x * scale;
+            h += ch.Size.y * scale;
+
+            w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x) * scale;
+        }
+
+        if (count != sizeY)
+            std::cout <<"count and sizeY don't match count: "<<count<<" sizeY: "<<sizeY<<"\n";
+
+
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        c = text.begin();
+
+        NewCharacter cc = NewCharacters_[*c];
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            ww,
+            cc.Size.y,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            buffer
+        );
+
+        // Set texture options
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+
+        FontString ff = {textureID,w};
+
+        fontTexures_.insert(std::pair<std::string,FontString>(text,ff));
+        delete[] buffer;
 
     }
 
-    c = text.begin();
-    int sizeY = (NewCharacters_[*c]).Size.y;
-    sizeY *= ww;
-    unsigned char * buffer = new unsigned char[sizeY];
-    //unsigned char buffer[9780];
-    //for (int i =0; i < 9780; i++)
-    //    buffer[i] = 112;
-
-    int count = 0;
-    int j = 0;
-
-    for (c = text.begin(); c != text.end(); c++)
-    {
-        NewCharacter ch = NewCharacters_[*c];
-
-        if (*c == 'w')
-        {
-            int w =5;
-        }
-
-       int extraWidth = 0;
-       // if ( ch.Bearing >= 0)
-       if (ch.Bearing.x >= 0)
-           extraWidth = abs(ch.Bearing.x);
-        //else
-        //    extraWidth = 0;
-
-        int advance = (ch.Advance >> 6) - ch.Bearing.x - ch.Size.x;
-        if (ch.Bearing.x < 0)
-            j + ch.Bearing.x;
-//        if ( (c+1) != text.end())
-//        {
-//            NewCharacter cc = NewCharacters_[*(c+1)];
-
-//            if (cc.Bearing.x < 0)
-//                advance += cc.Bearing.x;
-//        }
-
-        for (int k = 0; k < extraWidth; k++)
-        {
-            for (int i = 0; i < ch.Size.y; i++)
-            {
-                buffer[ (i * ww) + j] = 0;
-                count++;
-            }
-            j++;
-        }
-
-        for (int l =0; l < ch.Size.x; l++)
-        {
-            for (int k = 0; k < ch.Size.y; k++)
-            {
-                //buffer[ (k * ch.Size.y) + j] = ch.buffer[(k * ch.Size.y) + l];
-                buffer[ (k * ww) + j] = ch.buffer[(k * ch.Size.x) + l];
-                //buffer[ (k * ww) + j] = 0;
-                count++;
-            }
-            j++;
-        }
-
-        for (int l = 0; l < advance; l++)
-        {
-            for (int i = 0; i < ch.Size.y; i++)
-            {
-                buffer[ (i * ww) + j] = 0;
-                count++;
-            }
-            j++;
-        }
-
-        if (ch.Bearing.x >= 0)
-            w += abs(ch.Bearing.x) * scale;
-
-        w += ch.Size.x * scale;
-        h += ch.Size.y * scale;
-
-        w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x) * scale;
-    }
-
-    if (count != sizeY)
-        std::cout <<"count and sizeY don't match count: "<<count<<" sizeY: "<<sizeY<<"\n";
-//    for (int i = 0; i < ww; i++)
-//    {
-//        for (int j = 0; j < (NewCharacters_[*c]).Size.y; j++)
-//            buffer[(i * (NewCharacters_[*c]).Size.y) + j] = 255;
-//    }
+    FontString ff = fontTexures_[text];
 
     c = text.begin();
     NewCharacter ch = NewCharacters_[*c];
 
     h = ch.Size.y * scale;
     // Update VBO for the string
-    GLfloat vertices[6][4] = {
-        { xpos,     ypos + h,   0.0, 0.0 },
-        { xpos,     ypos,       0.0, 1.0 },
-        { xpos + w, ypos,       1.0, 1.0 },
-
-        { xpos,     ypos + h,   0.0, 0.0 },
-        { xpos + w, ypos,       1.0, 1.0 },
-        { xpos + w, ypos + h,   1.0, 0.0 }
+    GLfloat vertices[4][4] = {
+        { xpos,            ypos + h,   0.0, 0.0 },
+        { xpos,            ypos,       0.0, 1.0 },
+        { xpos + ff.width, ypos,       1.0, 1.0 },
+        { xpos + ff.width, ypos + h,   1.0, 0.0 }
     };
 
-    if (textureID != -1)
-        glDeleteTextures(1, &textureID);
-
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    c = text.begin();
-
-    NewCharacter cc = NewCharacters_[*c];
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RED,
-        ww,
-        cc.Size.y,
-        0,
-        GL_RED,
-        GL_UNSIGNED_BYTE,
-        buffer
-    );
-
-    // Set texture options
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
+    glBindTexture(GL_TEXTURE_2D, ff.texName);
     // Update content of VBO memory
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // Be sure to use glBufferSubData and not glBufferData
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // Render quad
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
+    //glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
 
-    delete[] buffer;
+//-----------------------------------------------------------------------------
+// Name : getFontPath
+//-----------------------------------------------------------------------------
+std::string mkFont::getFontPath(std::string fontName)
+{
+    FcConfig* config = FcInitLoadConfigAndFonts();
+    FcResult result;
+    // configure the search pattern,
+    // assume "name" is a std::string with the desired font name in it
+    FcPattern* pat = FcNameParse((const FcChar8*)(fontName.c_str()));
+    FcConfigSubstitute(config, pat, FcMatchPattern);
+    FcDefaultSubstitute(pat);
+
+    // find the font
+    std::string path;
+    FcPattern* font = FcFontMatch(config, pat, &result);
+    if (font)
+    {
+       FcChar8* file = NULL;
+       if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch)
+       {
+          // save the file to another std::string
+          path = (char*)file;
+       }
+       FcPatternDestroy(font);
+    }
+
+    FcPatternDestroy(pat);
+    return path;
 }

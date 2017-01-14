@@ -27,23 +27,33 @@ struct NewCharacter {
     unsigned char* buffer;
 };
 
+struct FontString {
+    GLuint texName;
+    GLfloat width;
+};
+
 class mkFont
 {
 public:
     mkFont();
     ~mkFont();
 
-    int Init();
+    int init();
     int newInit();
-    void RenderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
-    void RenderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    void renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    std::string getFontPath(std::string fontName);
+
+    static void printallFonts();
 
 
 private:
     std::map<GLchar, Character> Characters_;
     std::map<GLchar, NewCharacter> NewCharacters_;
-    std::map<std::string, GLuint> fontTexures_;
+    std::map<std::string, FontString> fontTexures_;
     GLuint VAO,VBO;
+    GLushort indices[6];
+
 };
 
 #endif  //_FONT_H

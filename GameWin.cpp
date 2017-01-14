@@ -282,7 +282,7 @@ bool GameWin::initOpenGL(int width, int height)
     meshShader = new Shader("shader.vs", "shader.frag");
     textShader = new Shader("text.vs", "text.frag");
 
-    font_.Init();
+    font_.init();
     font_.newInit();
 
     int err = glGetError();
@@ -356,15 +356,27 @@ void GameWin::drawing(Display* display, Window win)
 
     textShader->Use();
     glUniformMatrix4fv(glGetUniformLocation(textShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     std::stringstream ss;
     ss << timer.getFPS();
 
-    font_.RenderText(textShader, ss.str(),0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderText(textShader, ss.str(),710.0f, 5.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.RenderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.RenderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 450.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    //font_.RenderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.RenderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.RenderText(textShader, "this is so awesome thingee",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.RenderText(textShader, "I wanna be the very best L",0.0f, 500.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.RenderText(textShader, "gendlin gendlin gendlin nn",0.0f, 450.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.RenderText(textShader, "gendmon gendmon gendmon ge",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.RenderText(textShader, "make me fucking pround tyu",0.0f, 350.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+
+
+    font_.renderTextBatched(textShader, "this is so awesome thingee",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderTextBatched(textShader, "I wanna be the very best L",0.0f, 442.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderTextBatched(textShader, "gendlin gendlin gendlin nn",0.0f, 358.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderTextBatched(textShader, "gendmon gendmon gendmon ge",0.0f, 274.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderTextBatched(textShader, "make me fucking pround tyu",0.0f, 190.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+
     //font_.RenderText(ourShader, "woot!!!", 0.s0f, 0.0f, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
     int err = glGetError();
     if (err != GL_NO_ERROR)
@@ -446,6 +458,11 @@ int GameWin::BeginGame()
         }
         
         timer.frameAdvanced();
+
+        int err = glGetError();
+        if (err != GL_NO_ERROR)
+            std::cout <<"ERROR bitches\n";
+
         if (!timer.isCap())
         {
             drawing(display, win);
