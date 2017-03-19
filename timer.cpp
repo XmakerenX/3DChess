@@ -92,8 +92,8 @@ void Timer::frameAdvanced()
             // Calculate Frame Rate
             m_FPSFrameCount++;
             //std::cout << "m_FPSFrameCount++ \n";
-           if (m_FPSFrameCount == 600)
-               m_cap = true;
+           //if (m_FPSFrameCount == 600)
+           //    m_cap = true;
         }
         //m_FPSFrameCount++;
         m_FPSTimeElapsed += curTimeDelta;

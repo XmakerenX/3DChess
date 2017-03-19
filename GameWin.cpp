@@ -7,27 +7,34 @@ bool GameWin::ctxErrorOccurred = false;
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
 GameWin::GameWin()
+    :font_("NotoMono")
 {
     display = nullptr;
     
     gameRunning = true;
     ctx = nullptr;
 
+    // point 1  xyz
     vertices[0] = 0.5f;
     vertices[1] = -0.5f;
     vertices[2] = 0.0f;
+    // point 1 rgb
     vertices[3] = 1.0f;
     vertices[4] = 0.0f;
     vertices[5] = 0.0f;
+    // point 2 xyz
     vertices[6] = -0.5f;
     vertices[7] = -0.5f;
     vertices[8] = 0.0f;
+    // point 2 rgb
     vertices[9] = 0.0f;
     vertices[10] = 1.0f;
     vertices[11] = 0.0f;
+    // point 3 xyz
     vertices[12] = 0.0f;
     vertices[13] = 0.5f;
     vertices[14] = 0.0f;
+    // point 3 rgb
     vertices[15] = 0.0f;
     vertices[16] = 0.0f;
     vertices[17] = 1.0f;
@@ -186,7 +193,7 @@ bool GameWin::initOpenGL(int width, int height)
     // Note this error handler is global.  All display connections in all threads
     // of a process use the same error handler, so be sure to guard against other
     // threads issuing X commands while this code is running.
-    ctxErrorOccurred = false;
+    // NOTE: this might be an issue if there is more than 1 thread issuing x commands
     int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
 
     // Check for the GLX_ARB_create_context extension string and the function.
@@ -262,6 +269,7 @@ bool GameWin::initOpenGL(int width, int height)
 
     glewInit();
 
+    // restore cout to print numbers in decimal base
     std::cout<<std::dec;
 
     glGenVertexArrays(1, &VA0);
@@ -282,12 +290,14 @@ bool GameWin::initOpenGL(int width, int height)
     meshShader = new Shader("shader.vs", "shader.frag");
     textShader = new Shader("text.vs", "text.frag");
 
+    reshape(width,height);
+
     font_.init();
     font_.newInit();
 
     int err = glGetError();
     if (err != GL_NO_ERROR)
-        std::cout <<"ERROR bitches\n";
+        std::cout <<"Init: ERROR bitches\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -340,12 +350,14 @@ int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
 void GameWin::drawing(Display* display, Window win)
 {
     //clock.draw();
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     //TODO: Move this  to some where sane
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     //glFlush();
 
@@ -361,26 +373,36 @@ void GameWin::drawing(Display* display, Window win)
     std::stringstream ss;
     ss << timer.getFPS();
 
-    font_.renderText(textShader, ss.str(),710.0f, 5.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    //font_.RenderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    //font_.RenderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 450.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.RenderText(textShader, "this is so awesome thingee",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.RenderText(textShader, "I wanna be the very best L",0.0f, 500.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.RenderText(textShader, "gendlin gendlin gendlin nn",0.0f, 450.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.RenderText(textShader, "gendmon gendmon gendmon ge",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.RenderText(textShader, "make me fucking pround tyu",0.0f, 350.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
+    //font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 526.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
+    //font_.renderText(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderText(textShader, "awwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "awwwwwwwwwwwwww",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderText(textShader, "this is so awesome thingee",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderText(textShader, "I wanna be the very best L",0.0f, 500.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderText(textShader, "gendlin gendlin gendlin nn",0.0f, 450.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderText(textShader, "gendmon gendmon gendmon ge",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderText(textShader, "make me fucking pround tyu",0.0f, 350.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+
+    font_.renderText(textShader, "this is so awesome thingee",0.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+    font_.renderText(textShader, "I wanna be the very best L",0.0f, 100.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+    font_.renderText(textShader, "gendlin gendlin gendlin nn",0.0f, 150.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+    font_.renderText(textShader, "gendmon gendmon gendmon ge",0.0f, 200.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+    font_.renderText(textShader, "make me fucking proud bitc",0.0f, 250.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
 
 
-    font_.renderTextBatched(textShader, "this is so awesome thingee",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderTextBatched(textShader, "I wanna be the very best L",0.0f, 442.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderTextBatched(textShader, "gendlin gendlin gendlin nn",0.0f, 358.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderTextBatched(textShader, "gendmon gendmon gendmon ge",0.0f, 274.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderTextBatched(textShader, "make me fucking pround tyu",0.0f, 190.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderTextBatched(textShader, "this ws so awesome thingee",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderTextBatched(textShader, "I wanna be the very best L",0.0f, 442.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderTextBatched(textShader, "gendlin gendlin gendlin nn",0.0f, 358.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderTextBatched(textShader, "gendmon gendmon gendmon ge",0.0f, 274.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderTextBatched(textShader, "make me fucking pround tyu",0.0f, 190.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
     //font_.RenderText(ourShader, "woot!!!", 0.s0f, 0.0f, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
     int err = glGetError();
     if (err != GL_NO_ERROR)
-        std::cout <<"ERROR bitches\n";
+        std::cout <<"Drawing: ERROR bitches\n";
 
     //glFlush();
     glXSwapBuffers (display, win);
@@ -420,7 +442,11 @@ void GameWin::reshape(int width, int height)
         bottom /= AR;
     }
 	
+    height_ = height;
+
     // 6) defining the boundary of the model using gluOrtho2D
+    textShader->Use();
+    glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
     projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     //gluOrtho2D(left,right, bottom,top);
     std::cout <<"Ortho2D\n";    
@@ -461,7 +487,7 @@ int GameWin::BeginGame()
 
         int err = glGetError();
         if (err != GL_NO_ERROR)
-            std::cout <<"ERROR bitches\n";
+            std::cout <<"MsgLoop: ERROR bitches\n";
 
         if (!timer.isCap())
         {

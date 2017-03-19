@@ -4,10 +4,12 @@
 //-----------------------------------------------------------------------------
 // Name : mkFont (constructor)
 //-----------------------------------------------------------------------------
-mkFont::mkFont()
+mkFont::mkFont(std::string fontName)
 {
     VAO = 0;
     VBO = 0;
+
+    fontPath = getFontPath(fontName);
 }
 
 //-----------------------------------------------------------------------------
@@ -42,7 +44,7 @@ int mkFont::init()
 
      // Load font as face
      FT_Face face;
-     if (FT_New_Face(ft, "/usr/share/fonts/noto/NotoMono-Regular.ttf", 0, &face))
+     if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
      //if (FT_New_Face(ft, "/usr/share/fonts/TTF/LiberationSerif-Regular", 0, &face))
          std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 
@@ -126,12 +128,25 @@ int mkFont::init()
      glBindBuffer(GL_ARRAY_BUFFER, 0);
      glBindVertexArray(0);
 
-     indices[0] = 0;
-     indices[1] = 1;
-     indices[2] = 2;
-     indices[3] = 0;
-     indices[4] = 3;
-     indices[5] = 2;
+//     indices[0] = 0;
+//     indices[1] = 1;
+//     indices[2] = 2;
+//     indices[3] = 0;
+//     indices[4] = 3;
+//     indices[5] = 2;
+     indices[0] = 3;
+     indices[1] = 2;
+     indices[2] = 1;
+     indices[3] = 3;
+     indices[4] = 0;
+     indices[5] = 1;
+//     indices[0] = 0;
+//     indices[1] = 2;
+//     indices[2] = 3;
+//     indices[3] = 0;
+//     indices[4] = 1;
+//     indices[5] = 2;
+
 
      return 0;
 }
@@ -149,7 +164,7 @@ int mkFont::newInit()
 
      // Load font as face
      FT_Face face;
-     if (FT_New_Face(ft, "/usr/share/fonts/noto/NotoMono-Regular.ttf", 0, &face))
+     if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
      //if (FT_New_Face(ft, "/usr/share/fonts/TTF/LiberationSerif-Regular", 0, &face))
          std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 
@@ -261,8 +276,9 @@ int mkFont::newInit()
 //-----------------------------------------------------------------------------
 // Name : renderText
 //-----------------------------------------------------------------------------
-void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
+void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color, int height)
 {
+   // y = y*-1;
     // Activate corresponding render state
     shader->Use();
     glUniform3f(glGetUniformLocation(shader->Program, "textColor"), color.x, color.y, color.z);
@@ -276,20 +292,55 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
         Character ch = Characters_[*c];
 
         GLfloat xpos = x + ch.Bearing.x * scale;
-        GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        //GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        //GLfloat ypos = 600 - y - ch.Bearing.y * scale;
+        //GLfloat ypos = height - y + ch.Bearing.y * scale;
+        //GLfloat ypos = y + (ch.Bearing.y) * scale;
+        //GLfloat ypos = y + (ch.Size.y) * scale;
+        //GLfloat ypos = y - (ch.Size.y - ((ch.Size.y - ch.Bearing.y))) * scale;
+        GLfloat ypos;
+        if (ch.Size.y - ch.Bearing.y == 0)
+            ypos = height - y;
+        else
+            //ypos = height - y + (ch.Size.y - ch.Bearing.y) * scale;
+            ypos = height - y;
+
+        //ypos = 600 - ypos ;
 
         GLfloat w = ch.Size.x * scale;
         GLfloat h = ch.Size.y * scale;
         // Update VBO for each character
-        GLfloat vertices[6][4] = {
-            { xpos,     ypos + h,   0.0, 0.0 },
-            { xpos,     ypos,       0.0, 1.0 },
-            { xpos + w, ypos,       1.0, 1.0 },
+//        GLfloat vertices[6][4] = {
+//            { xpos,     ypos + h,   0.0, 0.0 },
+//            { xpos,     ypos,       0.0, 1.0 },
+//            { xpos + w, ypos,       1.0, 1.0 },
 
-            { xpos,     ypos + h,   0.0, 0.0 },
-            { xpos + w, ypos,       1.0, 1.0 },
-            { xpos + w, ypos + h,   1.0, 0.0 }
-        };
+//            { xpos,     ypos + h,   0.0, 0.0 },
+//            { xpos + w, ypos,       1.0, 1.0 },
+//            { xpos + w, ypos + h,   1.0, 0.0 }
+//        };
+
+//        GLfloat vertices[4][4] = {
+//            { xpos,            ypos + h,   0.0, 0.0 },
+//            { xpos,            ypos,       0.0, 1.0 },
+//            { xpos + w, ypos,       1.0, 1.0 },
+//            { xpos + w, ypos + h,   1.0, 0.0 }
+//        };
+//           GLfloat vertices[4][4] = {
+//              { xpos,            600 - (ypos + h) + h,   0.0, 0.0 },
+//              { xpos + w,            600 - (ypos + h) + h,       1.0, 0.0 },
+//              { xpos + w, 600 - ypos - h,       1.0, 1.0 },
+//              { xpos,  600 - ypos - h,   0.0, 1.0 }
+//           };
+
+           GLfloat vertices[4][4] = {
+              { xpos,            ypos,   0.0, 0.0 },
+              { xpos + w,            ypos,       1.0, 0.0 },
+              { xpos + w,  ypos - h,       1.0, 1.0 },
+              { xpos,  ypos - h,   0.0, 1.0 }
+           };
+
+
         // Render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
         // Update content of VBO memory
@@ -298,7 +349,8 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         // Render quad
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        //glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
         // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
         x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
     }
@@ -323,127 +375,14 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     GLfloat ypos = y;
     GLfloat h = 0;
 
-    GLuint textureID;
-
+    // check if the given text is cahced in the map
     if (fontTexures_.count(text) == 0)
     {
-        GLfloat w = 0;
-
-        GLuint ww = 0;
-        GLuint hh = 0;
-
-        for (c = text.begin(); c!= text.end(); c++)
-        {
-            NewCharacter ch = NewCharacters_[*c];
-
-            if (ch.Bearing.x >= 0)
-                ww += abs(ch.Bearing.x);
-
-            ww += ch.Size.x;
-            hh += ch.Size.y;
-
-            ww += (ch.Advance >> 6) - ch.Size.x - ch.Bearing.x;
-        }
-
-        c = text.begin();
-        int sizeY = (NewCharacters_[*c]).Size.y;
-        sizeY *= ww;
-        unsigned char * buffer = new unsigned char[sizeY];
-
-        int count = 0;
-        int j = 0;
-
-        for (c = text.begin(); c != text.end(); c++)
-        {
-            NewCharacter ch = NewCharacters_[*c];
-
-           int extraWidth = 0;
-           if (ch.Bearing.x >= 0)
-               extraWidth = abs(ch.Bearing.x);
-
-            int advance = (ch.Advance >> 6) - ch.Bearing.x - ch.Size.x;
-            if (ch.Bearing.x < 0)
-                j + ch.Bearing.x;
-
-            for (int k = 0; k < extraWidth; k++)
-            {
-                for (int i = 0; i < ch.Size.y; i++)
-                {
-                    buffer[ (i * ww) + j] = 0;
-                    count++;
-                }
-                j++;
-            }
-
-            for (int l =0; l < ch.Size.x; l++)
-            {
-                for (int k = 0; k < ch.Size.y; k++)
-                {
-                    //buffer[ (k * ch.Size.y) + j] = ch.buffer[(k * ch.Size.y) + l];
-                    buffer[ (k * ww) + j] = ch.buffer[(k * ch.Size.x) + l];
-                    //buffer[ (k * ww) + j] = 0;
-                    count++;
-                }
-                j++;
-            }
-
-            for (int l = 0; l < advance; l++)
-            {
-                for (int i = 0; i < ch.Size.y; i++)
-                {
-                    buffer[ (i * ww) + j] = 0;
-                    count++;
-                }
-                j++;
-            }
-
-            if (ch.Bearing.x >= 0)
-                w += abs(ch.Bearing.x) * scale;
-
-            w += ch.Size.x * scale;
-            h += ch.Size.y * scale;
-
-            w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x) * scale;
-        }
-
-        if (count != sizeY)
-            std::cout <<"count and sizeY don't match count: "<<count<<" sizeY: "<<sizeY<<"\n";
-
-
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        c = text.begin();
-
-        NewCharacter cc = NewCharacters_[*c];
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RED,
-            ww,
-            cc.Size.y,
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            buffer
-        );
-
-        // Set texture options
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-
-        FontString ff = {textureID,w};
-
-        fontTexures_.insert(std::pair<std::string,FontString>(text,ff));
-        delete[] buffer;
-
+        cacheTextTexutre(text,scale);
     }
 
     FontString ff = fontTexures_[text];
+    GLfloat widthScale = scale / ff.scale;
 
     c = text.begin();
     NewCharacter ch = NewCharacters_[*c];
@@ -451,10 +390,10 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     h = ch.Size.y * scale;
     // Update VBO for the string
     GLfloat vertices[4][4] = {
-        { xpos,            ypos + h,   0.0, 0.0 },
-        { xpos,            ypos,       0.0, 1.0 },
-        { xpos + ff.width, ypos,       1.0, 1.0 },
-        { xpos + ff.width, ypos + h,   1.0, 0.0 }
+        { xpos,                         ypos + h,   0.0, 0.0 },
+        { xpos,                         ypos,       0.0, 1.0 },
+        { xpos + ff.width * widthScale, ypos,       1.0, 1.0 },
+        { xpos + ff.width * widthScale, ypos + h,   1.0, 0.0 }
     };
 
     glBindTexture(GL_TEXTURE_2D, ff.texName);
@@ -472,8 +411,195 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
 }
 
 //-----------------------------------------------------------------------------
+// Name : cacheTextTexutre
+//-----------------------------------------------------------------------------
+bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
+{
+    std::string::const_iterator c;
+    GLfloat w = 0;
+    GLuint ww = 0;
+    GLuint hh = 0;
+    GLuint h = 0;
+
+    // calc the needed texture width
+    for (c = text.begin(); c!= text.end(); c++)
+    {
+        NewCharacter ch = NewCharacters_[*c];
+
+        // add to width num pixels before the char
+        if (ch.Bearing.x >= 0)
+            ww += abs(ch.Bearing.x);
+            //ww += ch.Bearing.x;
+
+        ww += ch.Size.x;
+        hh += ch.Size.y;
+
+        // add to width num pixels after the char
+        ww += (ch.Advance >> 6) - ch.Size.x - ch.Bearing.x;
+    }
+
+    // get character height in pixels
+    c = text.begin();
+    int sizeY = (NewCharacters_[*c]).Size.y;
+    // mul by width and get the needed texture size
+    sizeY *= ww;
+    unsigned char * buffer = new unsigned char[sizeY];
+
+    int count = 0;
+    int j = 0;
+    int leftOver = 0;
+
+    // add all the chars in the text to the texture buffer
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        // get char info (glypth , size , spaces)
+        NewCharacter ch = NewCharacters_[*c];
+
+        int extraStartPixels = 0;
+        int advance = 0;
+        int nColumnBlend = 0;
+        // set how many pixels are before the char
+        // negative value means adding more colums before the char
+        if (ch.Bearing.x >= 0)
+            extraStartPixels = abs(ch.Bearing.x);
+        else
+           if (ch.Bearing.x < 0)
+           {
+               std::cout <<"before j:= " << j << "\n";
+               //TODO: check this line this seems so wrong....
+               if (j + ch.Bearing.x >= 0)
+               {
+                  j = j + ch.Bearing.x;
+                  leftOver += ch.Bearing.x;
+                  nColumnBlend = abs(ch.Bearing.x);
+               }
+               //advance += abs(ch.Bearing.x);
+               std::cout <<"after  j:= " << j << "\n";
+           }
+
+        // num of columns to add after the char glyph
+        advance += (ch.Advance >> 6) - ch.Bearing.x - ch.Size.x;
+        //advance = (ch.Advance >> 6) - ch.Bearing.x - ch.Size.x;
+
+
+        // add the extra empty column before the char to the buffer
+        for (int k = 0; k < extraStartPixels; k++)
+        {
+            // add a complete empty column
+            for (int i = 0; i < ch.Size.y; i++)
+            {
+                if (nColumnBlend == 0)
+                    buffer[ (i * ww) + j] = 0;
+
+                count++;
+            }
+
+            if (nColumnBlend != 0)
+                nColumnBlend--;
+
+            j++;
+        }
+
+        // add the char glypth to the buffer
+        for (int l =0; l < ch.Size.x; l++)
+        {
+            for (int k = 0; k < ch.Size.y; k++)
+            {
+                if (nColumnBlend == 0 ||  ch.buffer[(k * ch.Size.x) + l] > 20)
+                    buffer[ (k * ww) + j] = ch.buffer[(k * ch.Size.x) + l];
+
+                //buffer[ (k * ch.Size.y) + j] = ch.buffer[(k * ch.Size.y) + l];
+
+                //buffer[ (k * ww) + j] = 0;
+                count++;
+            }
+
+            if (nColumnBlend != 0)
+                nColumnBlend--;
+
+            j++;
+        }
+
+        // add the needed columns after the char glyph
+        for (int l = 0; l < advance; l++)
+        {
+            for (int i = 0; i < ch.Size.y; i++)
+            {
+                buffer[ (i * ww) + j] = 0;
+                count++;
+            }
+            j++;
+        }
+
+        // calc the width of the text rect using the given scale
+        if (ch.Bearing.x >= 0)
+            w += abs(ch.Bearing.x) * scale;
+
+        w += ch.Size.x * scale;
+        h += ch.Size.y * scale;
+
+        w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x) * scale;
+    }
+
+    NewCharacter ch = NewCharacters_[*(text.begin())];
+    // fill with 0 the end of the buffer
+    for (int l = leftOver; l < 0; l++)
+    {
+        for (int i = 0; i < ch.Size.y; i++)
+        {
+            buffer[ (i * ww) + j] = 0;
+            count++;
+        }
+        j++;
+    }
+
+
+    if (count != sizeY)
+        // something went wrong and likely have went over the bounds of the buffer
+        // or didn't fill it till the end
+        std::cout <<"count and sizeY don't match count: "<<count<<" sizeY: "<<sizeY<<"\n";
+
+
+    // ask to allocate new texutre
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    c = text.begin();
+    NewCharacter cc = NewCharacters_[*c];
+
+    // create the text texture using the created buffer
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RED,
+        ww,
+        cc.Size.y,
+        0,
+        GL_RED,
+        GL_UNSIGNED_BYTE,
+        buffer
+    );
+
+    // Set texture options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    // add the new texture to the map
+    FontString ff = {textureID, w, scale};
+    fontTexures_.insert( std::pair< std::string, FontString>(text,ff));
+
+    delete[] buffer;
+}
+
+//-----------------------------------------------------------------------------
 // Name : getFontPath
 //-----------------------------------------------------------------------------
+//std::string mkFont::getFontPath(std::string fontName)
 std::string mkFont::getFontPath(std::string fontName)
 {
     FcConfig* config = FcInitLoadConfigAndFonts();

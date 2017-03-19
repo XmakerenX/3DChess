@@ -30,17 +30,18 @@ struct NewCharacter {
 struct FontString {
     GLuint texName;
     GLfloat width;
+    GLfloat scale;
 };
 
 class mkFont
 {
 public:
-    mkFont();
+    mkFont(std::__cxx11::string fontName);
     ~mkFont();
 
     int init();
     int newInit();
-    void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color, int height);
     void renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
     std::string getFontPath(std::string fontName);
 
@@ -48,12 +49,14 @@ public:
 
 
 private:
+    std::string fontPath;
     std::map<GLchar, Character> Characters_;
     std::map<GLchar, NewCharacter> NewCharacters_;
     std::map<std::string, FontString> fontTexures_;
     GLuint VAO,VBO;
     GLushort indices[6];
 
+    bool cacheTextTexutre(std::string text, GLfloat scale);
 };
 
 #endif  //_FONT_H

@@ -54,6 +54,8 @@ private:
     
     Timer timer;
     
+    int height_;
+
     static bool ctxErrorOccurred;
     
     Clock clock;
