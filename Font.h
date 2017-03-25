@@ -30,6 +30,7 @@ struct NewCharacter {
 struct FontString {
     GLuint texName;
     GLfloat width;
+    GLfloat height;
     GLfloat scale;
 };
 
@@ -39,11 +40,13 @@ public:
     mkFont(std::__cxx11::string fontName);
     ~mkFont();
 
-    int init();
+    int init(int height);
     int newInit();
-    void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color, int height);
+    void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
     void renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
     std::string getFontPath(std::string fontName);
+
+    void setScreenHeight(int height);
 
     static void printallFonts();
 
@@ -55,6 +58,8 @@ private:
     std::map<std::string, FontString> fontTexures_;
     GLuint VAO,VBO;
     GLushort indices[6];
+    //TODO: find a way to make font ignorant of screen size
+    int height_;
 
     bool cacheTextTexutre(std::string text, GLfloat scale);
 };

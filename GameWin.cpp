@@ -292,7 +292,7 @@ bool GameWin::initOpenGL(int width, int height)
 
     reshape(width,height);
 
-    font_.init();
+    font_.init(height);
     font_.newInit();
 
     int err = glGetError();
@@ -359,7 +359,6 @@ void GameWin::drawing(Display* display, Window win)
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    //glFlush();
 
     meshShader->Use();
     glBindVertexArray(VA0);
@@ -367,15 +366,17 @@ void GameWin::drawing(Display* display, Window win)
     glBindVertexArray(0);
 
     textShader->Use();
-    glUniformMatrix4fv(glGetUniformLocation(textShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    //glUniformMatrix4fv(glGetUniformLocation(textShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     std::stringstream ss;
     ss << timer.getFPS();
 
-    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
-    //font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    //font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",0.0f, 526.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
+    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
+    font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(0.0f,1.0f,0.0f));
+    font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(1.0f,0.0f,0.0f));
     //font_.renderText(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderTextBatched(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderText(textShader, "awwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
@@ -386,18 +387,18 @@ void GameWin::drawing(Display* display, Window win)
 //    font_.renderText(textShader, "gendmon gendmon gendmon ge",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 //    font_.renderText(textShader, "make me fucking pround tyu",0.0f, 350.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
-    font_.renderText(textShader, "this is so awesome thingee",0.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
-    font_.renderText(textShader, "I wanna be the very best L",0.0f, 100.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
-    font_.renderText(textShader, "gendlin gendlin gendlin nn",0.0f, 150.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
-    font_.renderText(textShader, "gendmon gendmon gendmon ge",0.0f, 200.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
-    font_.renderText(textShader, "make me fucking proud bitc",0.0f, 250.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+//    font_.renderText(textShader, "this is so awesome thingee",0.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+//    font_.renderText(textShader, "I wanna be the very best L",0.0f, 100.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+//    font_.renderText(textShader, "gendlin gendlin gendlin nn",0.0f, 150.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+//    font_.renderText(textShader, "gendmon gendmon gendmon ge",0.0f, 200.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
+//    font_.renderText(textShader, "make me fucking proud bitc",0.0f, 250.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f),height_);
 
 
-//    font_.renderTextBatched(textShader, "this ws so awesome thingee",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.renderTextBatched(textShader, "I wanna be the very best L",0.0f, 442.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.renderTextBatched(textShader, "gendlin gendlin gendlin nn",0.0f, 358.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.renderTextBatched(textShader, "gendmon gendmon gendmon ge",0.0f, 274.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-//    font_.renderTextBatched(textShader, "make me fucking pround tyu",0.0f, 190.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderTextBatched(textShader, "this ws so awesome thingee",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
+//    font_.renderTextBatched(textShader, "I wanna be the very best L",0.0f, 442.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
+//    font_.renderTextBatched(textShader, "gendlin gendlin gendlin nn",0.0f, 358.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
+//    font_.renderTextBatched(textShader, "gendmon gendmon gendmon ge",0.0f, 274.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
+//    font_.renderTextBatched(textShader, "make me fucking pround tyu",0.0f, 176.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
 
     //font_.RenderText(ourShader, "woot!!!", 0.s0f, 0.0f, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
     int err = glGetError();
@@ -443,6 +444,8 @@ void GameWin::reshape(int width, int height)
     }
 	
     height_ = height;
+
+    font_.setScreenHeight(height);
 
     // 6) defining the boundary of the model using gluOrtho2D
     textShader->Use();
