@@ -293,7 +293,6 @@ bool GameWin::initOpenGL(int width, int height)
     reshape(width,height);
 
     font_.init(height);
-    font_.newInit();
 
     int err = glGetError();
     if (err != GL_NO_ERROR)
