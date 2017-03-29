@@ -29,9 +29,8 @@ struct NewCharacter {
 
 struct FontString {
     GLuint texName;
-    GLfloat width;
-    GLfloat height;
-    GLfloat scale;
+    GLuint width;
+    GLuint height;
 };
 
 class mkFont
@@ -59,9 +58,9 @@ private:
     GLuint VAO,VBO;
     GLushort indices[6];
     //TODO: find a way to make font ignorant of screen size
-    int height_;
+    int screenHeight_;
 
-    bool cacheTextTexutre(std::string text, GLfloat scale);
+    bool cacheTextTexutre(std::string text);
 };
 
 #endif  //_FONT_H

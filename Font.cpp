@@ -129,6 +129,7 @@ int mkFont::init(int height)
      glBindBuffer(GL_ARRAY_BUFFER, 0);
      glBindVertexArray(0);
 
+     // set indices buffer to render a square using 4 vertices
      indices[0] = 0;
      indices[1] = 1;
      indices[2] = 2;
@@ -288,15 +289,13 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
             maxCharHeight = ch.Size.y;
     }
 
-    //maxCharHeight = maxCharHeight * scale;
-
     // Iterate through all characters
     for (c = text.begin(); c != text.end(); c++)
     {
         Character ch = Characters_[*c];
 
         GLfloat xpos = x + ch.Bearing.x * scale;
-        GLfloat ypos = height_ - y - (ch.Size.y - ch.Bearing.y)*scale - (maxCharHeight - ch.Size.y)*scale;
+        GLfloat ypos = screenHeight_ - y - (ch.Size.y - ch.Bearing.y)*scale - (maxCharHeight - ch.Size.y)*scale;
 
         GLfloat w = ch.Size.x * scale;
         GLfloat h = ch.Size.y * scale;
@@ -312,15 +311,17 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
         // Update content of VBO memory
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // Be sure to use glBufferSubData and not glBufferData
+        // Be sure to use glBufferSubData and not glBufferData
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         // Render quad
-        //glDrawArrays(GL_TRIANGLES, 0, 6);
         glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
         // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+        // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+        x += (ch.Advance >> 6) * scale;
     }
+
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -339,17 +340,18 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     // Iterate through all characters
     std::string::const_iterator c;
     GLfloat xpos = x;
-    GLfloat ypos = height_ - y;
+    GLfloat ypos = screenHeight_ - y;
     GLfloat h = 0;
 
     // check if the given text is cahced in the map
     if (fontTexures_.count(text) == 0)
     {
-        cacheTextTexutre(text,scale);
+        cacheTextTexutre(text);
     }
 
     FontString ff = fontTexures_[text];
-    GLfloat widthScale = scale / ff.scale;
+    //GLfloat widthScale = scale / ff.scale;
+    GLfloat widthScale = scale;
 
     c = text.begin();
     NewCharacter ch = NewCharacters_[*c];
@@ -389,14 +391,12 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
 //-----------------------------------------------------------------------------
 // Name : cacheTextTexutre
 //-----------------------------------------------------------------------------
-bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
+bool mkFont::cacheTextTexutre(std::string text)
 {
     std::string::const_iterator c;
-    GLfloat w = 0;
-    GLuint ww = 0;
-    GLuint hh = 0;
-    GLuint h = 0;
-    GLfloat h_2 = 0;
+    GLuint w = 0;
+    GLuint width = 0;
+    GLuint height = 0;
 
     // calc the needed texture width
     for (c = text.begin(); c!= text.end(); c++)
@@ -405,21 +405,18 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
 
         // add to width num pixels before the char
         if (ch.Bearing.x >= 0)
-            ww += std::abs(ch.Bearing.x);
-            //ww += ch.Bearing.x;
+            width += std::abs(ch.Bearing.x);
 
-        ww += ch.Size.x;
-        hh += ch.Size.y;
-
+        width += ch.Size.x;
         // add to width num pixels after the char
-        ww += (ch.Advance >> 6) - ch.Size.x - ch.Bearing.x;
+        width += (ch.Advance >> 6) - ch.Size.x - ch.Bearing.x;
     }
 
     // get character height which is the texture height
     c = text.begin();
-    int sizeY = (NewCharacters_[*c]).Size.y;
+    int textureHeight = (NewCharacters_[*c]).Size.y;
     // allocate the texture buffer
-    unsigned char * buffer = new unsigned char[sizeY * ww];
+    unsigned char * buffer = new unsigned char[width * textureHeight];
 
     int count = 0;
     // how many empty column are left in the end of texture
@@ -444,7 +441,6 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
         else
            if (ch.Bearing.x < 0)
            {
-               std::cout <<"before j:= " << j << "\n";
                // check if going back x columns if we are still in texture bounds
                if (j + ch.Bearing.x >= 0)
                {
@@ -453,8 +449,6 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
                   leftOver += ch.Bearing.x;
                   nColumnBlend = std::abs(ch.Bearing.x);
                }
-               //advance += std::abs(ch.Bearing.x);
-               std::cout <<"after  j:= " << j << "\n";
            }
 
         // number of columns to add after the char glyph
@@ -469,7 +463,7 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
             {
                 // only clear columns which are not overlapping
                 if (nColumnBlend == 0)
-                    buffer[ (i * ww) + j] = 0;
+                    buffer[ (i * width) + j] = 0;
 
                 count++;
             }
@@ -488,7 +482,7 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
                 // change value in buffer only if is not overlapping pervious value
                 // or color in buffer is negligible( less than 20)
                 if (nColumnBlend == 0 ||  ch.buffer[(k * ch.Size.x) + l] > 20)
-                    buffer[ (k * ww) + j] = ch.buffer[(k * ch.Size.x) + l];
+                    buffer[ (k * width) + j] = ch.buffer[(k * ch.Size.x) + l];
 
                 count++;
             }
@@ -504,21 +498,26 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
         {
             for (int i = 0; i < ch.Size.y; i++)
             {
-                buffer[ (i * ww) + j] = 0;
+                buffer[ (i * width) + j] = 0;
                 count++;
             }
             j++;
         }
 
         // calc the width of the text rect using the given scale
+        //if (ch.Bearing.x >= 0)
+          //  w += std::abs(ch.Bearing.x) * scale;
+
         if (ch.Bearing.x >= 0)
-            w += std::abs(ch.Bearing.x) * scale;
+            w += std::abs(ch.Bearing.x);
 
-        w += ch.Size.x * scale;
-        h += ch.Size.y * scale;
+        //w += ch.Size.x * scale;
+        w += ch.Size.x;
+        //h += ch.Size.y * scale;
 
-        w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x) * scale;
-    } // end of adding all char to texture
+        //w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x) * scale;
+        w += ((ch.Advance >> 6) - ch.Size.x - ch.Bearing.x);
+    } // end for of adding all char to texture
 
     // get char height
     NewCharacter ch = NewCharacters_[*(text.begin())];
@@ -527,7 +526,7 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
     {
         for (int i = 0; i < ch.Size.y; i++)
         {
-            buffer[ (i * ww) + j] = 0;
+            buffer[ (i * width) + j] = 0;
             count++;
         }
         j++;
@@ -535,10 +534,10 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
 
     // sainty check
     // TODO: currently check is always failing so either fix or remove it...
-    if (count != sizeY)
+    if (count != textureHeight)
         // something went wrong and likely have went over the bounds of the buffer
         // or didn't fill it till the end
-        std::cout <<"count and sizeY don't match count: "<<count<<" sizeY: "<<sizeY<<"\n";
+        std::cout <<"count and sizeY don't match count: "<<count<<" sizeY: "<<textureHeight<<"\n";
 
 
     c = text.begin();
@@ -550,10 +549,10 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
     // index of rows that aren't completly empty
     std::vector<int> linesToCopy;
     for (int i = 0; i < cc.Size.y; i++)
-        for (int j = 0; j < ww; j++)
+        for (int j = 0; j < width; j++)
         {
             // if row isn't empty add it index and move to next row
-            if (buffer[(i * ww) + j] != 0)
+            if (buffer[(i * width) + j] != 0)
             {
                 empty = false;
                 linesToCopy.push_back(i);
@@ -561,32 +560,31 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
             }
         }
 
-    // calc size of new buffer trimed buffer
-    int Sizex = (linesToCopy.size())*ww;
-    unsigned char * newBuffer = new unsigned char[(linesToCopy.size())*ww + 12*ww];
+    // calc size of new trimmed buffer
+    unsigned char * newBuffer = new unsigned char[(linesToCopy.size())*width + 12*width];
 
     // add 12 empty rows at the head of the buffer
     // text looks better this way and gives exact same results as the regular renderText()
     int i = 0;
     for ( i = 0; i < 12; i++)
-        for (int j = 0; j < ww; j++)
+        for (int j = 0; j < width; j++)
         {
-            newBuffer[(i * ww) + j] = 0;
+            newBuffer[(i * width) + j] = 0;
         }
 
     // copy the non empty rows in the original buffer
     for ( int k = 0; k < linesToCopy.size(); k++)
     {
-        for (int j = 0; j < ww; j++)
+        for (int j = 0; j < width; j++)
         {
-            newBuffer[(i * ww) + j] = buffer[(linesToCopy[k] * ww) + j];
+            newBuffer[(i * width) + j] = buffer[(linesToCopy[k] * width) + j];
         }
         i++;
     }
 
     // calc the new height of the texutre
     int newSizeY = linesToCopy.size() + 12;
-    h_2 = newSizeY;
+    height = newSizeY;
 
     // ask to allocate new texutre
     GLuint textureID;
@@ -596,38 +594,16 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
     c = text.begin();
     cc = NewCharacters_[*c];
 
+    if (w != width)
+        std::cout << "width don't match\n";
+
     // create the text texture using the created buffer
-//    glTexImage2D(
-//        GL_TEXTURE_2D,
-//        0,
-//        GL_RED,
-//        ww,
-//        cc.Size.y,
-//        0,
-//        GL_RED,
-//        GL_UNSIGNED_BYTE,
-//        buffer
-//    );
-
-    // create the text mono texture using the the trimmed buffer
-//    glTexImage2D(
-//        GL_TEXTURE_2D,
-//        0,
-//        GL_RED,
-//        w,
-//        h_2,
-//        0,
-//        GL_RED,
-//        GL_UNSIGNED_BYTE,
-//        newBuffer
-//    );
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
         GL_RED,
-        ww,
-        h_2,
+        width,
+        height,
         0,
         GL_RED,
         GL_UNSIGNED_BYTE,
@@ -643,7 +619,7 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
     // cache the texture generated in the map
-    FontString ff = {textureID, w,h_2, scale};
+    FontString ff = {textureID, w,height};
     fontTexures_.insert( std::pair< std::string, FontString>(text,ff));
 
     // free the buffers
@@ -656,7 +632,7 @@ bool mkFont::cacheTextTexutre(std::string text, GLfloat scale)
 //-----------------------------------------------------------------------------
 void mkFont::setScreenHeight(int height)
 {
-    height_ = height;
+    screenHeight_ = height;
 }
 
 //-----------------------------------------------------------------------------
