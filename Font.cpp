@@ -22,10 +22,17 @@ mkFont::mkFont(std::string fontName)
 mkFont::~mkFont()
 {
     // free the cached textures
-    for (auto it = fontTexures_.begin(); it != fontTexures_.end(); it++)
+    // TODO: maybe free these by adding a destructor to the structs...
+    for (auto it = charGlyphs.begin(); it != charGlyphs.end(); it++)
+    {
+        CharGlyph& cg = it->second;
+        glDeleteTextures(1,&cg.TextureID);
+    }
+
+    for (auto it = stringTextures.begin(); it != stringTextures.end(); it++)
     {
         FontString& f = it->second;
-        glDeleteTextures(1,&f.texName);
+        glDeleteTextures(1,&f.texID);
     }
 }
 
@@ -64,7 +71,7 @@ int mkFont::init(int height)
      glGenBuffers(1, &VBO);
      glBindVertexArray(VAO);
      glBindBuffer(GL_ARRAY_BUFFER, VBO);
-     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
+     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4 + 1, NULL, GL_DYNAMIC_DRAW);
      glEnableVertexAttribArray(0);
      glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
      glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -99,12 +106,12 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
 
     // find the max height of the text
     std::string::const_iterator c = text.begin();
-    CharGlyph ch = Characters_[*c];
+    CharGlyph ch = charGlyphs[*c];
     float maxCharHeight = ch.Size.y;
     //TODO: cache this crap somehow...
     for (c = text.begin() + 1; c != text.end(); c++)
     {
-        CharGlyph ch = Characters_[*c];
+        CharGlyph ch = charGlyphs[*c];
 
         if (ch.Size.y > maxCharHeight)
             maxCharHeight = ch.Size.y;
@@ -113,7 +120,7 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
     // Iterate through all characters
     for (c = text.begin(); c != text.end(); c++)
     {
-        CharGlyph ch = Characters_[*c];
+        CharGlyph ch = charGlyphs[*c];
 
         GLfloat xpos = x + ch.Bearing.x * scale;
         GLfloat ypos = height_ - y - (ch.Size.y - ch.Bearing.y)*scale - (maxCharHeight - ch.Size.y)*scale;
@@ -162,20 +169,21 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     // Iterate through all characters
     std::string::const_iterator c;
     GLfloat xpos = x;
-    GLfloat ypos = height_ - y;
+    // TODO: test better maxOffset_ * scale work
+    GLfloat ypos = height_ - y - maxOffset_ * scale;
     GLfloat h = 0;
 
     // check if the given text is cahced in the map
-    if (fontTexures_.count(text) == 0)
+    if (stringTextures.count(text) == 0)
     {
         cacheTextTexutre(text);
     }
 
-    FontString ff = fontTexures_[text];
+    FontString ff = stringTextures[text];
 
     c = text.begin();
     //NewCharacter ch = NewCharacters_[*c];
-    CharGlyphBat ch = NewCharacters_[*c];
+    CharGlyphBat ch = charGlyphsBat[*c];
 
     h = ff.height * scale;
 
@@ -188,15 +196,17 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     };
 
 
-    glBindTexture(GL_TEXTURE_2D, ff.texName);
+    glBindTexture(GL_TEXTURE_2D, ff.texID);
     // Update content of VBO memory
+    glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // Be sure to use glBufferSubData and not glBufferData
+    // Be sure to use glBufferSubData and not glBufferData
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     // Render quad
     glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -216,7 +226,7 @@ bool mkFont::cacheTextTexutre(std::string text)
     for (c = text.begin(); c!= text.end(); c++)
     {
         //NewCharacter ch = NewCharacters_[*c];
-        CharGlyphBat ch = NewCharacters_[*c];
+        CharGlyphBat ch = charGlyphsBat[*c];
 
         // add to width num pixels before the char
         if (ch.Bearing_.x >= 0)
@@ -230,7 +240,7 @@ bool mkFont::cacheTextTexutre(std::string text)
 
     // get character height which is the texture height
     c = text.begin();
-    int bufferHeight = (NewCharacters_[*c]).height_;
+    int bufferHeight = (charGlyphsBat[*c]).height_;
     // allocate the texture buffer
     monoBuffer monBuffer;
     monBuffer.allocBuffer(texWidth, bufferHeight);
@@ -249,7 +259,7 @@ bool mkFont::cacheTextTexutre(std::string text)
     {
         // get char info (glypth , size , spaces)
         //NewCharacter ch = NewCharacters_[*c];
-        CharGlyphBat ch = NewCharacters_[*c];
+        CharGlyphBat ch = charGlyphsBat[*c];
 
         // number of empty column at the start of texture
         int extraStartPixels = 0;
@@ -327,7 +337,7 @@ bool mkFont::cacheTextTexutre(std::string text)
 
     // cache the texture generated in the map
     FontString ff = {textureID, monBuffer.width_,monBuffer.height_};
-    fontTexures_.insert( std::pair< std::string, FontString>(text,ff));
+    stringTextures.insert( std::pair< std::string, FontString>(text,ff));
 }
 
 //-----------------------------------------------------------------------------
@@ -372,14 +382,14 @@ void mkFont::cacheGlyth(FT_Library ft, FT_Face face)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
         // Now store character for later use
-        CharGlyph character = {
+        CharGlyph charGlyph = {
             texture,
             glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
             face->glyph->advance.x
         };
 
-        Characters_.insert(std::pair<GLchar, CharGlyph>(c, character));
+        charGlyphs.insert(std::pair<GLchar, CharGlyph>(c, charGlyph));
 
         // find maxOffset and maxHeight for cacheGlyphBatched
         int bearing = face->glyph->bitmap.rows - face->glyph->bitmap_top;
@@ -449,7 +459,7 @@ void mkFont::cacheGlythBatched(FT_Library ft, FT_Face face, int maxHeight, int m
         character.copyBufferHoriz(rowsDown, i, emptyBuf);
 
         // Cache the glyph for the current character
-        NewCharacters_.insert(std::pair<GLchar, CharGlyphBat>(c, std::move(character)));
+        charGlyphsBat.insert(std::pair<GLchar, CharGlyphBat>(c, std::move(character)));
     }
 }
 

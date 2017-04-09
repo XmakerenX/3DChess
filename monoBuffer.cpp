@@ -138,7 +138,7 @@ void monoBuffer::trimEmptyLines()
         }
 
     // calc size of new buffer trimed buffer
-    unsigned char * newBuffer = new unsigned char[(linesToCopy.size())*width_ + 11*width_];
+    unsigned char * newBuffer = new unsigned char[(linesToCopy.size())*width_ + 12*width_];
     int newWidth = linesToCopy.size();
 
     // add 11 empty rows at the head of the buffer
@@ -146,11 +146,11 @@ void monoBuffer::trimEmptyLines()
     monoBuffer emptyBuf;
     int i = 0;
     //neoBuffer.copyBufferHoriz(12,i, emptyBuf);
-    for ( i = 0; i < 11; i++)
-        for (int j = 0; j < width_; j++)
-        {
-            newBuffer[(i * width_) + j] = 0;
-        }
+//    for ( i = 0; i < 12; i++)
+//        for (int j = 0; j < width_; j++)
+//        {
+//            newBuffer[(i * width_) + j] = 0;
+//        }
 
 
     // copy the non empty rows in the original buffer
