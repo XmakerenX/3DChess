@@ -19,7 +19,7 @@ struct CharGlyph {
     GLuint     TextureID;   // ID handle of the glyph texture
     glm::ivec2 Size;        // Size of glyph
     glm::ivec2 Bearing;     // Offset from baseline to left/top of glyph
-    GLuint     Advance;     // Horizontal offset to advance to next glyph
+    long     Advance;     // Horizontal offset to advance to next glyph
 };
 
 // stores glpyh buffer data and info, ready to be batched to a single texture
@@ -57,23 +57,23 @@ public:
         c.Advance_ = 0;
     }
 
-    ~CharGlyphBat()
-    {
-        ;
-    }
-
-    CharGlyphBat(glm::ivec2 bearing, GLuint advnace)
+    CharGlyphBat(glm::ivec2 bearing, long advnace)
     {
         Bearing_ = bearing;
         Advance_ = advnace;
     }
 
+    ~CharGlyphBat()
+    {
+        ;
+    }
+
     glm::ivec2 Bearing_;     // Offset from baseline to left/top of glyph
-    GLuint     Advance_;     // Horizontal offset to advance to next glyph
+    long       Advance_;     // Horizontal offset to advance to next glyph
 };
 
 struct FontString {
-    GLuint texName;
+    GLuint texID;
     GLuint width;
     GLuint height;
 };
@@ -96,9 +96,9 @@ public:
 
 private:
     std::string fontPath;
-    std::map<GLchar, CharGlyph> Characters_;
-    std::map<GLchar, CharGlyphBat> NewCharacters_;
-    std::map<std::string, FontString> fontTexures_;
+    std::map<GLchar, CharGlyph> charGlyphs;
+    std::map<GLchar, CharGlyphBat> charGlyphsBat;
+    std::map<std::string, FontString> stringTextures;
     GLuint VAO;
     GLuint VBO;
     GLushort indices[6];
