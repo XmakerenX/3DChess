@@ -16,28 +16,31 @@
 
 // Holds all state information relevant to a character glyph as loaded using FreeType
 struct CharGlyph {
-    GLuint     TextureID;   // ID handle of the glyph texture
-    glm::ivec2 Size;        // Size of glyph
+    GLuint     TextureID;
+    glm::ivec2 Size;
     glm::ivec2 Bearing;     // Offset from baseline to left/top of glyph
-    long     Advance;     // Horizontal offset to advance to next glyph
+    long       Advance;     // Horizontal offset to advance to next glyph
 };
 
 // stores glpyh buffer data and info, ready to be batched to a single texture
 class CharGlyphBat : public monoBuffer
 {
 public:
+    // default constructor
     CharGlyphBat() : monoBuffer()
     {
         Bearing_ = {0,0};
         Advance_ = 0;
     }
 
+    // copy constructor
     CharGlyphBat(const CharGlyphBat& c) : monoBuffer(c.getBuffer(),c.width_,c.height_)
     {
         Bearing_ = c.Bearing_;
         Advance_ = c.Advance_;
     }
 
+    // move constructor
     CharGlyphBat(CharGlyphBat&& c)
     {
         buffer_ = c.getBuffer();
@@ -57,6 +60,7 @@ public:
         c.Advance_ = 0;
     }
 
+    // constructor
     CharGlyphBat(glm::ivec2 bearing, long advnace)
     {
         Bearing_ = bearing;

@@ -71,7 +71,7 @@ int mkFont::init(int height)
      glGenBuffers(1, &VBO);
      glBindVertexArray(VAO);
      glBindBuffer(GL_ARRAY_BUFFER, VBO);
-     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4 + 1, NULL, GL_DYNAMIC_DRAW);
+     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
      glEnableVertexAttribArray(0);
      glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
      glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -111,7 +111,7 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
     //TODO: cache this crap somehow...
     for (c = text.begin() + 1; c != text.end(); c++)
     {
-        CharGlyph ch = charGlyphs[*c];
+        CharGlyph& ch = charGlyphs[*c];
 
         if (ch.Size.y > maxCharHeight)
             maxCharHeight = ch.Size.y;
@@ -169,7 +169,7 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     // Iterate through all characters
     std::string::const_iterator c;
     GLfloat xpos = x;
-    // TODO: test better maxOffset_ * scale work
+    // TODO: test better  that maxOffset_ * scale works...
     GLfloat ypos = height_ - y - maxOffset_ * scale;
     GLfloat h = 0;
 
@@ -179,11 +179,7 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
         cacheTextTexutre(text);
     }
 
-    FontString ff = stringTextures[text];
-
-    c = text.begin();
-    //NewCharacter ch = NewCharacters_[*c];
-    CharGlyphBat ch = charGlyphsBat[*c];
+    FontString& ff = stringTextures[text];
 
     h = ff.height * scale;
 
@@ -226,7 +222,7 @@ bool mkFont::cacheTextTexutre(std::string text)
     for (c = text.begin(); c!= text.end(); c++)
     {
         //NewCharacter ch = NewCharacters_[*c];
-        CharGlyphBat ch = charGlyphsBat[*c];
+        CharGlyphBat& ch = charGlyphsBat[*c];
 
         // add to width num pixels before the char
         if (ch.Bearing_.x >= 0)
@@ -244,10 +240,6 @@ bool mkFont::cacheTextTexutre(std::string text)
     // allocate the texture buffer
     monoBuffer monBuffer;
     monBuffer.allocBuffer(texWidth, bufferHeight);
-    //unsigned char * buffer = new unsigned char[bufferHeight * texWidth];
-    unsigned char * buffer;
-
-    buffer = monBuffer.getBuffer();
 
     int count = 0;
     // how many empty column are left in the end of texture
@@ -259,7 +251,7 @@ bool mkFont::cacheTextTexutre(std::string text)
     {
         // get char info (glypth , size , spaces)
         //NewCharacter ch = NewCharacters_[*c];
-        CharGlyphBat ch = charGlyphsBat[*c];
+        CharGlyphBat& ch = charGlyphsBat[*c];
 
         // number of empty column at the start of texture
         int extraStartPixels = 0;
@@ -273,17 +265,14 @@ bool mkFont::cacheTextTexutre(std::string text)
         else
            if (ch.Bearing_.x < 0)
            {
-               std::cout <<"before j:= " << j << "\n";
                // check if going back x columns if we are still in texture bounds
                if (j + ch.Bearing_.x >= 0)
                {
                   // move back x columns
                   j = j + ch.Bearing_.x;
-                  leftOver += ch.Bearing_.x;
+                  leftOver += std::abs(ch.Bearing_.x);
                   nColumnBlend = std::abs(ch.Bearing_.x);
                }
-               //advance += std::abs(ch.Bearing.x);
-               std::cout <<"after  j:= " << j << "\n";
            }
 
         // number of columns to add after the char glyph
@@ -292,9 +281,7 @@ bool mkFont::cacheTextTexutre(std::string text)
         // add the extra empty columns before the char to the buffer
         monBuffer.copyBufferVert(extraStartPixels, j, emptyBuf, nColumnBlend);
 
-        // add the char glypth to the buffer]
-        //monoBuffer temp(ch.buffer,ch.Size.x,ch.Size.y);
-        //monBuffer.copyBufferVert(ch.Size.x,j, temp, nColumnBlend);
+        // add the char glypth to the buffer
         monBuffer.copyBufferVert(ch.width_,j, ch, nColumnBlend);
         // add the needed empty columns after the char glyph
         monBuffer.copyBufferVert(advance,j,emptyBuf,nColumnBlend);
@@ -347,6 +334,7 @@ void mkFont::cacheGlyth(FT_Library ft, FT_Face face)
 {
     maxHeight_ = 0;
     maxOffset_ = 0;
+
     // Load first 128 characters of ASCII set
     for (GLubyte c = 0; c < 128; c++)
     {

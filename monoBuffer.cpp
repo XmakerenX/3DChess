@@ -124,51 +124,82 @@ void monoBuffer::copyBufferHoriz(int nRow, int &curRowIndex, monoBuffer &sBuffer
 //-----------------------------------------------------------------------------
 void monoBuffer::trimEmptyLines()
 {
+    int start = 0;
+    int end = 0;
+
+    bool found = false;
+
     // index of rows that aren't empty
     std::vector<int> linesToCopy;
     for (int i = 0; i < height_; i++)
+    {
         for (int j = 0; j < width_; j++)
         {
             // if row isn't empty add it index and move to next row
             if (buffer_[(i * width_) + j] != 0)
             {
                 linesToCopy.push_back(i);
+                start = i;
+                found = true;
+                break;
+            }
+        }
+        if (found)
+            break;
+    }
+
+    found = false;
+
+    for (int i = height_ - 1; i >= 0; i--)
+    {
+        for (int j = 0; j < width_; j++)
+        {
+            // if row isn't empty add it index and move to next row
+            if (buffer_[(i * width_) + j] != 0)
+            {
+                linesToCopy.push_back(i);
+                end = i;
+                found = true;
                 break;
             }
         }
 
+        if (found)
+            break;
+    }
+
     // calc size of new buffer trimed buffer
-    unsigned char * newBuffer = new unsigned char[(linesToCopy.size())*width_ + 12*width_];
-    int newWidth = linesToCopy.size();
+    //unsigned char * newBuffer = new unsigned char[(linesToCopy.size())*width_];
+    unsigned char * newBuffer = new unsigned char[(end - start + 1)*width_];
 
-    // add 11 empty rows at the head of the buffer
-    // text looks better this way and gives exact same results as the regular renderText()
-    monoBuffer emptyBuf;
     int i = 0;
-    //neoBuffer.copyBufferHoriz(12,i, emptyBuf);
-//    for ( i = 0; i < 12; i++)
-//        for (int j = 0; j < width_; j++)
-//        {
-//            newBuffer[(i * width_) + j] = 0;
-//        }
 
-
-    // copy the non empty rows in the original buffer
-    for ( int k = 0; k < linesToCopy.size(); k++)
+    for (int k = start; k <= end; k++)
     {
         for (int j = 0; j < width_; j++)
         {
-            newBuffer[(i * width_) + j] = buffer_[(linesToCopy[k] * width_) + j];
+            newBuffer[(i * width_) + j] = buffer_[k * width_ + j];
         }
         i++;
     }
+
+
+    // copy the non empty rows in the original buffer
+//    for ( int k = 0; k < linesToCopy.size(); k++)
+//    {
+//        for (int j = 0; j < width_; j++)
+//        {
+//            newBuffer[(i * width_) + j] = buffer_[(linesToCopy[k] * width_) + j];
+//        }
+//        i++;
+//    }
 
     // free the original buffer
     delete buffer_;
     // set the trimed buffer as buffer
     buffer_ = newBuffer;
     // set the new height of the buffer
-    height_ = linesToCopy.size() + 12;
+    height_ = end - start + 1;
 }
 
 //-----------------------------------------------------------------------------
