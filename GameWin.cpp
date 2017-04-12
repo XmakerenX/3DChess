@@ -15,7 +15,7 @@ GameWin::GameWin()
     ctx = nullptr;
 
     // point 1  xyz
-    vertices[0] = 0.5f;
+    vertices[0] = -0.5f;
     vertices[1] = -0.5f;
     vertices[2] = 0.0f;
     // point 1 rgb
@@ -23,7 +23,7 @@ GameWin::GameWin()
     vertices[4] = 0.0f;
     vertices[5] = 0.0f;
     // point 2 xyz
-    vertices[6] = -0.5f;
+    vertices[6] = 0.5f;
     vertices[7] = -0.5f;
     vertices[8] = 0.0f;
     // point 2 rgb
@@ -67,8 +67,9 @@ bool GameWin::initWindow()
 //-----------------------------------------------------------------------------
 bool GameWin::initOpenGL(int width, int height)
 {
-    std::cout << "initOpenGL\n";
-      // Get a matching FB config
+    std::cout << "InitOpenGL started\n";
+
+    // Get a matching FB config
   /*static*/ int visual_attribs[] =
     {
       GLX_X_RENDERABLE    , True,
@@ -90,7 +91,7 @@ bool GameWin::initOpenGL(int width, int height)
     int glx_major, glx_minor;
  
     if (display == nullptr)
-        std::cout << "mega bah\n"; 
+        std::cout << "No X display! but it did open it....\n";
     
     // FBConfigs were added in GLX version 1.3.
     if ( !glXQueryVersion( display, &glx_major, &glx_minor ) ||  
@@ -99,9 +100,7 @@ bool GameWin::initOpenGL(int width, int height)
         std::cout << "Invalid GLX Version\n";
         return false;
     }
-    
-    std::cout << "babh\n";
-    
+       
     std::cout << "Getting matching framebuffer configs\n"; 
   
     int fbcount;
@@ -114,7 +113,7 @@ bool GameWin::initOpenGL(int width, int height)
     std::cout << "Found " << fbcount << " matching FB configs.\n";
     
     // Pick the FB config/visual with the most samples per pixel
-    std::cout << "Getting XVisualInfos\n";
+    //std::cout << "Getting XVisualInfos\n";
     int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
 
     int i;
@@ -127,8 +126,8 @@ bool GameWin::initOpenGL(int width, int height)
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples  );
       
-            std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid 
-            << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
+            //std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
+            //<< ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
       
             if ( best_fbc < 0 || samp_buf && samples > best_num_samp )
                 best_fbc = i, best_num_samp = samples;
@@ -203,7 +202,7 @@ bool GameWin::initOpenGL(int width, int height)
         std::cout << "glXCreateContextAttribsARB() not found" << " ... using old-style GLX context\n";
         ctx = glXCreateNewContext( display, bestFbc, GLX_RGBA_TYPE, 0, True );
     }
-    // If it does, try to get a GL 3.0 context!
+    // If it does, try to get a GL 3.3 context!
     else
     {
         int context_attribs[] =
@@ -220,21 +219,11 @@ bool GameWin::initOpenGL(int width, int height)
         // Sync to ensure any errors generated are processed.
         XSync( display, False );
         if ( !ctxErrorOccurred && ctx )
-            std::cout << "Created GL 3.0 context\n";
+            std::cout << "Created GL 3.3 context\n";
         else
         {
-            // Couldn't create GL 3.0 context.  Fall back to old-style 2.x context.
-            // When a context version below 3.0 is requested, implementations will
-            // return the newest context version compatible with OpenGL versions less
-            // than version 3.0.
-            // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
-            context_attribs[1] = 1;
-            // GLX_CONTEXT_MINOR_VERSION_ARB = 0
-            context_attribs[3] = 0;
-
-            ctxErrorOccurred = false;
-            std::cout << "Failed to create GL 3.0 context" << " ... using old-style GLX context\n";
-            ctx = glXCreateContextAttribsARB( display, bestFbc, 0, True, context_attribs );
+            std::cout << "Failed to create GL 3.3 context";
+            return false;
         }
     }
     
@@ -287,6 +276,7 @@ bool GameWin::initOpenGL(int width, int height)
 
     glBindVertexArray(0);
 
+    // complie shaders
     meshShader = new Shader("shader.vs", "shader.frag");
     textShader = new Shader("text.vs", "text.frag");
 
@@ -417,6 +407,8 @@ void GameWin::reshape(int width, int height)
     float left,right,bottom,top;
     float AR;
 	
+    std::cout <<"reshape called\n";
+
     // define our ortho
     left=-1.5;
     right=1.5;
@@ -451,8 +443,6 @@ void GameWin::reshape(int width, int height)
     textShader->Use();
     glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
     projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
-    //gluOrtho2D(left,right, bottom,top);
-    std::cout <<"Ortho2D\n";    
 }
 
 //-----------------------------------------------------------------------------
@@ -464,25 +454,24 @@ int GameWin::BeginGame()
     {
         XEvent event;
 
-         // Did we receive a message, or are we idling ?
+         // Handle all messages before rendering the next frame
         while (XPending(display) > 0)
         {
             XNextEvent(display, &event);
+            // quit event
             if ( (event.type == ClientMessage) && (event.xclient.data.l[0] == wmDeleteMessage) ) 
             {
                 std::cout << "Shutting down now!!!" << std::endl;
                 gameRunning = false;
                 break;
             }
+            // window size was changed / need to be reRendered(always reRender anyway...)
             if (event.type == Expose)
             {
                 XWindowAttributes gwa;
-                
-               // std::cout << "restroing!!! \n";
-                
+
                 XGetWindowAttributes(display, win, &gwa);
                 reshape(gwa.width, gwa.height);
-                //drawing(dpy, win);
             }
         }
         
