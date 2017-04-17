@@ -7,7 +7,8 @@ bool GameWin::ctxErrorOccurred = false;
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
 GameWin::GameWin()
-    :font_("NotoMono")
+    :font_("NotoMono"),
+    vertices2{{0.0f,100.0f,0.0f,0.0f}, {0.0f,228.0f,0.0f,1.0f}, {128.0f,228.0f,1.0f,1.0f}, {128.0f,100.0f,1.0f,0.0f}}
 {
     display = nullptr;
     
@@ -38,6 +39,16 @@ GameWin::GameWin()
     vertices[15] = 0.0f;
     vertices[16] = 0.0f;
     vertices[17] = 1.0f;
+
+    // set indices for quad rendering
+    // first triangle
+    indices[0] = 0;
+    indices[1] = 1;
+    indices[2] = 2;
+    // secound triangle
+    indices[3] = 0;
+    indices[4] = 3;
+    indices[5] = 2;
 
 }
 
@@ -274,11 +285,22 @@ bool GameWin::initOpenGL(int width, int height)
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
+    glGenVertexArrays(1, &VA1);
+    glGenBuffers(1, &VB1);
+    glBindVertexArray(VA1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VB1);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, vertices2, GL_STATIC_DRAW );
+
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
     glBindVertexArray(0);
 
     // complie shaders
     meshShader = new Shader("shader.vs", "shader.frag");
     textShader = new Shader("text.vs", "text.frag");
+    textureShader = new Shader("texture.vs", "texture.frag");
 
     reshape(width,height);
 
@@ -366,7 +388,7 @@ void GameWin::drawing(Display* display, Window win)
     font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
     font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(0.0f,1.0f,0.0f));
     font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(1.0f,0.0f,0.0f));
-    font_.renderTextBatched(textShader, "jj",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "jj",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderText(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderTextBatched(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderText(textShader, "awwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
@@ -391,6 +413,20 @@ void GameWin::drawing(Display* display, Window win)
 //    font_.renderTextBatched(textShader, "make me fucking pround tyu",0.0f, 176.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f), height_);
 
     //font_.RenderText(ourShader, "woot!!!", 0.s0f, 0.0f, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
+
+    textureShader->Use();
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("YorLogo.png"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("gold.png"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("square.bmp"));
+    glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("king_white.bmp"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.bmp"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("pawn2.bmp"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.png"));
+    //glBindTexture(GL_TEXTURE_2D, 120);
+    glBindVertexArray(VA1);
+    glBindBuffer(GL_ARRAY_BUFFER, VB1);
+    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
+
     int err = glGetError();
     if (err != GL_NO_ERROR)
         std::cout <<"Drawing: ERROR bitches\n";
@@ -442,6 +478,8 @@ void GameWin::reshape(int width, int height)
     // 6) defining the boundary of the model using gluOrtho2D
     textShader->Use();
     glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
+    textureShader->Use();
+    glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
     projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
 }
 

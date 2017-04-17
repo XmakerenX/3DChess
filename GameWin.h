@@ -16,6 +16,7 @@
 
 #include "timer.h"
 #include "clock.h"
+#include "AssetManager.h"
 #include "Shader.h"
 #include "Font.h"
 
@@ -53,7 +54,8 @@ private:
     bool gameRunning;
     
     Timer timer;
-    
+    AssetManager assetManager_;
+
     int height_;
 
     static bool ctxErrorOccurred;
@@ -62,9 +64,14 @@ private:
 
     Shader* meshShader;
     Shader* textShader;
+    Shader* textureShader;
 
     GLuint VB0, VA0;
+    GLuint VB1, VA1;
     GLfloat vertices[18];
+
+    GLfloat vertices2[4][4];
+    GLushort indices[6];
 
     mkFont font_;
 
