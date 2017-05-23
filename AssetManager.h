@@ -7,6 +7,7 @@
 #include<unordered_map>
 #include<GL/glew.h>
 #include<png.h>
+#include<jpeglib.h>
 
 class AssetManager
 {
@@ -17,6 +18,7 @@ public:
     GLuint getTexture(const std::string& filePath);
     GLuint loadPng(const std::string& filePath);
     GLuint loadBMP(const std::string& filePath);
+    GLuint loadJPEG(const std::string& filePath);
 
 private:
     GLuint createTexture(GLsizei width, GLsizei height, GLenum format,unsigned char* data);
