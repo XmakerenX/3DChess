@@ -416,12 +416,18 @@ void GameWin::drawing(Display* display, Window win)
 
     textureShader->Use();
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("YorLogo.png"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("symbol.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("gold.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("square.bmp"));
-    glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("king_white.bmp"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("king_white.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("pawn2.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.png"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("space.jpg"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("T1.jpg"));
+    glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("logo.jpg"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("CIVV.jpg"));
+
     //glBindTexture(GL_TEXTURE_2D, 120);
     glBindVertexArray(VA1);
     glBindBuffer(GL_ARRAY_BUFFER, VB1);

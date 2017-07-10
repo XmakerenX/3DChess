@@ -30,11 +30,23 @@ GLuint AssetManager::getTexture(const std::string& filePath)
     // else load the textrue
     else
     {
-        //return loadPng(filePath);
-        return loadBMP(filePath);
+        std::string suffix;
+        std::stringstream s(filePath);
+        // gets the file name
+        std::getline(s, suffix, '.');
+        // gets the file suffix
+        std::getline(s, suffix, '.');
+        // load the texutre using the appropriate method
+        if (suffix == "png")
+            return loadPng(filePath);
+        if (suffix == "jpg")
+            return loadJPEG(filePath);
+        if (suffix == "bmp")
+            return loadBMP(filePath);
+
+        std::cout << suffix << " is not a supported texture type\n";
+        return 0;
     }
-
-
 }
 
 //-----------------------------------------------------------------------------
@@ -43,7 +55,7 @@ GLuint AssetManager::getTexture(const std::string& filePath)
 GLuint AssetManager::loadPng(const std::string &filePath)
 {
     int number_of_passes = 0;
-    int format = 0;
+    unsigned int format = 0;
 
     // header for testing if it is a png
     png_byte header[8];
@@ -68,7 +80,7 @@ GLuint AssetManager::loadPng(const std::string &filePath)
         return 0;
     }
 
-    //create png struct
+    // create png struct
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr,nullptr,nullptr);
     if (!png_ptr)
     {
@@ -77,7 +89,7 @@ GLuint AssetManager::loadPng(const std::string &filePath)
         return 0;
     }
 
-    //create png info struct
+    // create png info struct
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
     {
@@ -123,15 +135,11 @@ GLuint AssetManager::loadPng(const std::string &filePath)
     //get info about png
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, nullptr, nullptr, nullptr);
 
-    // set the correct image format to laod
+    // set the correct image format
     if (color_type == PNG_COLOR_TYPE_RGB)
         format = GL_RGB;
     if (color_type == PNG_COLOR_TYPE_RGBA)
         format = GL_RGBA;
-
-    // Update width and height based on the png info
-    //width = twidth;
-    //height = theight;
 
     // Update the png info struct
     png_read_update_info(png_ptr, info_ptr);
@@ -170,12 +178,7 @@ GLuint AssetManager::loadPng(const std::string &filePath)
 
 
     // now generate the OpenGL texture
-    GLuint textureID = createTexture(width, height, format, image_data);;
-//    glGenTextures(1, &textureID);
-//    glBindTexture(GL_TEXTURE_2D, textureID);
-//    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
-//                 0, format, GL_UNSIGNED_BYTE, (GLvoid*)image_data);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    GLuint textureID = createTexture(width, height, format, image_data);
 
     //clean up memory and close stuff
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
@@ -183,9 +186,9 @@ GLuint AssetManager::loadPng(const std::string &filePath)
     delete[] row_pointers;
     fclose(fp);
 
+    // cached the loaded texture
     textureCache_.insert(std::pair<std::string, GLuint>(filePath,textureID));
     return textureID;
-    return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -267,10 +270,11 @@ GLuint AssetManager::loadBMP(const std::string &filePath)
 
     GLuint textureID = createTexture(width, height, GL_BGR, data);
 
-    //clean up memory and close stuff
+    // clean up memory and close stuff
     file.close();
     delete[] data;
 
+    // cache the loaded texture
     textureCache_.insert(std::pair<std::string, GLuint>(filePath,textureID));
 
     return textureID;
@@ -280,83 +284,78 @@ GLuint AssetManager::loadBMP(const std::string &filePath)
 // Name : loadJPEG
 //-----------------------------------------------------------------------------
 GLuint AssetManager::loadJPEG(const std::string &filePath)
-{    
-    int rc;
-    // This struct contains the JPEG decompression parameters and pointers to
-    // working space (which is allocated as needed by the JPEG library).
-    struct jpeg_decompress_struct cinfo;
+{
+    unsigned int width, height;
+    int channels; //  3 =>RGB   4 =>RGBA
+    unsigned int format = 0;
 
-    // We use our private extension JPEG error handler.
-    // Note that this struct must live as long as the main JPEG parameter
-    // struct, to avoid dangling-pointer problems.
-    struct my_error_mgr jerr;
+    unsigned char * rowptr[1];    // pointer to an array
+    unsigned char * jdata;        // data for the image
+    struct jpeg_decompress_struct info; //for our jpeg info
+    struct jpeg_error_mgr err;          //the error handler
 
-    FILE *infile;                 // source file
-    JSAMPARRAY buffer;            // Output row buffer
-    int row_stride;               // physical row width in output buffer
+    FILE* file = fopen(filePath.c_str(), "rb");  //open the file
 
-    if ((infile = fopen(filePath.c_str(), "rb")) == NULL)
+    info.err = jpeg_std_error(&err);
+    jpeg_create_decompress(&info);   //fills info structure
+
+    //if the jpeg file doesn't load
+    if(!file)
     {
-      fprintf(stderr, "can't open %s\n", filename);
-      return 0;
+        std::cout << "Falied to open " << filePath << "\n";
+        return 0;
     }
 
-    // Step 1: allocate and initialize JPEG decompression object
-    // We set up the normal JPEG error routines, then override error_exit.
-    cinfo.err = jpeg_std_error(&jerr.pub);
-    jerr.pub.error_exit = my_error_exit;
-    // Establish the setjmp return context for my_error_exit to use.
-    if (setjmp(jerr.setjmp_buffer))
+    jpeg_stdio_src(&info, file);
+    jpeg_read_header(&info, TRUE);
+
+    //TODO: check jpeg size before starting decompressing
+    jpeg_start_decompress(&info);
+
+    width = info.output_width;
+    height = info.output_height;
+
+    channels = info.num_components;
+    // set texture type
+    if (channels < 3)
     {
-       // If we get here, the JPEG code has signaled an error.
-       // We need to clean up the JPEG object, close the input file, and return.
-      jpeg_destroy_decompress(&cinfo);
-      fclose(infile);
-      return 0;
+        std::cout << "jpegs with less than 3 channels are not supported\n";
+        return 0;
     }
 
-    // Now we can initialize the JPEG decompression object.
-    jpeg_create_decompress(&cinfo);
+    format = GL_RGB;
+    if(channels == 4) format = GL_RGBA;
 
-    // Step 2: specify data source (eg, a file)
-    jpeg_stdio_src(&cinfo, infile);
+    unsigned long data_size = width * height * info.output_components;
+    unsigned int rowStride = channels * info.output_width;
 
-    // Step 3: read file parameters with jpeg_read_header()
-
-    rc = jpeg_read_header(&cinfo, TRUE);
-
-    if (rc != 1)
+    // read scanlines one at a time into jdata[] array
+    jdata = new unsigned char[data_size];
+    while (info.output_scanline < info.output_height)
     {
-        std::cout << "File is not a valid JPEG\n";
-        return -1;
+
+        // point rowptr to the current row to be filled with data
+        // libjpeg loads from end to start to rowptr starts from the end of jdata
+        //          start +         end        -  current line  - line(to get to the start of the line)
+        rowptr[0] = jdata + rowStride * height - rowStride * info.output_scanline - rowStride;
+
+        // load data to the current line
+        jpeg_read_scanlines(&info, rowptr, 1);
+
     }
 
-    int width, height, pixel_size;
+    jpeg_finish_decompress(&info);
+    GLuint textureID = createTexture(width, height, format, jdata);
 
-    // Step 4: set parameters for decompression
-    // In this example, we don't need to change any of the defaults set by
-    // jpeg_read_header(), so we do nothing here.
+    // free resources
+    jpeg_destroy_decompress(&info);
+    fclose(file);
+    delete[] jdata;
 
-    // Step 5: Start decompressor
-    jpeg_start_decompress(&cinfo);
-    // We can ignore the return value since suspension is not possible
-    // with the stdio data source.
+    // cache the loaded texture
+    textureCache_.insert(std::pair<std::string, GLuint>(filePath,textureID));
 
-    // We may need to do some setup of our own at this point before reading
-    // the data.  After jpeg_start_decompress() we have the correct scaled
-    // output image dimensions available, as well as the output colormap
-    // if we asked for color quantization.
-    // In this example, we need to make an output work buffer of the right size.
-    // JSAMPLEs per row in output buffer
-    width = cinfo.output_width;
-    height = cinfo.output_height;
-    pixel_size = cinfo.output_components;
-    row_stride = cinfo.output_width * cinfo.output_components;
-    // Make a one-row-high sample array that will go away when done with image
-    buffer = (*cinfo.mem->alloc_sarray)
-                  ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-
-
+    return textureID;
 }
 
 //-----------------------------------------------------------------------------

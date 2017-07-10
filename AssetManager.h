@@ -8,6 +8,7 @@
 #include<GL/glew.h>
 #include<png.h>
 #include<jpeglib.h>
+#include<sstream>
 
 class AssetManager
 {
