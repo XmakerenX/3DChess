@@ -2,7 +2,6 @@
 #include <GL/glut.h>
 
 bool GameWin::ctxErrorOccurred = false;
-
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
@@ -71,6 +70,8 @@ bool GameWin::initWindow()
         std::cout << "Failed to open X display\n";
         return false;
     }
+    
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -138,9 +139,9 @@ bool GameWin::initOpenGL(int width, int height)
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples  );
       
             //std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
-            //<< ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
+            // << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
       
-            if ( best_fbc < 0 || samp_buf && samples > best_num_samp )
+            if ( (best_fbc < 0) || (samp_buf && (samples > best_num_samp)) )
                 best_fbc = i, best_num_samp = samples;
             
             if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
@@ -301,6 +302,7 @@ bool GameWin::initOpenGL(int width, int height)
     meshShader = new Shader("shader.vs", "shader.frag");
     textShader = new Shader("text.vs", "text.frag");
     textureShader = new Shader("texture.vs", "texture.frag");
+    projShader = new Shader("shader2.vs", "shader2.frag");
 
     reshape(width,height);
 
@@ -309,6 +311,10 @@ bool GameWin::initOpenGL(int width, int height)
     int err = glGetError();
     if (err != GL_NO_ERROR)
         std::cout <<"Init: ERROR bitches\n";
+    
+	assetManager_.loadObjMesh("porsche.obj");
+	
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -360,9 +366,12 @@ int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
 //-----------------------------------------------------------------------------
 void GameWin::drawing(Display* display, Window win)
 {
+    int err;
+	
+
     //clock.draw();
     glEnable(GL_CULL_FACE);
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     //TODO: Move this  to some where sane
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -372,22 +381,76 @@ void GameWin::drawing(Display* display, Window win)
     glClear(GL_COLOR_BUFFER_BIT);
 
     meshShader->Use();
+	glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	
+	
+	glm::vec4 testy(-0.5f,-0.5f, 0.0f, 1.0);
+	
+	testy = projection * testy;
+	
+	testy.x = 0.5f;
+	testy.y = -0.5f;
+	testy.z = 0;
+	testy.w = 1.0f;
+	testy = projection * testy;
+	
+	testy.x = 0.0f;
+	testy.y = 0.5f;
+	testy.z = 0.0;
+	testy.w = 1.0f;
+	testy = projection * testy;
+	
+	testy.x = 10.0f;
+	testy.y = -10.0f;
+	testy.z = -10.0;
+	testy.w = 1.0f;
+	testy = projection * testy;
+	
+	testy.x = 10.0f;
+	testy.y = -10.0f;
+	testy.z = 10.0f;
+	testy.w = 1.0f;
+	testy = projection * testy;
+	
+	testy.x = 10.0f;
+	testy.y = 10.0f;
+	testy.z = 10.0f;
+	testy.w = 1.0f;
+	testy = projection * testy;
+	
+	testy.x = 10.0f;
+	testy.y = 10.0f;
+	testy.z = -10.0f;
+	testy.w = 1.0f;
+	testy = projection * testy;
+	
+	projShader->Use();
+	//projection = glm::mat4(1.0f);
+    glUniformMatrix4fv(glGetUniformLocation(projShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	
+	
+	
     glBindVertexArray(VA0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
 
-    textShader->Use();
     //glUniformMatrix4fv(glGetUniformLocation(textShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+//     glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+// 	
+// 	
+// 	projShader->Use();
+//     glUniformMatrix4fv(glGetUniformLocation(projShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
+	textShader->Use();
+	
     std::stringstream ss;
     ss << timer.getFPS();
 
     font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
-    font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(0.0f,1.0f,0.0f));
-    font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(1.0f,0.0f,0.0f));
+    //font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
+    //font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(1.0f,0.0f,0.0f));
     //font_.renderTextBatched(textShader, "jj",0.0f, 400.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderText(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 550.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderTextBatched(textShader, "wwwwwwwwwwwwwwwwwwwwwwwwww",0.0f, 526.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
@@ -420,22 +483,146 @@ void GameWin::drawing(Display* display, Window win)
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("gold.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("square.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("king_white.bmp"));
+    glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("negx.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("pawn2.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("space.jpg"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("T1.jpg"));
-    glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("logo.jpg"));
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("logo.jpg"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("CIVV.jpg"));
 
     //glBindTexture(GL_TEXTURE_2D, 120);
-    glBindVertexArray(VA1);
-    glBindBuffer(GL_ARRAY_BUFFER, VB1);
-    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
+    //glBindVertexArray(VA1);
+    //glBindBuffer(GL_ARRAY_BUFFER, VB1);
+    //glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
 
-    int err = glGetError();
+    std::vector<Vertex> vertices;
+    std::vector<GLushort> indices;
+    //std::vector<Texture> textures;
+    
+	Vertex vertex1(glm::vec3( 1,-1,-1),  glm::vec3(0,0,0), glm::vec2(0,0));
+    //Vertex vertex1 = {glm::vec3( 1,-1,-1),  glm::vec3(0,0,0), glm::vec2(0,0)};
+    Vertex vertex2 = {glm::vec3( 1,-1, 1),  glm::vec3(0,0,0), glm::vec2(1,0)};
+    Vertex vertex3 = {glm::vec3( 1, 1, 1),  glm::vec3(0,0,0), glm::vec2(1,1)};
+	
+// 	Vertex vertex1 = {glm::vec3( -0.5f,-0.5f,0),  glm::vec3(0,0,0), glm::vec2(0,0)};
+//     Vertex vertex2 = {glm::vec3( 0.5,-0.5, 0),  glm::vec3(0,0,0), glm::vec2(1,0)};
+//     Vertex vertex3 = {glm::vec3( 0, 0.5, 0),  glm::vec3(0,0,0), glm::vec2(1,1)};
+
+
+    Vertex vertex4 = {glm::vec3( 1, 1,-1),  glm::vec3(0,0,0), glm::vec2(0,1)};    
+    Vertex vertex5 = {glm::vec3(-1,-1, 1),  glm::vec3(0,0,0), glm::vec2(0,0)};
+    Vertex vertex6 = {glm::vec3(-1,-1,-1),  glm::vec3(0,0,0), glm::vec2(1,0)};
+    Vertex vertex7 = {glm::vec3(-1, 1,-1),  glm::vec3(0,0,0), glm::vec2(1,1)};
+    Vertex vertex8 = {glm::vec3(-1, 1, 1),  glm::vec3(0,0,0), glm::vec2(0,1)};
+	
+// 	Vertex vertex1 = {glm::vec3( 5,-5,-5),  glm::vec3(0,0,0), glm::vec2(0,0)};
+//     Vertex vertex2 = {glm::vec3( 5,-5, 5),  glm::vec3(0,0,0), glm::vec2(1,0)};
+//     Vertex vertex3 = {glm::vec3( 5, 5, 5),  glm::vec3(0,0,0), glm::vec2(1,1)};
+//     Vertex vertex4 = {glm::vec3( 5, 5,-5),  glm::vec3(0,0,0), glm::vec2(0,1)};
+//     
+//     Vertex vertex5 = {glm::vec3(-5,-5, 5),  glm::vec3(0,0,0), glm::vec2(0,0)};
+//     Vertex vertex6 = {glm::vec3(-5,-5,-5),  glm::vec3(0,0,0), glm::vec2(1,0)};
+//     Vertex vertex7 = {glm::vec3(-5, 5,-5),  glm::vec3(0,0,0), glm::vec2(1,1)};
+//     Vertex vertex8 = {glm::vec3(-5, 5, 5),  glm::vec3(0,0,0), glm::vec2(0,1)};
+    
+    vertices.push_back(Vertex(vertex1));
+    vertices.push_back(Vertex(vertex2));
+    vertices.push_back(Vertex(vertex3));
+    vertices.push_back(Vertex(vertex4));
+    vertices.push_back(Vertex(vertex5));
+    vertices.push_back(Vertex(vertex6));
+    vertices.push_back(Vertex(vertex7));
+    vertices.push_back(Vertex(vertex8));
+    
+    // first squre
+//     indices.push_back(0);
+//     indices.push_back(1);
+//     indices.push_back(2);
+//     indices.push_back(0);
+//     indices.push_back(3);
+//     indices.push_back(2);
+	
+	indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(2);
+	indices.push_back(3);
+    indices.push_back(0);
+	
+	indices.push_back(6);
+	indices.push_back(5);
+    indices.push_back(0);
+    indices.push_back(1);
+    
+    // secound squre
+//     indices.push_back(4);
+//     indices.push_back(5);
+//     indices.push_back(6);
+    //indices.push_back(4);
+    //indices.push_back(7);
+    //indices.push_back(6);
+    
+    // third squre
+// 	indices.push_back(1);
+//     indices.push_back(5);
+//     indices.push_back(3);
+//     indices.push_back(1);
+//     indices.push_back(4);
+//     indices.push_back(5);
+	
+	
+	// third squre
+//     indices.push_back(6);
+//     indices.push_back(3);
+//     indices.push_back(2);
+//     indices.push_back(6);
+//     indices.push_back(7);
+//     indices.push_back(2);
+//     
+//     // fourth squre
+//     indices.push_back(4);
+//     indices.push_back(1);
+//     indices.push_back(0);
+//     indices.push_back(4);
+//     indices.push_back(5);
+//     indices.push_back(0);
+//     
+//     // fifth squre
+//     indices.push_back(5);
+//     indices.push_back(0);
+//     indices.push_back(3);
+//     indices.push_back(5);
+//     indices.push_back(6);
+//     indices.push_back(3);
+//     
+//     // sixth squre
+//     indices.push_back(1);
+//     indices.push_back(4);
+//     indices.push_back(7);
+//     indices.push_back(1);
+//     indices.push_back(2);
+//     indices.push_back(7);
+    
+    //Texture T = {assetManager_.getTexture("negx.bmp"), "texture_diffuse" ,"negx.bmp"};
+    
+    //textures.push_back(T);
+    
+    //Mesh M(vertices, indices);
+    
+    projShader->Use();
+	
+	glm::mat4 matt(1.0f);
+	matt = glm::translate(matt, glm::vec3(10.0f, 10.0f, 10.0f));
+	float yy = matt[3][2];
+	
+	//glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("negx.bmp"));
+    
+    //M.Draw();
+    
+    err = glGetError();
     if (err != GL_NO_ERROR)
-        std::cout <<"Drawing: ERROR bitches\n";
+        std::cout <<"Drawing: ERROR bitches " << err << "\n";
 
     //glFlush();
     glXSwapBuffers (display, win);
@@ -486,7 +673,12 @@ void GameWin::reshape(int width, int height)
     glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
     textureShader->Use();
     glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
-    projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
+    //projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
+    float aspect = (float)width / (float)height;
+    projection = glm::perspective(90.0f, aspect, 1.0f, 100.0f);
+	//projection = glm::lookAt(glm::vec3(-10,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0)) * projection;
+	//projection = projection * glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	projection = projection * glm::lookAt(glm::vec3(-2,0,2), glm::vec3(0,0,0), glm::vec3(0,1,0));
 }
 
 //-----------------------------------------------------------------------------
@@ -530,6 +722,8 @@ int GameWin::BeginGame()
             drawing(display, win);
         }
     }
+    
+    return 0;
 }
 
 //-----------------------------------------------------------------------------

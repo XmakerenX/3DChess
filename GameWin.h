@@ -19,6 +19,7 @@
 #include "AssetManager.h"
 #include "Shader.h"
 #include "Font.h"
+#include "Mesh.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -65,6 +66,7 @@ private:
     Shader* meshShader;
     Shader* textShader;
     Shader* textureShader;
+    Shader* projShader;
 
     GLuint VB0, VA0;
     GLuint VB1, VA1;

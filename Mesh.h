@@ -1,51 +1,26 @@
 #ifndef  _MESH_H
 #define  _MESH_H
 
-// Std. Includes
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <vector>
-
-// GL Includes
-#include <GL/glew.h> // Contains all the necessery OpenGL includes
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include "Shader.h"
-
-struct Vertex {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoords;
-};
-
-struct Texture {
-    GLuint id;
-    std::string type;
-    std::string path;
-};
+#include "subMesh.h"
 
 class Mesh {
 
 public:
-    /*  Mesh Data  */
-    std::vector<Vertex> vertices;
-    std::vector<GLuint> indices;
-    std::vector<Texture> textures;
-
-    /*  Functions  */
     // Constructor
-    Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
+    Mesh();
+	Mesh(std::vector<SubMesh> sMeshes);
+	Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials,
+		std::vector<std::string> dTextures);
 
     // Render the mesh
-    void Draw(Shader shader);
+    void Draw(unsigned int subMeshIndex);
+	void addSubMesh(SubMesh subMesh);
 
 private:
-    GLuint VAO, VBO, EBO;
-
-    // Initializes all the buffer objects/arrays
-    void setupMesh();
+	std::vector<SubMesh> subMeshes;
+	std::vector<GLuint> defaultMaterials;
+	std::vector<std::string> defaultTextures;
 };
 
 

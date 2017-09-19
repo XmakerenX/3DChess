@@ -1,5 +1,7 @@
 #include "Shader.h"
 
+//TODO: change to std::string instead of raw string
+//TODO: add a shader valid var so outside caller can tell if shader was constructed successfully
 Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 {
 
