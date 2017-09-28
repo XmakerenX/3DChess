@@ -55,7 +55,7 @@ struct Group
 	{
 		name = rName;
 		numTrinagles = 0;
-		material = 0;
+        material = -1;
 		
 	}
 	
@@ -189,7 +189,11 @@ public:
 	
 	Shader* getShader(const std::string& shaderPath);
 	int 	getMaterialIndex(const Material& mat);
+    Material& getMaterial(int materialIndex);
 	int getAttribute(const std::string& texPath, const Material& mat,const std::string& shaderPath);
+    int getAttribute(const std::string& texPath, GLuint matIndex,const std::string& shaderPath);
+
+    const std::vector<Attribute>& getAttributeVector();
 
 private:
     GLuint createTexture(GLsizei width, GLsizei height, GLenum format,unsigned char* data);

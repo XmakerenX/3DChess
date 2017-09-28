@@ -499,10 +499,11 @@ Mesh* AssetManager::loadObjMesh(const std::string& meshPath)
 	{
 		// ignore empty groups
 		if (g.vertices.size() != 0)
-		{
-			subMeshes.emplace_back(g.vertices, g.indices);
-			meshMaterials.push_back(g.material);
-		}
+        {
+            subMeshes.emplace_back(g.vertices, g.indices);
+            if (g.material != -1)
+                meshMaterials.push_back(g.material);
+        }
 	}
 	
 	m_meshCache.insert(std::pair<std::string, Mesh>(meshPath, 
@@ -629,7 +630,7 @@ void AssetManager::objFirstPass(std::ifstream& in ,Model& model)
 					
 					in >> buf;
 					readNextLine = false;
-					while (buf.find("//") != std::string::npos)
+                    while (buf.find("//") != std::string::npos && !in.eof())
 					{
 						model.numTrinagles++;
 						group->numTrinagles++;
@@ -707,12 +708,13 @@ void AssetManager::objFirstPass(std::ifstream& in ,Model& model)
 					readNextLine = false;
 					std::stringstream s(buf);
 					s >> v;
-					while (!s.fail())
+                    while (!s.fail() && !in.eof())
 					{
 						model.numTrinagles++;
 						group->numTrinagles++;
 						
 						in >> buf;
+                        s = std::stringstream(buf);
 						s >> v;
 					}
 				}
@@ -753,16 +755,17 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 	Group* group;
 	
 	std::string buf;
-	
+    bool readNextLine = true;
+
 	group = &model.addGroup("defualt");
 	
-	numVertices = numNormals = numTexCords = 1;
+    numVertices = numNormals = numTexCords = 0;
 	numTrinagles = 0;
 	material = 0;
-	
-	model.verticesPos = new float[numVertices * 3];
-	model.normals = new float[numNormals * 3];
-	model.texCords = new float[numTexCords * 2];
+
+    model.verticesPos = new float[model.numVertices * 3];
+    model.normals = new float[model.numNormals * 3];
+    model.texCords = new float[model.numTexCords * 2];
 	
 	in >> buf;
 	while (!in.eof())
@@ -812,22 +815,27 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 				
 				s >> buf;
 				s >> buf;
+                // group by material
+                group = &model.addGroup(buf);
 				group->material = material = model.materials[buf];
-			}
+            }break;
 			case 'g':
 			{
+                // Seems like I can ignore groups for now
 				std::getline(in, buf);
 				//in >> buf;
-				group = &model.addGroup(buf);
-				group->material = material;
+                //group = &model.addGroup(buf);
+                //group->material = material;
 			}break;
+
 			case 'f':
 			{
-				std::string buffer;
+                //std::string buf;
 				v = n = t = 0;
 				
-				in >> buffer;
-				if (buffer.find("//") != std::string::npos)
+                in >> buf;
+                // can be one of v , v//n, v/t, v/t/n, x//x
+                if (buf.find("//") != std::string::npos)
 				{
 					// v//n
 					// make the string easier to parse
@@ -835,25 +843,27 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 					
 					GLushort index;
 					// merge all the face vertex data together and add to the vector
-					for (int i = 0; i < 2; i ++)
+                    for (int i = 0; i < 3; i ++)
 					{
 						// make the string easier to parse
-						std::replace(buffer.begin(), buffer.end(), '/', ' ');
-						std::stringstream s(buffer);
+                        std::replace(buf.begin(), buf.end(), '/', ' ');
+                        std::stringstream s(buf);
 						s >> v;
 						s >> n;
 						
 						index = group->addVertex(model,&v, nullptr, &n);
 						group->indices.push_back(index);
 						
-						in >> buffer;
+                        // will read the next word before quitting the loop
+                        in >> buf;
 					}
 					
-					while (buffer.find("//") != std::string::npos)
+                    readNextLine = false;
+                    while (buf.find("//") != std::string::npos)
 					{
 						// make the string easier to parse
-						std::replace(buffer.begin(), buffer.end(), '/', ' ');
-						std::stringstream s(buffer);
+                        std::replace(buf.begin(), buf.end(), '/', ' ');
+                        std::stringstream s(buf);
 						s >> v;
 						s >> n;
 						
@@ -864,19 +874,19 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 						index = group->addVertex(model, &v, nullptr, &n);
 						group->indices.push_back(index);
 						
-						in >> buffer;
+                        in >> buf;
 					}
 					
 				}
-				else if (std::count(buffer.begin(), buffer.end(), '/') == 3)
+                else if (std::count(buf.begin(), buf.end(), '/') == 3)
 				{
 					// v/t/n
 					GLushort index;
 					
-					for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < 3; i++)
 					{
-						std::replace(buffer.begin(), buffer.end(), '/', ' ');
-						std::stringstream s(buffer);
+                        std::replace(buf.begin(), buf.end(), '/', ' ');
+                        std::stringstream s(buf);
 						s >> v;
 						s >> t;
 						s >> n;
@@ -884,13 +894,14 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 						index = group->addVertex(model ,&v, &t, &n);
 						group->indices.push_back(index);
 						
-						in >> buffer;
+                        in >> buf;
 					}
 					
-					while (std::count(buffer.begin(), buffer.end(), '/') > 0)
+                    readNextLine = false;
+                    while (std::count(buf.begin(), buf.end(), '/') > 0)
 					{
-						std::replace(buffer.begin(), buffer.end(), '/', ' ');
-						std::stringstream s(buffer);
+                        std::replace(buf.begin(), buf.end(), '/', ' ');
+                        std::stringstream s(buf);
 						s >> v;
 						s >> t;
 						s >> n;
@@ -902,32 +913,33 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 						index = group->addVertex(model, &v, &t, &n);
 						group->indices.push_back(index);
 						
-						in >> buffer;
+                        in >> buf;
 					}
 					
 				}
-				else if (std::count(buffer.begin(), buffer.end(), '/') == 2)
+                else if (std::count(buf.begin(), buf.end(), '/') == 2)
 				{
 					// v/t
 					GLushort index;
 					
-					for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < 3; i++)
 					{
-						std::replace(buffer.begin(), buffer.end(), '/', ' ');
-						std::stringstream s(buffer);
+                        std::replace(buf.begin(), buf.end(), '/', ' ');
+                        std::stringstream s(buf);
 						s >> v;
 						s >> t;
 						
 						index = group->addVertex(model, &v, &t, nullptr);
 						group->indices.push_back(index);
-						
-						in >> buffer;
+
+                        in >> buf;
 					}
 					
-					while (std::count(buffer.begin(), buffer.end(), '/') > 0)
+                    readNextLine = false;
+                    while (std::count(buf.begin(), buf.end(), '/') > 0)
 					{
-						std::replace(buffer.begin(), buffer.end(), '/', ' ');
-						std::stringstream s(buffer);
+                        std::replace(buf.begin(), buf.end(), '/', ' ');
+                        std::stringstream s(buf);
 						s >> v;
 						s >> t;
 						
@@ -938,7 +950,7 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 						index = group->addVertex(model, &v, &t, nullptr);
 						group->indices.push_back(index);
 						
-						in >> buffer;
+                        in >> buf;
 					}
 					
 				}
@@ -946,18 +958,33 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 				{
 					// v
 					GLushort index;
+                    std::stringstream s(buf);
+                    s >> v;
 					
-					for (int i = 0; i < 2; i++)
+                    //std::cout << v;
+
+                    index = group->addVertex(model, &v, nullptr, nullptr);
+                    group->indices.push_back(index);
+
+                    for (int i = 0; i < 2; i++)
 					{
 						in >> v;
-						
+                        //std::cout <<" "<< v;
+
 						index = group->addVertex(model, &v, nullptr, nullptr);
 						group->indices.push_back(index);
 					}
 					
-					in >> v;
-					while (!in.fail())
+                    //std::cout << "\n";
+
+                    in >> buf;
+                    readNextLine = false;
+                    s = std::stringstream(buf);
+                    s >> v;
+                    while (!s.fail() && !in.eof())
 					{
+                        //s = std::stringstream(buf);
+                        //s >> v;
 						int indicesSize = group->indices.size();
 						group->indices.push_back(group->indices[indicesSize - 3]);
 						group->indices.push_back(group->indices[indicesSize - 1]);
@@ -965,7 +992,9 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 						index = group->addVertex(model,&v, nullptr, nullptr);
 						group->indices.push_back(index);
 						
-						in >> v;
+                        in >> buf;
+                        s = std::stringstream(buf);
+                        s >> v;
 					}
 				}
 			}break;
@@ -976,7 +1005,10 @@ void AssetManager::objSecondPass(std::ifstream& in, Model& model)
 			
 		}
 		
-		in >> buf;
+        if (readNextLine)
+            in >> buf;
+        else
+            readNextLine = true;
 	}
 	
 }
@@ -1103,6 +1135,10 @@ void AssetManager::objReadMatrial(Model& model, std::string matrialPath)
 		}
 		in >> buf;
 	}
+
+    // save the last material added
+    GLuint materialIndex = getMaterialIndex(curMaterial);
+    model.materials.insert(std::pair<std::string, GLuint>(curMaterialName, materialIndex));
 }
 
 //-----------------------------------------------------------------------------
@@ -1146,23 +1182,55 @@ int AssetManager::getMaterialIndex(const Material& mat)
 }
 
 //-----------------------------------------------------------------------------
+// Name : getMaterial
+//-----------------------------------------------------------------------------
+Material& AssetManager::getMaterial(int materialIndex)
+{
+    return m_materials[materialIndex];
+}
+
+//-----------------------------------------------------------------------------
 // Name : getAttribute
+// Desc : returns the attribute index that correlate to the given properties
 //-----------------------------------------------------------------------------
 int AssetManager::getAttribute(const std::string& texPath, const Material& mat,const std::string& shaderPath)
 {
 	unsigned int  matIndex = getMaterialIndex(mat);
-	Attribute attrib = {texPath, matIndex, shaderPath};
-	
-	for (unsigned int i = 0; i < m_attributes.size(); i++)
-	{
-		if (attrib == m_attributes[i])
-			return i;
-	}
-	
-	// no matching Attribute found , adding a new one
-	m_attributes.push_back(attrib);
-	
-	return m_attributes.size() - 1;
-	
+    return getAttribute(texPath, matIndex, shaderPath);
 }
 
+//-----------------------------------------------------------------------------
+// Name : getAttribute
+// Desc : returns the attribute index that correlate to the given properties
+// ****   Material property is given by index
+//-----------------------------------------------------------------------------
+int AssetManager::getAttribute(const std::string &texPath, GLuint matIndex, const std::string &shaderPath)
+{
+    Attribute attrib = {texPath, matIndex, shaderPath};
+
+
+    for (unsigned int i = 0; i < m_attributes.size(); i++)
+    {
+        if (attrib == m_attributes[i])
+            return i;
+    }
+
+    // no matching Attribute found , adding a new one
+    // TODO: to test if it is smart to force load unloaded attributes
+    if (texPath != "")
+        getTexture(texPath);
+    if (shaderPath != "")
+        getShader(shaderPath);
+
+    m_attributes.push_back(attrib);
+
+    return m_attributes.size() - 1;
+}
+
+//-----------------------------------------------------------------------------
+// Name : getAttributeVector
+//-----------------------------------------------------------------------------
+const std::vector<Attribute>& AssetManager::getAttributeVector()
+{
+    return m_attributes;
+}

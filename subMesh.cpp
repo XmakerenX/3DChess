@@ -19,7 +19,8 @@ void SubMesh::Draw()
 {
     // Draw mesh
     glBindVertexArray(this->VAO);
-    glDrawElements(GL_TRIANGLE_STRIP, this->indices.size(), GL_UNSIGNED_SHORT, 0);
+    //glDrawElements(GL_TRIANGLE_STRIP, this->indices.size(), GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_SHORT, 0);
 
     glBindVertexArray(0);
 

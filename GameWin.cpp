@@ -1,6 +1,51 @@
 #include "GameWin.h"
 #include <GL/glut.h>
 
+/* Helper function to convert GLSL types to storage sizes */
+size_t TypeSize(GLenum type)
+{
+    size_t size;
+
+    #define CASE(Enum, Count, Type) \
+    case Enum: size = Count * sizeof(Type); break
+    switch (type)
+    {
+    CASE(GL_FLOAT,              1,  GLfloat);
+    CASE(GL_FLOAT_VEC2,         2,  GLfloat);
+    CASE(GL_FLOAT_VEC3,         3,  GLfloat);
+    CASE(GL_FLOAT_VEC4,         4,  GLfloat);
+    CASE(GL_INT,                1,  GLint);
+    CASE(GL_INT_VEC2,           2,  GLint);
+    CASE(GL_INT_VEC3,           3,  GLint);
+    CASE(GL_INT_VEC4,           4,  GLint);
+    CASE(GL_UNSIGNED_INT,       1,  GLuint);
+    CASE(GL_UNSIGNED_INT_VEC2,  2,  GLuint);
+    CASE(GL_UNSIGNED_INT_VEC3,  3,  GLuint);
+    CASE(GL_UNSIGNED_INT_VEC4,  4,  GLuint);
+    CASE(GL_BOOL,               1,  GLboolean);
+    CASE(GL_BOOL_VEC2,          2,  GLboolean);
+    CASE(GL_BOOL_VEC3,          3,  GLboolean);
+    CASE(GL_BOOL_VEC4,          4,  GLboolean);
+    CASE(GL_FLOAT_MAT2,         4,  GLfloat);
+    CASE(GL_FLOAT_MAT2x3,       6,  GLfloat);
+    CASE(GL_FLOAT_MAT2x4,       8,  GLfloat);
+    CASE(GL_FLOAT_MAT3,         9,  GLfloat);
+    CASE(GL_FLOAT_MAT3x2,       6,  GLfloat);
+    CASE(GL_FLOAT_MAT3x4,       12, GLfloat);
+    CASE(GL_FLOAT_MAT4,         16, GLfloat);
+    CASE(GL_FLOAT_MAT4x2,       8,  GLfloat);
+    CASE(GL_FLOAT_MAT4x3,       12, GLfloat);
+    #undef CASE
+
+    default:
+        std::cerr << "Unknown type:" << type << "\n";
+        exit(EXIT_FAILURE);
+    break;
+    }
+
+    return size;
+}
+
 bool GameWin::ctxErrorOccurred = false;
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
@@ -48,6 +93,9 @@ GameWin::GameWin()
     indices[3] = 0;
     indices[4] = 3;
     indices[5] = 2;
+
+    for (int i = 0; i < 256; i++)
+        keysStatus[i] = false;
 
 }
 
@@ -172,7 +220,7 @@ bool GameWin::initOpenGL(int width, int height)
                               0, 0, width, height, 0, vi->depth, InputOutput,
                               vi->visual, 
                               CWBorderPixel|CWColormap|CWEventMask, &swa );
-    
+
     if ( !win )
     {
         std::cout << "Failed to create window.\n";
@@ -239,6 +287,8 @@ bool GameWin::initOpenGL(int width, int height)
         }
     }
     
+    XSelectInput(display, win, KeyPressMask | KeyReleaseMask);
+
     // Sync to ensure any errors generated are processed.
     XSync( display, False );
 
@@ -308,12 +358,61 @@ bool GameWin::initOpenGL(int width, int height)
 
     font_.init(height);
 
+    uboIndex = glGetUniformBlockIndex(meshShader->Program, "Material");
+
+    glGetActiveUniformBlockiv(meshShader->Program, uboIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &uboSize);
+
+    buffer = operator new(uboSize);
+
+    const char* names[NumUniforms] = {"diffuse", "ambient", "specular", "emissive", "power"};
+
+    glGetUniformIndices(meshShader->Program, NumUniforms, names, uboIndices);
+    glGetActiveUniformsiv(meshShader->Program, NumUniforms, uboIndices, GL_UNIFORM_OFFSET, offset);
+    glGetActiveUniformsiv(meshShader->Program, NumUniforms, uboIndices, GL_UNIFORM_SIZE, Size);
+    glGetActiveUniformsiv(meshShader->Program, NumUniforms, uboIndices, GL_UNIFORM_TYPE, type);
+
+    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_NORMALIZE);
+
     int err = glGetError();
     if (err != GL_NO_ERROR)
+    {
         std::cout <<"Init: ERROR bitches\n";
+        std::cout << gluErrorString(err);
+    }
     
-	assetManager_.loadObjMesh("porsche.obj");
-	
+    Mesh* pMesh = assetManager_.loadObjMesh("porsche.obj");
+    //Mesh* pMesh = assetManager_.loadObjMesh("cube.obj");
+    obj.AttachMesh(pMesh);
+    obj.SetPos(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    std::vector<GLuint>& materials = pMesh->getDefaultMaterials();
+    std::vector<unsigned int> objAtteributes;
+
+    if (materials.size() != 0)
+    {
+        for (GLuint i : materials)
+        {
+            objAtteributes.push_back(assetManager_.getAttribute("", i, "shader"));
+        }
+    }
+    else
+    {
+        Material matt;
+        matt.ambient = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.diffuse = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.emissive = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.specular = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.power = 1.0f;
+        GLuint i = assetManager_.getMaterialIndex(matt);
+        objAtteributes.push_back(assetManager_.getAttribute("", i, "shader"));
+    }
+
+    obj.SetObjectAttributes(objAtteributes);
+
+    glGenBuffers(1, &ubo);
+    glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
+
     return true;
 }
 
@@ -367,18 +466,17 @@ int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
 void GameWin::drawing(Display* display, Window win)
 {
     int err;
-	
-
+	   
     //clock.draw();
     glEnable(GL_CULL_FACE);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     //TODO: Move this  to some where sane
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     meshShader->Use();
 	glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -441,12 +539,12 @@ void GameWin::drawing(Display* display, Window win)
 // 	projShader->Use();
 //     glUniformMatrix4fv(glGetUniformLocation(projShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-	textShader->Use();
+//	textShader->Use();
 	
-    std::stringstream ss;
-    ss << timer.getFPS();
+//    std::stringstream ss;
+//    ss << timer.getFPS();
 
-    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+//    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
     //font_.renderTextBatched(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 50.0f, 1.0f, glm::vec3(1.0f,0.0f,0.0f));
     //font_.renderText(textShader, "ajbcdefghijklomnpqwtyusxzv",40.0f, 200.0f, 2.0f, glm::vec3(0.0f,1.0f,0.0f));
@@ -493,9 +591,9 @@ void GameWin::drawing(Display* display, Window win)
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("CIVV.jpg"));
 
     //glBindTexture(GL_TEXTURE_2D, 120);
-    //glBindVertexArray(VA1);
-    //glBindBuffer(GL_ARRAY_BUFFER, VB1);
-    //glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
+    glBindVertexArray(VA1);
+    glBindBuffer(GL_ARRAY_BUFFER, VB1);
+    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
 
     std::vector<Vertex> vertices;
     std::vector<GLushort> indices;
@@ -610,6 +708,16 @@ void GameWin::drawing(Display* display, Window win)
     
     //Mesh M(vertices, indices);
     
+    auto attribVector = assetManager_.getAttributeVector();
+
+    for (GLuint i = 0; i < attribVector.size(); i++)
+    {
+        Attribute& attrib = attribVector[i];
+        SetAttribute(attrib);
+
+        obj.Draw(meshShader, i, projection);
+    }
+
     projShader->Use();
 	
 	glm::mat4 matt(1.0f);
@@ -619,10 +727,21 @@ void GameWin::drawing(Display* display, Window win)
 	//glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("negx.bmp"));
     
     //M.Draw();
+
+    textShader->Use();
+
+    std::stringstream ss;
+    ss << timer.getFPS();
+
+    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+
     
     err = glGetError();
     if (err != GL_NO_ERROR)
+    {
         std::cout <<"Drawing: ERROR bitches " << err << "\n";
+        std::cout << gluErrorString(err);
+    }
 
     //glFlush();
     glXSwapBuffers (display, win);
@@ -678,7 +797,9 @@ void GameWin::reshape(int width, int height)
     projection = glm::perspective(90.0f, aspect, 1.0f, 100.0f);
 	//projection = glm::lookAt(glm::vec3(-10,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0)) * projection;
 	//projection = projection * glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
-	projection = projection * glm::lookAt(glm::vec3(-2,0,2), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    //projection = projection * glm::lookAt(glm::vec3(-50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    projection = projection * glm::lookAt(glm::vec3(50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    //projection = projection * glm::lookAt(glm::vec3(-1,0,-1), glm::vec3(0,0,0), glm::vec3(0,1,0));
 }
 
 //-----------------------------------------------------------------------------
@@ -701,7 +822,26 @@ int GameWin::BeginGame()
                 gameRunning = false;
                 break;
             }
-            // window size was changed / need to be reRendered(always reRender anyway...)
+            if (event.type == KeyPress)
+            {
+                char buf[128];
+                KeySym key;
+
+                std::cout << "key pressed\n";
+                std::cout << event.xkey.keycode << "\n";
+                XLookupString(&event.xkey, buf, 128, &key, nullptr);
+                std::cout << "KeySym: " << key << " " << "char: " <<  buf <<"\n";
+
+                keysStatus[event.xkey.keycode] = true;
+            }
+            if (event.type == KeyRelease)
+            {
+                std::cout << "key released\n";
+                std::cout << event.xkey.keycode << "\n";
+
+                keysStatus[event.xkey.keycode] = false;
+            }
+            // window size was changed / need to be reRend!ered(always reRender anyway...)
             if (event.type == Expose)
             {
                 XWindowAttributes gwa;
@@ -746,4 +886,58 @@ bool GameWin::Shutdown()
     XCloseDisplay( display );
     
     return true;
+}
+
+//TODO: searching each time for pointers is slow
+//      consider saving them with the attribute indexes
+//-----------------------------------------------------------------------------
+// Name : SetAttribute ()
+//-----------------------------------------------------------------------------
+void GameWin::SetAttribute(Attribute& attrib)
+{
+    // set the attributes that have changed
+    // this check might be too cotly as this is in the render loop
+    if (attrib.shaderIndex != curAttribute.shaderIndex)
+    {
+        Shader* pShader = assetManager_.getShader(attrib.shaderIndex);
+        pShader->Use();
+    }
+
+    if (attrib.texIndex != curAttribute.texIndex)
+    {
+        glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture(attrib.texIndex));
+    }
+
+    if (attrib.matIndex != curAttribute.matIndex)
+    {
+
+        Material& mat = assetManager_.getMaterial(attrib.matIndex);
+
+        GLint ii = offset[Diffuse];
+        // copy the material to the buffer
+
+        memcpy(buffer + offset[Diffuse], &mat.diffuse, Size[Diffuse] *
+               TypeSize(type[Diffuse]));
+        memcpy(buffer + offset[Ambient], &mat.ambient, Size[Ambient] *
+               TypeSize(type[Ambient]));
+        memcpy(buffer + offset[Specular], &mat.specular, Size[Specular] *
+               TypeSize(type[Specular]));
+        memcpy(buffer + offset[Emissive], &mat.emissive, Size[Emissive] *
+               TypeSize(type[Emissive]));
+        memcpy(buffer + offset[Power], &mat.power, Size[Power] *
+               TypeSize(type[Power]));
+
+        GLfloat* ff = (GLfloat*)buffer;
+
+        for (int ii = 0; ii < uboSize/4; ii++ )
+        {
+            float x = ff[ii];
+            x += 2;
+        }
+
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferData(GL_UNIFORM_BUFFER, uboSize, buffer, GL_DYNAMIC_DRAW);
+        //glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
+    }
+
 }

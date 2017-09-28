@@ -17,6 +17,9 @@ public:
     void Draw(unsigned int subMeshIndex);
 	void addSubMesh(SubMesh subMesh);
 
+    std::vector<GLuint>& getDefaultMaterials();
+    std::vector<std::string>& getDefaultTextures();
+
 private:
 	std::vector<SubMesh> subMeshes;
 	std::vector<GLuint> defaultMaterials;

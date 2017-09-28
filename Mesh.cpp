@@ -40,3 +40,19 @@ void Mesh::addSubMesh(SubMesh subMesh)
 {
 	subMeshes.push_back(subMesh);
 }
+
+//-----------------------------------------------------------------------------
+// Name : getDefaultMaterials ()
+//-----------------------------------------------------------------------------
+std::vector<GLuint>& Mesh::getDefaultMaterials()
+{
+    return defaultMaterials;
+}
+
+//-----------------------------------------------------------------------------
+// Name : getDefaultTextures ()
+//-----------------------------------------------------------------------------
+std::vector<std::string>& Mesh::getDefaultTextures()
+{
+    return defaultTextures;
+}
