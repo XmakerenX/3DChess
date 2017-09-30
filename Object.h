@@ -26,7 +26,7 @@ public:
 	void 		SetObjectAttributes(std::vector<unsigned int> meshAttribute);
 	void 		AddObjectAttribute(unsigned int attribute);
 	
-	void 		Draw			(Shader* shader, unsigned int attributeIndex, glm::mat4x4& matViewProj);
+	void 		Draw			(Shader* shader, unsigned int attributeIndex, const glm::mat4x4 &matViewProj);
 
 private:
 	glm::mat4x4 m_mthxWorld;

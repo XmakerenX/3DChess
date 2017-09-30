@@ -97,6 +97,8 @@ GameWin::GameWin()
     for (int i = 0; i < 256; i++)
         keysStatus[i] = false;
 
+    mouseDrag = false;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -128,6 +130,9 @@ bool GameWin::initWindow()
 bool GameWin::initOpenGL(int width, int height)
 {
     std::cout << "InitOpenGL started\n";
+
+    m_winWidth = width;
+    m_winHeight = height;
 
     // Get a matching FB config
   /*static*/ int visual_attribs[] =
@@ -213,11 +218,12 @@ bool GameWin::initOpenGL(int width, int height)
     swa.colormap = cmap = XCreateColormap( display, RootWindow( display, vi->screen ), vi->visual, AllocNone );
     swa.background_pixmap = None ;
     swa.border_pixel      = 0;
-    swa.event_mask        = StructureNotifyMask | ExposureMask;
+    swa.event_mask        = StructureNotifyMask | ExposureMask | KeyPressMask | KeyReleaseMask |
+                            ButtonPressMask | ButtonReleaseMask;
     
     std::cout << "Creating window\n";
     win = XCreateWindow( display, RootWindow( display, vi->screen ), 
-                              0, 0, width, height, 0, vi->depth, InputOutput,
+                              0, 0, m_winWidth, m_winHeight, 0, vi->depth, InputOutput,
                               vi->visual, 
                               CWBorderPixel|CWColormap|CWEventMask, &swa );
 
@@ -287,7 +293,7 @@ bool GameWin::initOpenGL(int width, int height)
         }
     }
     
-    XSelectInput(display, win, KeyPressMask | KeyReleaseMask);
+    //XSelectInput(display, win, KeyPressMask | KeyReleaseMask);
 
     // Sync to ensure any errors generated are processed.
     XSync( display, False );
@@ -413,6 +419,20 @@ bool GameWin::initOpenGL(int width, int height)
     glGenBuffers(1, &ubo);
     glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
 
+    m_camera.SetFOV(45.0f);
+    m_camera.SetViewPort(0.0f, 0.0f, m_winWidth, m_winHeight, 1.0f, 1000.0f);
+    m_camera.SetPostion(glm::vec3(0, 20, -70));
+    m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+
+
+    XColor color = { 0 };
+    const char data[] = { 0 };
+
+    Pixmap pixmap = XCreateBitmapFromData(display, win, data, 1,1);
+    emptyCursor = XCreatePixmapCursor(display, pixmap, pixmap, &color, &color, 0, 0);
+
+    XFreePixmap(display,pixmap);
+
     return true;
 }
 
@@ -467,6 +487,12 @@ void GameWin::drawing(Display* display, Window win)
 {
     int err;
 	   
+    curAttribute.matIndex = -1;
+    curAttribute.shaderIndex = "";
+    curAttribute.texIndex = "";
+
+    ProcessInput(0);
+
     //clock.draw();
     glEnable(GL_CULL_FACE);
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -478,8 +504,8 @@ void GameWin::drawing(Display* display, Window win)
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    meshShader->Use();
-	glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    //meshShader->Use();
+    //glUniformMatrix4fv(glGetUniformLocation(meshShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	
 	
 	glm::vec4 testy(-0.5f,-0.5f, 0.0f, 1.0);
@@ -524,7 +550,7 @@ void GameWin::drawing(Display* display, Window win)
 	
 	projShader->Use();
 	//projection = glm::mat4(1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(projShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    //glUniformMatrix4fv(glGetUniformLocation(projShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	
 	
 	
@@ -712,10 +738,15 @@ void GameWin::drawing(Display* display, Window win)
 
     for (GLuint i = 0; i < attribVector.size(); i++)
     {
+        {
         Attribute& attrib = attribVector[i];
         SetAttribute(attrib);
 
-        obj.Draw(meshShader, i, projection);
+        //glm::mat4x4 matt = m_camera.GetProjMatrix() * m_camera.GetViewMatrix();
+        //obj.Draw(meshShader, i, m_camera.GetViewMatrix() * m_camera.GetProjMatrix());
+        obj.Draw(meshShader, i, m_camera.GetProjMatrix() * m_camera.GetViewMatrix());
+        //obj.Draw(meshShader, i, projection);
+        }
     }
 
     projShader->Use();
@@ -755,6 +786,9 @@ void GameWin::reshape(int width, int height)
     float left,right,bottom,top;
     float AR;
 	
+    m_winWidth = width;
+    m_winHeight = height;
+
     std::cout <<"reshape called\n";
 
     // define our ortho
@@ -764,7 +798,7 @@ void GameWin::reshape(int width, int height)
     bottom=-1.5;
 
     // 1)update viewport
-    glViewport(0, 0, width, height);
+    //glViewport(0, 0, width, height);
     // 2) clear the transformation matrices (load identity)
     //glLoadIdentity();
     // 3) compute the aspect ratio
@@ -787,6 +821,8 @@ void GameWin::reshape(int width, int height)
 
     font_.setScreenHeight(height);
 
+    m_camera.SetViewPort(0.0f, 0.0f, m_winWidth, m_winHeight, 1.0f, 1000.0f);
+
     // 6) defining the boundary of the model using gluOrtho2D
     textShader->Use();
     glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
@@ -794,12 +830,73 @@ void GameWin::reshape(int width, int height)
     glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
     //projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     float aspect = (float)width / (float)height;
-    projection = glm::perspective(90.0f, aspect, 1.0f, 100.0f);
-	//projection = glm::lookAt(glm::vec3(-10,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0)) * projection;
+    projection = glm::perspective(2.2f, aspect, 1.0f, 100.0f);
+    //projection = glm::lookAt(glm::vec3(-10,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0)) * projection;
 	//projection = projection * glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
     //projection = projection * glm::lookAt(glm::vec3(-50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
     projection = projection * glm::lookAt(glm::vec3(50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
     //projection = projection * glm::lookAt(glm::vec3(-1,0,-1), glm::vec3(0,0,0), glm::vec3(0,1,0));
+}
+
+//-----------------------------------------------------------------------------
+// Name : ProcessInput ()
+//-----------------------------------------------------------------------------
+void GameWin::ProcessInput(float timeDelta)
+{
+    GLuint direction = 0;
+
+    if (keysStatus[GK_UP])
+    {
+        direction |= Camera::DIR_FORWARD;
+    }
+
+    if (keysStatus[GK_DOWN])
+    {
+        direction |= Camera::DIR_BACKWARD;
+    }
+
+    if (keysStatus[GK_LEFT])
+    {
+        direction |= Camera::DIR_LEFT;
+    }
+
+    if (keysStatus[GK_RIGHT])
+    {
+        direction |= Camera::DIR_RIGHT;
+    }
+
+    m_camera.Move(direction, 1);
+
+    if (mouseDrag)
+    {
+        int cursorX;
+        int cursorY;
+        float X = 0.0f,Y = 0.0f;
+        bool ret;
+
+        Window root,child;
+        int x,y;
+        unsigned int maskRet;
+
+
+        ret = XQueryPointer(display, win, &root, &child ,&x, &y,
+                            &cursorX, &cursorY, &maskRet);
+
+        std::cout <<"process input:\n";
+        std::cout << "x = " << cursorX << " y = " << cursorY << "\n";
+
+        X = (float)(cursorX - oldCursorLoc.x) / 3.0f;
+        Y = (float)(cursorY - oldCursorLoc.y) / 3.0f;
+
+        if (X != 0.0f || Y != 0.0f)
+            if (X || Y)
+            m_camera.Rotate(Y, X, 0.0f);
+
+        XWarpPointer(display, None, win, 0, 0, 0, 0, oldCursorLoc.x, oldCursorLoc.y);
+        XFlush(display);
+    }
+
+
 }
 
 //-----------------------------------------------------------------------------
@@ -812,17 +909,22 @@ int GameWin::BeginGame()
         XEvent event;
 
          // Handle all messages before rendering the next frame
-        while (XPending(display) > 0)
+        while (XPending(display) > 0 && gameRunning)
         {
             XNextEvent(display, &event);
-            // quit event
-            if ( (event.type == ClientMessage) && (event.xclient.data.l[0] == wmDeleteMessage) ) 
+
+            switch(event.type)
             {
-                std::cout << "Shutting down now!!!" << std::endl;
-                gameRunning = false;
-                break;
-            }
-            if (event.type == KeyPress)
+
+            case Expose:
+            {
+                XWindowAttributes gwa;
+
+                XGetWindowAttributes(display, win, &gwa);
+                reshape(gwa.width, gwa.height);
+            }break;
+
+            case KeyPress:
             {
                 char buf[128];
                 KeySym key;
@@ -833,22 +935,57 @@ int GameWin::BeginGame()
                 std::cout << "KeySym: " << key << " " << "char: " <<  buf <<"\n";
 
                 keysStatus[event.xkey.keycode] = true;
-            }
-            if (event.type == KeyRelease)
+            }break;
+
+            case KeyRelease:
             {
                 std::cout << "key released\n";
                 std::cout << event.xkey.keycode << "\n";
 
                 keysStatus[event.xkey.keycode] = false;
-            }
-            // window size was changed / need to be reRend!ered(always reRender anyway...)
-            if (event.type == Expose)
-            {
-                XWindowAttributes gwa;
+            }break;
 
-                XGetWindowAttributes(display, win, &gwa);
-                reshape(gwa.width, gwa.height);
+            case ButtonPress:
+            {
+                if (event.xbutton.button == Button1)
+                {
+                    std::cout << "left button pressed\n";
+                    oldCursorLoc.x = event.xbutton.x;
+                    oldCursorLoc.y = event.xbutton.y;
+                    mouseDrag = true;
+                    int ret = XDefineCursor(display, win, emptyCursor);
+                    ret++;
+
+//                    std::cout <<"loop:\n";
+//                    std::cout << "x = " << event.xbutton.x << " y = " << event.xbutton.y << "\n";
+
+                }
+
+                if (event.xbutton.button == Button3)
+                    std::cout << "right button pressed\n";
+
+            }break;
+
+            case ButtonRelease:
+            {
+                if (event.xbutton.button == Button1)
+                {
+                    std::cout << "left button released\n";
+                    mouseDrag = false;
+                    XUndefineCursor(display, win);
+                }
+                else
+                    std::cout << "mouse released\n";
+            }break;
+
+            // got quit message, quitting the game loop
+            case ClientMessage:
+                std::cout << "Shutting down now!!!\n";
+                gameRunning = false;
+            break;
+
             }
+
         }
         
         timer.frameAdvanced();
@@ -881,6 +1018,7 @@ bool GameWin::Shutdown()
     glXMakeCurrent( display, 0, 0 );
     glXDestroyContext( display, ctx );
 
+    XFreeCursor(display, emptyCursor);
     XDestroyWindow( display, win );
     XFreeColormap( display, cmap );
     XCloseDisplay( display );
@@ -901,6 +1039,7 @@ void GameWin::SetAttribute(Attribute& attrib)
     {
         Shader* pShader = assetManager_.getShader(attrib.shaderIndex);
         pShader->Use();
+        //glUniformMatrix4fv(glGetUniformLocation(pShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(m_camera.GetProjMatrix()));
     }
 
     if (attrib.texIndex != curAttribute.texIndex)
@@ -927,17 +1066,18 @@ void GameWin::SetAttribute(Attribute& attrib)
         memcpy(buffer + offset[Power], &mat.power, Size[Power] *
                TypeSize(type[Power]));
 
-        GLfloat* ff = (GLfloat*)buffer;
+//        GLfloat* ff = (GLfloat*)buffer;
 
-        for (int ii = 0; ii < uboSize/4; ii++ )
-        {
-            float x = ff[ii];
-            x += 2;
-        }
+//        for (int ii = 0; ii < uboSize/4; ii++ )
+//        {
+//            float x = ff[ii];
+//            x += 2;
+//        }
 
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferData(GL_UNIFORM_BUFFER, uboSize, buffer, GL_DYNAMIC_DRAW);
         //glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
+        curAttribute = attrib;
     }
 
 }

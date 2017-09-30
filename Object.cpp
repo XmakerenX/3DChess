@@ -161,7 +161,7 @@ void Object::AddObjectAttribute(unsigned int attribute)
 //-----------------------------------------------------------------------------
 // Name : Draw
 //-----------------------------------------------------------------------------
-void Object::Draw(Shader* shader, unsigned int attributeIndex, glm::mat4x4& matViewProj)
+void Object::Draw(Shader* shader, unsigned int attributeIndex, const glm::mat4x4& matViewProj)
 {
 	for (unsigned int i = 0; i < m_meshAttributes.size(); i++)
 	{

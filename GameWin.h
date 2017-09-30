@@ -15,12 +15,13 @@
 #include <sstream>
 
 #include "timer.h"
-#include "clock.h"
+//#include "clock.h"
 #include "AssetManager.h"
 #include "Shader.h"
 #include "Font.h"
 #include "Mesh.h"
 #include "Object.h"
+#include "FreeCam.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -39,6 +40,12 @@ typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXC
 
 #define GK_SPACE 35
 
+struct Point
+{
+    int x;
+    int y;
+};
+
 enum {Diffuse, Ambient, Specular, Emissive, Power, NumUniforms};
 
 class GameWin
@@ -53,6 +60,8 @@ public:
     void drawing        (Display* display, Window win);
     void reshape        (int width, int height);
     
+    void ProcessInput   (float timeDelta);
+
     int  BeginGame      ();
     bool Shutdown       ();
     
@@ -65,11 +74,16 @@ private:
     Display *display;
     Window win;
     
+    GLuint m_winWidth;
+    GLuint m_winHeight;
+
     Atom wmDeleteMessage;
     
     GLXContext ctx;
     Colormap cmap;
     
+    Cursor emptyCursor;
+
     bool gameRunning;
     
     Timer timer;
@@ -79,7 +93,9 @@ private:
 
     static bool ctxErrorOccurred;
     
-    Clock clock;
+    //Clock clock;
+
+    FreeCam m_camera;
 
     Attribute curAttribute;
 
@@ -101,6 +117,8 @@ private:
     GLint type[NumUniforms];
 
     bool keysStatus[256];
+    Point oldCursorLoc;
+    bool mouseDrag;
 
     GLfloat vertices[18];
 
