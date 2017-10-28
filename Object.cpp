@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 Object::Object()
 	:m_mthxWorld(1.0f),
-	m_mtxTranslate(1.0f),
+    //m_mtxTranslate(1.0f),
 	m_mtxRot(1.0f),
 	m_mtxScale(1.0f),
     m_rotAngles(0.0f)
@@ -19,7 +19,7 @@ Object::Object()
 // Name : Object (constructor)
 //-----------------------------------------------------------------------------
 Object::Object::Object(const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute)
-	:m_mtxTranslate(1.0f),
+    ://m_mtxTranslate(1.0f),
 	m_mtxScale(1.0f)
 {
 	SetPos(pos);
@@ -52,11 +52,20 @@ glm::mat4x4 Object::GetWorldMatrix()
 {
 	if (m_worldDirty)
 	{
-		m_mthxWorld = m_mtxScale * m_mtxRot*  m_mtxTranslate;
+        m_mthxWorld = glm::translate(glm::mat4x4(1.0f), m_pos);
+        m_mthxWorld = m_mthxWorld * m_mtxScale * m_mtxRot;
 		m_worldDirty = false;
 	}
 	
 	return m_mthxWorld;
+}
+
+//-----------------------------------------------------------------------------
+// Name : GetPosition
+//-----------------------------------------------------------------------------
+glm::vec3 Object::GetPosition()
+{
+    return m_pos;
 }
 
 //-----------------------------------------------------------------------------
@@ -80,9 +89,11 @@ void Object::SetObjectHidden(bool newStatus)
 //-----------------------------------------------------------------------------
 void Object::SetPos(glm::vec3 newPos)
 {
-	m_mtxTranslate[3][0] = newPos.x;
-	m_mtxTranslate[3][1] = newPos.y;
-	m_mtxTranslate[3][2] = newPos.z;
+    //glm::translate(m_mtxTranslate, newPos);
+//	m_mtxTranslate[3][0] = newPos.x;
+//	m_mtxTranslate[3][1] = newPos.y;
+//    m_mtxTranslate[3][2] = -newPos.z;
+    m_pos = newPos;
 	m_worldDirty = true;
 }
 
@@ -125,12 +136,30 @@ void Object::Rotate(float x, float y, float z)
     m_rotAngles.y += y;
     m_rotAngles.z += z;
 
-    glm::rotate(mtxRotX,m_rotAngles.x,glm::vec3(1.0f,0.0f,0.0f));
-    glm::rotate(mtxRotY,m_rotAngles.y,glm::vec3(0.0f,1.0f,0.0f));
-    glm::rotate(mtxRotZ,m_rotAngles.z,glm::vec3(0.0f,0.0f,1.0f));
+    mtxRotX = glm::rotate(mtxRotX,m_rotAngles.x,glm::vec3(1.0f,0.0f,0.0f));
+    mtxRotY = glm::rotate(mtxRotY,m_rotAngles.y,glm::vec3(0.0f,1.0f,0.0f));
+    mtxRotZ = glm::rotate(mtxRotZ,m_rotAngles.z,glm::vec3(0.0f,0.0f,1.0f));
     m_mtxRot = mtxRotX * mtxRotY * mtxRotZ;
 	
 	m_worldDirty = true;
+}
+
+//-----------------------------------------------------------------------------
+// Name : TranslatePos
+//-----------------------------------------------------------------------------
+void Object::TranslatePos(float x, float y, float z)
+{
+    if (x != 0 || y != 0 || z != 0)
+    {
+        //m_mtxTranslate = glm::translate(m_mtxTranslate, glm::vec3(x,y,-z));
+        m_pos.x += x;
+        m_pos.y += y;
+        m_pos.z -= z;
+//    m_mtxTranslate[3][0] += x;
+//    m_mtxTranslate[3][1] += y;
+//    m_mtxTranslate[3][2] -= z;
+        m_worldDirty = true;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -163,11 +192,16 @@ void Object::AddObjectAttribute(unsigned int attribute)
 //-----------------------------------------------------------------------------
 void Object::Draw(Shader* shader, unsigned int attributeIndex, const glm::mat4x4& matViewProj)
 {
-	for (unsigned int i = 0; i < m_meshAttributes.size(); i++)
+    for (unsigned int i = 0; i < m_meshAttributes.size(); ++i)
 	{
 		if (m_meshAttributes[i] == attributeIndex)
 		{
-			glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(m_mthxWorld * matViewProj));
+            //glm::mat4x4 temp =  m_mtxTranslate * matViewProj;
+            glm::mat4x4 temp =  matViewProj * GetWorldMatrix();
+            glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(temp));
+            glUniformMatrix4fv(glGetUniformLocation(shader->Program, "matWorld"), 1, GL_FALSE, glm::value_ptr(GetWorldMatrix()));
+            glUniformMatrix4fv(glGetUniformLocation(shader->Program, "matWorldInverseT"), 1, GL_FALSE, glm::value_ptr(glm::inverse(GetWorldMatrix())));
+            //glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(matViewProj * GetWorldMatrix()));
 			m_pMesh->Draw(i);
 			break;
 		}

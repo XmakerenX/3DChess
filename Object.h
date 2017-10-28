@@ -14,13 +14,16 @@ public:
     ~Object         ();
 
     glm::mat4x4 GetWorldMatrix  ();
+    glm::vec3   GetPosition     ();
 
     bool        IsObjectHidden  ();
     void        SetObjectHidden (bool newStatus);
     void        SetPos          (glm::vec3 newPos);
     void        SetRotAngles    (glm::vec3 newRotAngles);
 	void 		SetScale  (glm::vec3 newScale);
+
     void        Rotate          (float x, float y, float z);
+    void        TranslatePos    (float x ,float y, float z);
 	
 	void 		AttachMesh		(Mesh* pMesh);
 	void 		SetObjectAttributes(std::vector<unsigned int> meshAttribute);
@@ -29,8 +32,9 @@ public:
 	void 		Draw			(Shader* shader, unsigned int attributeIndex, const glm::mat4x4 &matViewProj);
 
 private:
-	glm::mat4x4 m_mthxWorld;
-    glm::mat4x4 m_mtxTranslate;
+    //glm::mat4x4 m_mtxTranslate;
+    glm::vec3   m_pos;
+    glm::mat4x4 m_mthxWorld;
     glm::mat4x4 m_mtxRot;
     glm::mat4x4 m_mtxScale;
     glm::vec3   m_rotAngles;

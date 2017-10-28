@@ -1,5 +1,11 @@
 #include "GameWin.h"
 #include <GL/glut.h>
+#include <unistd.h>
+
+//const char* meshShaderPath = "shader";
+//const char* meshShaderPath = "shader3";
+//const char* meshShaderPath = "objectShader";
+const char* meshShaderPath = "objectShader2";
 
 /* Helper function to convert GLSL types to storage sizes */
 size_t TypeSize(GLenum type)
@@ -46,7 +52,84 @@ size_t TypeSize(GLenum type)
     return size;
 }
 
+
 bool GameWin::ctxErrorOccurred = false;
+
+glm::vec3 myReflect(glm::vec3 i, glm::vec3 n)
+{
+    //return (i - (2 * n * glm::dot(i,n)));
+    return (i - (2 * glm::dot(i,n)) * n);
+}
+
+glm::vec4 GameWin::shaderTest(glm::vec3 pos, glm::vec3 normal)
+{
+    glm::vec4 temp = glm::inverse(obj2.GetWorldMatrix()) * glm::vec4(normal, 0.0f);
+    glm::vec3 normalW = glm::vec3(temp.x, temp.y, temp.z);
+
+    glm::vec4 posW = obj2.GetWorldMatrix() * glm::vec4(pos, 1.0);
+
+    glm::vec4 outColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glm::vec3 toEye = glm::normalize(m_camera.GetPosition() - glm::vec3(posW.x, posW.y, posW.z));
+
+    {
+        Material& mat = assetManager_.getMaterial(curAttribute.matIndex);
+        //glm::vec4 temp4 = glm::cross(mat.ambient, light.ambient);
+        glm::vec4 temp5 = mat.ambient * light.ambient;
+        glm::vec3 lightAmbient = glm::vec3(temp5.x, temp5.y, temp5. z);
+        //glm::vec3 lightAmbient = glm::vec3(temp4.x, temp4.y, temp4. z);
+
+        float s;
+        glm::vec3 r;
+        float A;
+        float spot;
+
+        if (light.pos.x != 0 || light.pos.y || light.pos.z)
+        {
+            glm::vec3 lightVecW = glm::normalize(light.pos -glm::vec3(posW.x, posW.y, posW.z));
+
+            r = myReflect(-lightVecW, normalW);
+            s = std::max( glm::dot(normalW, lightVecW), 0.0f);
+
+            float d = glm::distance(light.pos, glm::vec3(posW.x, posW.y, posW.z));
+            d = d / 4;
+
+            A = light.attenuation.x + light.attenuation.y * d + light.attenuation.z * d * d;
+
+            if (light.spotPower != 0)
+                spot = std::pow( std::max( glm::dot(glm::vec4(-lightVecW, 0.0f), light.dir), 0.0f), light.spotPower);
+            else
+                spot = 1;
+        }
+        else
+        {
+            glm::vec3 ddd = glm::vec3 (light.dir.x, light.dir.y, light.dir.z);
+            r = myReflect(-ddd, normalW);
+            s = std::max( glm::dot( light.dir, glm::vec4(normalW, 0.0)), 0.0f);
+            A = 1;
+            spot = 1;
+        }
+
+        glm::vec4 temp2 = s * (mat.diffuse * light.diffuse);
+        glm::vec3 diffuseLight = glm::vec3(temp2.x, temp2.y, temp2.z);
+
+        float t = std::pow( std::max( glm::dot(r, toEye), 0.0f), mat.power);
+        glm::vec4 temp3 = t * (mat.specular * light.specular);
+        glm::vec3 spec = glm::vec3(temp3.x, temp3.y, temp.z);
+
+        diffuseLight = (diffuseLight + spec) / A;
+        lightAmbient = lightAmbient + diffuseLight;
+        glm::vec3 color = spot * lightAmbient;
+
+        glm::vec4 lightColor = glm::vec4(color, mat.diffuse.a);
+
+        outColor = lightColor;
+    }
+
+    return outColor;
+}
+
+
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
@@ -129,11 +212,12 @@ bool GameWin::initWindow()
 //-----------------------------------------------------------------------------
 bool GameWin::initOpenGL(int width, int height)
 {
+    int err;
     std::cout << "InitOpenGL started\n";
 
-    m_winWidth = width;
-    m_winHeight = height;
-
+    //------------------------------------
+    // Window and OpenGL context creation
+    //------------------------------------
     // Get a matching FB config
   /*static*/ int visual_attribs[] =
     {
@@ -223,7 +307,7 @@ bool GameWin::initOpenGL(int width, int height)
     
     std::cout << "Creating window\n";
     win = XCreateWindow( display, RootWindow( display, vi->screen ), 
-                              0, 0, m_winWidth, m_winHeight, 0, vi->depth, InputOutput,
+                              0, 0, width, height, 0, vi->depth, InputOutput,
                               vi->visual, 
                               CWBorderPixel|CWColormap|CWEventMask, &swa );
 
@@ -326,6 +410,26 @@ bool GameWin::initOpenGL(int width, int height)
 
     glewInit();
 
+    //------------------------------------
+    // empty cursor init
+    //------------------------------------
+    XColor color = { 0 };
+    const char data[] = { 0 };
+
+    Pixmap pixmap = XCreateBitmapFromData(display, win, data, 1,1);
+    emptyCursor = XCreatePixmapCursor(display, pixmap, pixmap, &color, &color, 0, 0);
+
+    XFreePixmap(display,pixmap);
+
+    //------------------------------------
+    // Render states
+    //------------------------------------
+    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_NORMALIZE);
+
+    //------------------------------------
+    // buffers creation
+    //------------------------------------
     // restore cout to print numbers in decimal base
     std::cout<<std::dec;
 
@@ -354,43 +458,58 @@ bool GameWin::initOpenGL(int width, int height)
 
     glBindVertexArray(0);
 
-    // complie shaders
-    meshShader = new Shader("shader.vs", "shader.frag");
+    //------------------------------------
+    // Shader loading
+    //------------------------------------
+    // complie shaders meshShaderPath
+    //meshShader = assetManager_.getShader("shader");
+    meshShader = assetManager_.getShader(meshShaderPath);
+    //meshShader = assetManager_.getShader("ss");
+    //meshShader = assetManager_.getShader("objectShader");
+    //meshShader = new Shader("shader.vs", "shader.frag");
     textShader = new Shader("text.vs", "text.frag");
     textureShader = new Shader("texture.vs", "texture.frag");
     projShader = new Shader("shader2.vs", "shader2.frag");
 
-    reshape(width,height);
-
-    font_.init(height);
-
+    //------------------------------------
+    // Material unifrom buffer init
+    //------------------------------------
     uboIndex = glGetUniformBlockIndex(meshShader->Program, "Material");
 
     glGetActiveUniformBlockiv(meshShader->Program, uboIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &uboSize);
 
     buffer = operator new(uboSize);
 
-    const char* names[NumUniforms] = {"diffuse", "ambient", "specular", "emissive", "power"};
+    //const char* names[NumUniforms] = {"diffuse", "ambient", "specular", "emissive", "power"};
+    const char* names[NumUniforms] = {"mDiffuse", "mAmbient", "mSpecular", "mEmissive", "mPower"};
 
     glGetUniformIndices(meshShader->Program, NumUniforms, names, uboIndices);
     glGetActiveUniformsiv(meshShader->Program, NumUniforms, uboIndices, GL_UNIFORM_OFFSET, offset);
     glGetActiveUniformsiv(meshShader->Program, NumUniforms, uboIndices, GL_UNIFORM_SIZE, Size);
     glGetActiveUniformsiv(meshShader->Program, NumUniforms, uboIndices, GL_UNIFORM_TYPE, type);
 
-    glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_NORMALIZE);
+//    err = glGetError();
+//    if (err != GL_NO_ERROR)
+//    {
+//        std::cout <<"Init: ERROR bitches\n";
+//        std::cout << gluErrorString(err);
+//    }
 
-    int err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        std::cout <<"Init: ERROR bitches\n";
-        std::cout << gluErrorString(err);
-    }
-    
+    glGenBuffers(1, &ubo);
+    glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
+    // no idea why 1 is the correct number...
+    glUniformBlockBinding(meshShader->Program, uboIndex, uboIndex);
+
+    //------------------------------------
+    // Mesh creation
+    //------------------------------------
     Mesh* pMesh = assetManager_.loadObjMesh("porsche.obj");
+    pMesh->CalcVertexNormals(90.0f);
+    //Mesh* pMesh = assetManager_.loadObjMesh("bah2.obj");
     //Mesh* pMesh = assetManager_.loadObjMesh("cube.obj");
     obj.AttachMesh(pMesh);
-    obj.SetPos(glm::vec3(0.0f, 0.0f, 0.0f));
+    obj.SetPos(glm::vec3(1.0f, 1.0f, 1.0f));
+    obj.SetScale(glm::vec3(0.5f,0.5f,0.5f));
 
     std::vector<GLuint>& materials = pMesh->getDefaultMaterials();
     std::vector<unsigned int> objAtteributes;
@@ -399,7 +518,72 @@ bool GameWin::initOpenGL(int width, int height)
     {
         for (GLuint i : materials)
         {
-            objAtteributes.push_back(assetManager_.getAttribute("", i, "shader"));
+            //objAtteributes.push_back(assetManager_.getAttribute("", i, "shader"));
+            objAtteributes.push_back(assetManager_.getAttribute("", i, meshShaderPath));
+        }
+    }
+    else
+    {
+        Material matt;
+        matt.ambient = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.diffuse = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.emissive = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.specular = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.power = 1.0f;
+        GLuint i = assetManager_.getMaterialIndex(matt);
+        //objAtteributes.push_back(assetManager_.getAttribute("", i, "shader"));
+        objAtteributes.push_back(assetManager_.getAttribute("", i, meshShaderPath));
+    }
+
+    obj.SetObjectAttributes(objAtteributes);
+
+    pMesh = assetManager_.loadObjMesh("cube.obj");
+    obj2.AttachMesh(pMesh);
+    //obj2.SetPos(glm::vec3(0.0f, 30.0f, 0.0f));
+    obj2.SetPos(glm::vec3(18.5f, -0.5f, 0.0f));
+    obj2.SetScale(glm::vec3(1.0f,1.0f,1.0f));
+
+    std::vector<GLuint>& materials2 = pMesh->getDefaultMaterials();
+    std::vector<unsigned int> objAtteributes2;
+
+    if (materials2.size() != 0)
+    {
+        for (GLuint i : materials2)
+        {
+            //objAtteributes2.push_back(assetManager_.getAttribute("", i, "shader"));
+            objAtteributes2.push_back(assetManager_.getAttribute("", i, meshShaderPath));
+        }
+    }
+    else
+    {
+        Material matt;
+        matt.ambient = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.diffuse = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.emissive = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.specular = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.power = 1.0f;
+        GLuint i = assetManager_.getMaterialIndex(matt);
+        //objAtteributes2.push_back(assetManager_.getAttribute("", i, "shader"));
+        objAtteributes2.push_back(assetManager_.getAttribute("", i, meshShaderPath));
+    }
+
+    obj2.SetObjectAttributes(objAtteributes2);
+
+    pMesh = assetManager_.loadObjMesh("cube.obj");
+    obj3.AttachMesh(pMesh);
+    //obj2.SetPos(glm::vec3(0.0f, 30.0f, 0.0f));
+    obj3.SetPos(glm::vec3(20.6f, 1.5f, 0.0f));
+    obj3.SetScale(glm::vec3(0.6f,0.6f,0.6f));
+
+    std::vector<GLuint>& materials3 = pMesh->getDefaultMaterials();
+    std::vector<unsigned int> objAtteributes3;
+
+    if (materials3.size() != 0)
+    {
+        for (GLuint i : materials3)
+        {
+            //objAtteributes3.push_back(assetManager_.getAttribute("", i, "shader"));
+            objAtteributes3.push_back(assetManager_.getAttribute("", i, meshShaderPath));
         }
     }
     else
@@ -411,27 +595,78 @@ bool GameWin::initOpenGL(int width, int height)
         matt.specular = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
         matt.power = 1.0f;
         GLuint i = assetManager_.getMaterialIndex(matt);
-        objAtteributes.push_back(assetManager_.getAttribute("", i, "shader"));
+        //objAtteributes3.push_back(assetManager_.getAttribute("", i, "shader"));
+        objAtteributes3.push_back(assetManager_.getAttribute("", i, meshShaderPath));
     }
 
-    obj.SetObjectAttributes(objAtteributes);
+    obj3.SetObjectAttributes(objAtteributes2);
 
-    glGenBuffers(1, &ubo);
-    glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
 
-    m_camera.SetFOV(45.0f);
-    m_camera.SetViewPort(0.0f, 0.0f, m_winWidth, m_winHeight, 1.0f, 1000.0f);
+    //------------------------------------
+    // Camera  Init
+    //------------------------------------
+    m_camera.SetFOV(60.0f);
+    m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 1000.0f);
     m_camera.SetPostion(glm::vec3(0, 20, -70));
     m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 
+    //------------------------------------
+    // lights  Init
+    //------------------------------------
+    //light.dir = glm::vec4(1.0f, 0.8f, 0.4f, 0.0f);
+    light.dir = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
+    //light.dir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    light.ambient = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f) * 0.1f;
+    //light.ambient = glm::vec4(0.4f, 0.4f, 0.4f, 0.4f); //* 0.4f;
+    //light.diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    light.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    light.specular = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+    //light.pos = glm::vec3(0.0f, 30.0f, 0.0f);
+    //light.spotPower = 2;
+    //light.attenuation = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    XColor color = { 0 };
-    const char data[] = { 0 };
+    //light.dir = glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f);
+    //light.dir = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    //light.ambient = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * 0.1f;
+    //light.diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    //light.specular = glm::vec4(0.3f, 0.0f, 0.0f, 1.0f);
+    light.pos = glm::vec3 (1.6f, 20.0f, 0.0f);
+    //light.pos = glm::vec3 (25.0f, 1.0f, 0.0f);
+    light.attenuation = glm::vec3(1.0f, 0.007f, 0.002f);
+    light.spotPower = 0;
 
-    Pixmap pixmap = XCreateBitmapFromData(display, win, data, 1,1);
-    emptyCursor = XCreatePixmapCursor(display, pixmap, pixmap, &color, &color, 0, 0);
+    ublightIndex = glGetUniformBlockIndex(meshShader->Program, "lightBlock");
 
-    XFreePixmap(display,pixmap);
+    glGetActiveUniformBlockiv(meshShader->Program, ublightIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &ublightSize);
+
+    glGenBuffers(1, &ubLight);
+    glBindBufferBase(GL_UNIFORM_BUFFER, ublightIndex, ubLight);
+    glUniformBlockBinding(meshShader->Program, ublightIndex, ublightIndex);
+
+    //glBufferData(GL_UNIFORM_BUFFER, ublightSize, lightBuffer, GL_STATIC_DRAW);
+    //glBufferData(GL_UNIFORM_BUFFER, sizeof(LIGHT_PREFS), lightBuffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubLight);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(LIGHT_PREFS), &light, GL_STATIC_DRAW);
+
+    //glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
+
+    meshShader->Use();
+    glUniform1i(glGetUniformLocation(meshShader->Program, "nActiveLights"), 1);
+
+    //glUniform1i(glGetUniformLocation(meshShader->Program, "nActiveLights"), 1);
+
+
+    // make sure the viewport is updated
+    reshape(width,height);
+    // init our font
+    font_.init(height);
+
+    err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        std::cout <<"Init: ERROR bitches\n";
+        std::cout << gluErrorString(err);
+    }
 
     return true;
 }
@@ -486,12 +721,16 @@ int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
 void GameWin::drawing(Display* display, Window win)
 {
     int err;
-	   
+
     curAttribute.matIndex = -1;
     curAttribute.shaderIndex = "";
     curAttribute.texIndex = "";
 
-    ProcessInput(0);
+    ProcessInput(timer.getTimeElapsed());
+
+    meshShader->Use();
+    glm::vec3 eye = m_camera.GetPosition();
+    glUniform3f(glGetUniformLocation(meshShader->Program, "vecEye"), eye.x, eye.y, eye.z);
 
     //clock.draw();
     glEnable(GL_CULL_FACE);
@@ -501,6 +740,7 @@ void GameWin::drawing(Display* display, Window win)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -601,13 +841,16 @@ void GameWin::drawing(Display* display, Window win)
 
     //font_.RenderText(ourShader, "woot!!!", 0.s0f, 0.0f, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
 
-    textureShader->Use();
+    //textureShader->Use();
+
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("YorLogo.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("symbol.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("gold.png"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("square.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("king_white.bmp"));
-    glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("negx.bmp"));
+
+    //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("negx.bmp"));
+
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("pawn2.bmp"));
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("yor.png"));
@@ -617,9 +860,10 @@ void GameWin::drawing(Display* display, Window win)
     //glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("CIVV.jpg"));
 
     //glBindTexture(GL_TEXTURE_2D, 120);
-    glBindVertexArray(VA1);
-    glBindBuffer(GL_ARRAY_BUFFER, VB1);
-    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
+
+    //glBindVertexArray(VA1);
+    //glBindBuffer(GL_ARRAY_BUFFER, VB1);
+    //glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
 
     std::vector<Vertex> vertices;
     std::vector<GLushort> indices;
@@ -733,7 +977,6 @@ void GameWin::drawing(Display* display, Window win)
     //textures.push_back(T);
     
     //Mesh M(vertices, indices);
-    
     auto attribVector = assetManager_.getAttributeVector();
 
     for (GLuint i = 0; i < attribVector.size(); i++)
@@ -743,17 +986,30 @@ void GameWin::drawing(Display* display, Window win)
         SetAttribute(attrib);
 
         //glm::mat4x4 matt = m_camera.GetProjMatrix() * m_camera.GetViewMatrix();
+//        glm::mat4x4 temp = m_camera.GetViewMatrix() * m_camera.GetProjMatrix();
+//        glm::mat4x4 temp2 = m_camera.GetProjMatrix() * m_camera.GetViewMatrix();
         //obj.Draw(meshShader, i, m_camera.GetViewMatrix() * m_camera.GetProjMatrix());
         obj.Draw(meshShader, i, m_camera.GetProjMatrix() * m_camera.GetViewMatrix());
+        obj2.Draw(meshShader, i, m_camera.GetProjMatrix() * m_camera.GetViewMatrix());
+        obj3.Draw(meshShader, i, m_camera.GetProjMatrix() * m_camera.GetViewMatrix());
+
+        //glm::vec4 colorVec = shaderTest(glm::vec3(-1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+        if (i == 5)
+        {
+            glm::vec4 colorVec = shaderTest(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            //glm::vec4 colorVec = shaderTest(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            //glm::vec4 colorVec = shaderTest(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            colorVec.x++;
+        }
         //obj.Draw(meshShader, i, projection);
         }
     }
 
-    projShader->Use();
+//    projShader->Use();
 	
-	glm::mat4 matt(1.0f);
-	matt = glm::translate(matt, glm::vec3(10.0f, 10.0f, 10.0f));
-	float yy = matt[3][2];
+//	glm::mat4 matt(1.0f);
+//	matt = glm::translate(matt, glm::vec3(10.0f, 10.0f, 10.0f));
+//	float yy = matt[3][2];
 	
 	//glBindTexture(GL_TEXTURE_2D, assetManager_.getTexture("negx.bmp"));
     
@@ -763,6 +1019,14 @@ void GameWin::drawing(Display* display, Window win)
 
     std::stringstream ss;
     ss << timer.getFPS();
+    ss << " ";
+    glm::vec3 obj2Pos = obj2.GetPosition();
+    ss << obj2Pos.x;
+    ss << " ";
+    ss << obj2Pos.y;
+    ss << " ";
+    ss << obj2Pos.z;
+
 
     font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
@@ -786,56 +1050,60 @@ void GameWin::reshape(int width, int height)
     float left,right,bottom,top;
     float AR;
 	
-    m_winWidth = width;
-    m_winHeight = height;
-
-    std::cout <<"reshape called\n";
-
-    // define our ortho
-    left=-1.5;
-    right=1.5;
-    top=1.5;
-    bottom=-1.5;
-
-    // 1)update viewport
-    //glViewport(0, 0, width, height);
-    // 2) clear the transformation matrices (load identity)
-    //glLoadIdentity();
-    // 3) compute the aspect ratio
-    AR = (width / (float)height);
-	
-    // 4) if AR>=1 update left, right
-    if (AR >= 1)
+    if(m_winWidth != width || m_winHeight != height)
     {
-        left *= AR;
-        right *= AR;
+        std::cout <<"reshape called\n";
+        m_winWidth = width;
+        m_winHeight = height;
+
+        // define our ortho
+        left=-1.5;
+        right=1.5;
+        top=1.5;
+        bottom=-1.5;
+
+        // 1)update viewport
+        //glViewport(0, 0, width, height);
+        // 2) clear the transformation matrices (load identity)
+        //glLoadIdentity();
+        // 3) compute the aspect ratio
+        AR = (width / (float)height);
+
+        // 4) if AR>=1 update left, right
+        if (AR >= 1)
+        {
+            left *= AR;
+            right *= AR;
+        }
+        // 5) else i.e. AR<1 update the top, bottom
+        else
+        {
+            top /= AR;
+            bottom /= AR;
+        }
+
+        height_ = height;
+
+        font_.setScreenHeight(height);
+
+        m_camera.SetViewPort(0.0f, 0.0f, m_winWidth, m_winHeight, 1.0f, 1000.0f);
+
+        // 6) defining the boundary of the model using gluOrtho2D
+        textShader->Use();
+        glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
+        textureShader->Use();
+        glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
+        //projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
+        float aspect = (float)width / (float)height;
+        projection = glm::perspective(2.2f, aspect, 1.0f, 100.0f);
+        //projection = glm::lookAt(glm::vec3(-10,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0)) * projection;
+        //projection = projection * glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
+        //projection = projection * glm::lookAt(glm::vec3(-50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
+        projection = projection * glm::lookAt(glm::vec3(50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
+        //projection = projection * glm::lookAt(glm::vec3(-1,0,-1), glm::vec3(0,0,0), glm::vec3(0,1,0));
     }
-    // 5) else i.e. AR<1 update the top, bottom
     else
-    {
-        top /= AR;
-        bottom /= AR;
-    }
-	
-    height_ = height;
-
-    font_.setScreenHeight(height);
-
-    m_camera.SetViewPort(0.0f, 0.0f, m_winWidth, m_winHeight, 1.0f, 1000.0f);
-
-    // 6) defining the boundary of the model using gluOrtho2D
-    textShader->Use();
-    glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
-    textureShader->Use();
-    glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
-    //projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
-    float aspect = (float)width / (float)height;
-    projection = glm::perspective(2.2f, aspect, 1.0f, 100.0f);
-    //projection = glm::lookAt(glm::vec3(-10,0,0), glm::vec3(0,0,0), glm::vec3(0,1,0)) * projection;
-	//projection = projection * glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
-    //projection = projection * glm::lookAt(glm::vec3(-50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
-    projection = projection * glm::lookAt(glm::vec3(50,20,-70), glm::vec3(0,0,0), glm::vec3(0,1,0));
-    //projection = projection * glm::lookAt(glm::vec3(-1,0,-1), glm::vec3(0,0,0), glm::vec3(0,1,0));
+        std::cout <<"reshape ignored\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -865,7 +1133,58 @@ void GameWin::ProcessInput(float timeDelta)
         direction |= Camera::DIR_RIGHT;
     }
 
-    m_camera.Move(direction, 1);
+    m_camera.Move(direction, 10* timeDelta);
+
+    float x = 0,y = 0,z = 0;
+    if (keysStatus[GK_D])
+    {
+        //x += 0.001f;
+        x -= 10.0f;
+    }
+
+    if (keysStatus[GK_A])
+    {
+        //x -= 0.001f;
+        x += 10.0f;
+    }
+
+    if (keysStatus[GK_W])
+    {
+        //y += 0.001f;
+        y += 10.0f;
+    }
+
+    if (keysStatus[GK_S])
+    {
+        //y -= 0.001f;
+        y -= 10.0f;
+    }
+
+    if (keysStatus[GK_Z])
+    {
+        //z += 0.001f;
+        z += 10.0f;
+    }
+
+    if (keysStatus[GK_X])
+    {
+        //z -= 0.001f;
+        z -= 10.0f;
+    }
+
+    //obj.TranslatePos(x * timeDelta,y * timeDelta,z * timeDelta);
+    obj2.TranslatePos(x * timeDelta,y * timeDelta,z * timeDelta);
+
+    if (keysStatus[GK_Q])
+    {
+        obj.Rotate(-(glm::pi<float>() / 4) * timeDelta, 0.0f, 0.0f);
+    }
+
+    if (keysStatus[GK_E])
+    {
+        obj.Rotate(glm::pi<float>() / 4 * timeDelta, 0.0f, 0.0f);
+    }
+
 
     if (mouseDrag)
     {
@@ -890,7 +1209,7 @@ void GameWin::ProcessInput(float timeDelta)
 
         if (X != 0.0f || Y != 0.0f)
             if (X || Y)
-            m_camera.Rotate(Y, X, 0.0f);
+                m_camera.Rotate(-Y, -X, 0.0f);
 
         XWarpPointer(display, None, win, 0, 0, 0, 0, oldCursorLoc.x, oldCursorLoc.y);
         XFlush(display);
@@ -1039,7 +1358,7 @@ void GameWin::SetAttribute(Attribute& attrib)
     {
         Shader* pShader = assetManager_.getShader(attrib.shaderIndex);
         pShader->Use();
-        //glUniformMatrix4fv(glGetUniformLocation(pShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(m_camera.GetProjMatrix()));
+        //glUniform1i(glGetUniformLocation(pShader->Program, "nActiveLights"), 1);
     }
 
     if (attrib.texIndex != curAttribute.texIndex)
@@ -1052,30 +1371,21 @@ void GameWin::SetAttribute(Attribute& attrib)
 
         Material& mat = assetManager_.getMaterial(attrib.matIndex);
 
-        GLint ii = offset[Diffuse];
         // copy the material to the buffer
+//        memcpy(buffer + offset[Diffuse], &mat.diffuse, Size[Diffuse] *
+//               TypeSize(type[Diffuse]));
+//        memcpy(buffer + offset[Ambient], &mat.ambient, Size[Ambient] *
+//               TypeSize(type[Ambient]));
+//        memcpy(buffer + offset[Specular], &mat.specular, Size[Specular] *
+//               TypeSize(type[Specular]));
+//        memcpy(buffer + offset[Emissive], &mat.emissive, Size[Emissive] *
+//               TypeSize(type[Emissive]));
+//        memcpy(buffer + offset[Power], &mat.power, Size[Power] *
+//               TypeSize(type[Power]));
 
-        memcpy(buffer + offset[Diffuse], &mat.diffuse, Size[Diffuse] *
-               TypeSize(type[Diffuse]));
-        memcpy(buffer + offset[Ambient], &mat.ambient, Size[Ambient] *
-               TypeSize(type[Ambient]));
-        memcpy(buffer + offset[Specular], &mat.specular, Size[Specular] *
-               TypeSize(type[Specular]));
-        memcpy(buffer + offset[Emissive], &mat.emissive, Size[Emissive] *
-               TypeSize(type[Emissive]));
-        memcpy(buffer + offset[Power], &mat.power, Size[Power] *
-               TypeSize(type[Power]));
-
-//        GLfloat* ff = (GLfloat*)buffer;
-
-//        for (int ii = 0; ii < uboSize/4; ii++ )
-//        {
-//            float x = ff[ii];
-//            x += 2;
-//        }
 
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferData(GL_UNIFORM_BUFFER, uboSize, buffer, GL_DYNAMIC_DRAW);
+        glBufferData(GL_UNIFORM_BUFFER, uboSize, &mat, GL_DYNAMIC_DRAW);
         //glBindBufferBase(GL_UNIFORM_BUFFER, uboIndex, ubo);
         curAttribute = attrib;
     }

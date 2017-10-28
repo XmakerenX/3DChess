@@ -17,6 +17,8 @@ public:
     void Draw(unsigned int subMeshIndex);
 	void addSubMesh(SubMesh subMesh);
 
+    void CalcVertexNormals(GLfloat angle);
+
     std::vector<GLuint>& getDefaultMaterials();
     std::vector<std::string>& getDefaultTextures();
 

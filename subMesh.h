@@ -32,6 +32,8 @@ public:
 
     void Draw();
 
+    void CalcVertexNormals(GLfloat angle);
+
 private:
     GLuint VAO, VBO, EBO;
 

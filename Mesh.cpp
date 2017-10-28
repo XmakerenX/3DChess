@@ -42,6 +42,17 @@ void Mesh::addSubMesh(SubMesh subMesh)
 }
 
 //-----------------------------------------------------------------------------
+// Name : CalcVertexNormals ()
+//-----------------------------------------------------------------------------
+void Mesh::CalcVertexNormals(GLfloat angle)
+{
+    for (SubMesh mesh : subMeshes)
+    {
+        mesh.CalcVertexNormals(angle);
+    }
+}
+
+//-----------------------------------------------------------------------------
 // Name : getDefaultMaterials ()
 //-----------------------------------------------------------------------------
 std::vector<GLuint>& Mesh::getDefaultMaterials()

@@ -1102,8 +1102,8 @@ void AssetManager::objReadMatrial(Model& model, std::string matrialPath)
 			{
 				float shininess;
 				in >> curMaterial.power;
-				curMaterial.power /= 1000.0;
-				curMaterial.power *= 128.0;
+                curMaterial.power /= 1000.0;
+                curMaterial.power *= 128.0;
 			}
 			break;
 			

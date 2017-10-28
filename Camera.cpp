@@ -69,7 +69,8 @@ void Camera::SetLookAt(const glm::vec3 &vecLookat)
     if (up == glm::vec3(0.0f, 0.0f, 0.0f))
         up = up2;
 
-    matrix = glm::lookAt(m_vecPos, vecLookat, up);
+    //matrix = glm::lookAt(m_vecPos, vecLookat, up);
+    matrix = glm::lookAt(m_vecPos, vecLookat, m_vecUp);
 
     //m_vecRight = glm::vec3(matrix[0][1], matrix[1][1], matrix[2][1]);
     m_vecRight = glm::vec3(matrix[0][0], matrix[1][0], matrix[2][0]);
@@ -77,6 +78,8 @@ void Camera::SetLookAt(const glm::vec3 &vecLookat)
     // WTF ???
     m_vecUp = up2;
     m_vecLook = glm::vec3(matrix[0][2], matrix[1][2], matrix[2][2]);
+
+    m_vecUp = glm::vec3(matrix[0][1], matrix[1][1], matrix[2][1]);
     //m_vecLook = glm::vec3(matrix[2][0], matrix[2][1], matrix[2][2]);
 
     m_bViewDirty = true;
@@ -122,6 +125,7 @@ void Camera::SetViewPort(long left, long top, long width, long height,
 
 }
 
+
 //-----------------------------------------------------------------------------
 // Name : GetProjMatrix
 // Desc : Returns the current projection martix
@@ -133,9 +137,9 @@ const glm::mat4x4& Camera::GetProjMatrix()
         float fAspect = (float)m_viewPort.width / (float)m_viewPort.height;
 
         //m_mtxProj = glm::perspective(1.0f, glm::radians(fAspect), m_fNearClip, m_fFarClip);
-        m_fFOV = 90.0f;
+        //m_fFOV = 90.0f;
         //m_mtxProj = glm::perspective(glm::radians(m_fFOV), fAspect, m_fNearClip, m_fFarClip);
-        m_mtxProj = glm::perspective(90.0f, fAspect, m_fNearClip, m_fFarClip);
+        m_mtxProj = glm::perspective(glm::radians(m_fFOV), fAspect, 1.0f, 1000.0f);
         m_bProjDirty = false;
     }
 
@@ -156,6 +160,7 @@ const glm::mat4x4& Camera::GetViewMatrix()
         // do it every 50 calls as by than error could be noticeable
         if (calls == 50)
         {
+            glm::vec3 temp = m_vecLook;
             m_vecLook  = glm::normalize(m_vecLook);
             m_vecRight = glm::cross(m_vecUp, m_vecLook);
             m_vecRight = glm::normalize(m_vecRight);

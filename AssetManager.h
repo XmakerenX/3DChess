@@ -22,6 +22,13 @@
 
 struct Model;
 
+struct OBJnode
+{
+    GLuint index;
+    GLboolean averaged;
+    OBJnode * next;
+};
+
 struct Material
 {
 	glm::vec4 diffuse;
