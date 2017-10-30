@@ -537,11 +537,12 @@ bool GameWin::initOpenGL(int width, int height)
 
     obj.SetObjectAttributes(objAtteributes);
 
-    pMesh = assetManager_.loadObjMesh("cube.obj");
+    //pMesh = assetManager_.loadObjMesh("cube.obj");
+    pMesh = assetManager_.getMesh("king.fbx");
     obj2.AttachMesh(pMesh);
     //obj2.SetPos(glm::vec3(0.0f, 30.0f, 0.0f));
     obj2.SetPos(glm::vec3(18.5f, -0.5f, 0.0f));
-    obj2.SetScale(glm::vec3(1.0f,1.0f,1.0f));
+    obj2.SetScale(glm::vec3(8.0f,8.0f,8.0f));
 
     std::vector<GLuint>& materials2 = pMesh->getDefaultMaterials();
     std::vector<unsigned int> objAtteributes2;
@@ -557,10 +558,10 @@ bool GameWin::initOpenGL(int width, int height)
     else
     {
         Material matt;
-        matt.ambient = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
-        matt.diffuse = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
-        matt.emissive = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
-        matt.specular = glm::vec4(0.0f, 0.3f, 0.0f, 1.0);
+        matt.ambient = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0);
+        matt.emissive = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0);
         matt.power = 1.0f;
         GLuint i = assetManager_.getMaterialIndex(matt);
         //objAtteributes2.push_back(assetManager_.getAttribute("", i, "shader"));
@@ -608,8 +609,11 @@ bool GameWin::initOpenGL(int width, int height)
     m_camera.SetFOV(60.0f);
     m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 1000.0f);
     m_camera.SetPostion(glm::vec3(0, 20, -70));
-    m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 
+    glm::vec3 lightPos(1.6f, 40.0f, 0.0f);
+    m_camera.SetPostion(lightPos);
+
+    m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
     //------------------------------------
     // lights  Init
     //------------------------------------
@@ -630,10 +634,11 @@ bool GameWin::initOpenGL(int width, int height)
     //light.ambient = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * 0.1f;
     //light.diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     //light.specular = glm::vec4(0.3f, 0.0f, 0.0f, 1.0f);
-    light.pos = glm::vec3 (1.6f, 20.0f, 0.0f);
+    light.pos = glm::vec3 (1.6f, 40.0f, 0.0f);
+    light.pos = lightPos;
     //light.pos = glm::vec3 (25.0f, 1.0f, 0.0f);
     light.attenuation = glm::vec3(1.0f, 0.007f, 0.002f);
-    light.spotPower = 0;
+    light.spotPower = glm::cos(glm::radians(20.0f));
 
     ublightIndex = glGetUniformBlockIndex(meshShader->Program, "lightBlock");
 

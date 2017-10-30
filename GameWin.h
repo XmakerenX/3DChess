@@ -1,6 +1,9 @@
 #ifndef  _GAMEWIN_H
 #define  _GAMEWIN_H
 
+// must be included first becuase of conflict between x11 fbxsdk.h
+#include "AssetManager.h"
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 //#include <GL/glcorearb.h>
@@ -16,7 +19,6 @@
 
 #include "timer.h"
 //#include "clock.h"
-#include "AssetManager.h"
 #include "Shader.h"
 #include "Font.h"
 #include "Mesh.h"

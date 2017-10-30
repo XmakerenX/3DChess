@@ -8,6 +8,7 @@
 #include<vector>
 #include<string>
 #include<sstream>
+#include<exception>
 
 #include<cstdio>
 
@@ -16,6 +17,8 @@
 
 #include<png.h>
 #include<jpeglib.h>
+
+#include <fbxsdk.h>
 
 #include "Shader.h"
 #include "Mesh.h"
@@ -187,6 +190,10 @@ public:
     GLuint loadPng(const std::string& filePath);
     GLuint loadBMP(const std::string& filePath);
     GLuint loadJPEG(const std::string& filePath);
+
+    Mesh* loadFBXMesh(const std::string& meshPath);
+    glm::vec3 readFBXNormal(FbxMesh* mesh, int controlPointIndex, int vertexCounter );
+    glm::vec2 readFBXUV(FbxMesh* mesh, int controlPointIndex, int j, int k);
 	
 	Mesh*    getMesh(const std::string& meshPath);
 	Mesh*	 loadObjMesh(const std::string& meshPath);
@@ -212,6 +219,8 @@ private:
 	std::unordered_map<std::string, Shader*> m_shaderCache;
 	std::vector<Material> m_materials;
 	std::vector<Attribute> m_attributes;
+
+    FbxManager* m_pFbxSdkManager;
 };
 
 #endif  //_ASSETMANAGER_H
