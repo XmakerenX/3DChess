@@ -96,8 +96,8 @@ glm::vec4 GameWin::shaderTest(glm::vec3 pos, glm::vec3 normal)
 
             A = light.attenuation.x + light.attenuation.y * d + light.attenuation.z * d * d;
 
-            if (light.spotPower != 0)
-                spot = std::pow( std::max( glm::dot(glm::vec4(-lightVecW, 0.0f), light.dir), 0.0f), light.spotPower);
+            if (light.outerCutoff != 0)
+                spot = std::pow( std::max( glm::dot(glm::vec4(-lightVecW, 0.0f), light.dir), 0.0f), light.outerCutoff);
             else
                 spot = 1;
         }
@@ -634,11 +634,12 @@ bool GameWin::initOpenGL(int width, int height)
     //light.ambient = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * 0.1f;
     //light.diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     //light.specular = glm::vec4(0.3f, 0.0f, 0.0f, 1.0f);
-    light.pos = glm::vec3 (1.6f, 40.0f, 0.0f);
+    light.pos = glm::vec3 (0.0f, 40.0f, 0.0f);
     light.pos = lightPos;
     //light.pos = glm::vec3 (25.0f, 1.0f, 0.0f);
     light.attenuation = glm::vec3(1.0f, 0.007f, 0.002f);
-    light.spotPower = glm::cos(glm::radians(20.0f));
+    light.outerCutoff = glm::cos(glm::radians(25.0f));
+    light.innerCutoff = glm::cos(glm::radians(9.0f));
 
     ublightIndex = glGetUniformBlockIndex(meshShader->Program, "lightBlock");
 

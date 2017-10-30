@@ -98,7 +98,7 @@ struct LIGHT_PREFS
         ambient(0.0f, 0.0f, 0.0f, 0.0f),
         diffuse(0.0f, 0.0f, 0.0f, 0.0f),
         specular(0.0f, 0.0f, 0.0f, 0.0f),
-        spotPower(0.0f)
+        outerCutoff(0.0f)
     {}
 
     LIGHT_PREFS(glm::vec3& newPos, glm::vec4& newDir, glm::vec3& newAtten, glm::vec4& newAmbient,
@@ -109,7 +109,7 @@ struct LIGHT_PREFS
          ambient(newAmbient),
          diffuse(newDiffuse),
          specular(newSpecular),
-         spotPower(newSpecPower)
+         outerCutoff(newSpecPower)
     {}
 
     glm::vec3 pos;
@@ -123,8 +123,9 @@ struct LIGHT_PREFS
     glm::vec4 diffuse;
     glm::vec4 specular;
 
-    float spotPower;
-    glm::vec3 pad3; //padding to fit the glsl struct
+    float outerCutoff;
+    float innerCutoff;
+    glm::vec2 pad3; //padding to fit the glsl struct
 
 };
 
