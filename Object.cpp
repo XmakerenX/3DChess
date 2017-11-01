@@ -22,19 +22,57 @@ Object::Object::Object(const glm::vec3& pos, const glm::vec3& angle, const glm::
     ://m_mtxTranslate(1.0f),
 	m_mtxScale(1.0f)
 {
-	SetPos(pos);
-	SetRotAngles(angle);
-	SetScale(scale);
-	// update world matrix
-	m_worldDirty = true;
-	GetWorldMatrix();
-	
-	AttachMesh(pMesh);
-	SetObjectAttributes(meshAttribute);
-	
-	m_hideObject = false;
+    InitObject(pos, angle, scale, pMesh, meshAttribute);
 }
 
+//-----------------------------------------------------------------------------
+// Name : Object (constructor)
+//-----------------------------------------------------------------------------
+Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle, const glm::vec3 &scale, Mesh *pMesh, std::string shaderPath)
+    :m_mtxScale(1.0f)
+{
+    std::vector<GLuint> meshMaterial = pMesh->getDefaultMaterials();
+    std::vector<unsigned int> objAtteributes;
+
+    if (meshMaterial.size() != 0)
+    {
+        for (GLuint i : meshMaterial)
+        {
+            objAtteributes.push_back(asset.getAttribute("", i, shaderPath));
+        }
+    }
+    else
+    {
+        Material matt;
+        matt.ambient = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.diffuse = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.emissive = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.specular = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
+        matt.power = 1.0f;
+        GLuint i = asset.getMaterialIndex(matt);
+        objAtteributes.push_back(asset.getAttribute("", i, shaderPath));
+    }
+
+    InitObject(pos, angle, scale,pMesh,objAtteributes);
+}
+
+//-----------------------------------------------------------------------------
+// Name : InitObject ()
+//-----------------------------------------------------------------------------
+void Object::InitObject(const glm::vec3 &pos, const glm::vec3 &angle, const glm::vec3 &scale, Mesh *pMesh, std::vector<unsigned int> meshAttribute)
+{
+    SetPos(pos);
+    SetRotAngles(angle);
+    SetScale(scale);
+    // update world matrix
+    m_worldDirty = true;
+    GetWorldMatrix();
+
+    AttachMesh(pMesh);
+    SetObjectAttributes(meshAttribute);
+
+    m_hideObject = false;
+}
 
 //-----------------------------------------------------------------------------
 // Name : Object (destructor)

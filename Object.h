@@ -5,12 +5,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include "Mesh.h"
+#include "AssetManager.h"
 
 class Object
 {
 public:
     Object          ();
 	Object          (const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute);
+    Object          (AssetManager& asset, const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::string shaderPath);
+    void InitObject (const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute);
     ~Object         ();
 
     glm::mat4x4 GetWorldMatrix  ();
