@@ -42,11 +42,28 @@ void Mesh::addSubMesh(SubMesh subMesh)
 }
 
 //-----------------------------------------------------------------------------
+// Name : IntersectTriangle ()
+//-----------------------------------------------------------------------------
+bool Mesh::IntersectTriangle(glm::vec3& rayObjOrigin, glm::vec3& rayObjDir, int& faceCount, int& subMeshIndex)
+{
+    for (GLuint i = 0; i < subMeshes.size(); ++i)
+    {
+        if (subMeshes[i].IntersectTriangle(rayObjOrigin, rayObjDir, faceCount))
+        {
+            subMeshIndex = i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//-----------------------------------------------------------------------------
 // Name : CalcVertexNormals ()
 //-----------------------------------------------------------------------------
 void Mesh::CalcVertexNormals(GLfloat angle)
 {
-    for (SubMesh mesh : subMeshes)
+    for (SubMesh& mesh : subMeshes)
     {
         mesh.CalcVertexNormals(angle);
     }
@@ -67,3 +84,4 @@ std::vector<std::string>& Mesh::getDefaultTextures()
 {
     return defaultTextures;
 }
+

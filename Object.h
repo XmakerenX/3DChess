@@ -18,6 +18,7 @@ public:
 
     glm::mat4x4 GetWorldMatrix  ();
     glm::vec3   GetPosition     ();
+    Mesh*       GetMesh         ();
 
     bool        IsObjectHidden  ();
     void        SetObjectHidden (bool newStatus);

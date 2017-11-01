@@ -6,6 +6,7 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/intersect.hpp>
 #include "Shader.h"
 
 struct Vertex {
@@ -32,6 +33,9 @@ public:
 
     void Draw();
 
+    bool IntersectTriangle(glm::vec3& rayObjOrigin, glm::vec3& rayObjDir, int& faceCount);
+
+    //TODO: cuase this functio to really work
     void CalcVertexNormals(GLfloat angle);
 
 private:

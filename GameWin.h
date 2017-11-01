@@ -31,52 +31,6 @@
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
-struct Point
-{
-    int x;
-    int y;
-};
-
-struct LIGHT_PREFS
-{
-    LIGHT_PREFS()
-        :pos(0.0f, 0.0f, 0.0f),
-        dir(0.0f, 0.0f, 0.0f, 0.0f),
-        attenuation(0.0f, 0.0f, 0.0f),
-        ambient(0.0f, 0.0f, 0.0f, 0.0f),
-        diffuse(0.0f, 0.0f, 0.0f, 0.0f),
-        specular(0.0f, 0.0f, 0.0f, 0.0f),
-        outerCutoff(0.0f)
-    {}
-
-    LIGHT_PREFS(glm::vec3& newPos, glm::vec4& newDir, glm::vec3& newAtten, glm::vec4& newAmbient,
-                glm::vec4 newDiffuse, glm::vec4 newSpecular, float newSpecPower)
-        :pos(newPos),
-         dir(newDir),
-         attenuation(newAtten),
-         ambient(newAmbient),
-         diffuse(newDiffuse),
-         specular(newSpecular),
-         outerCutoff(newSpecPower)
-    {}
-
-    glm::vec3 pos;
-    float pad; //padding to fit the glsl struct
-
-    glm::vec4 dir;
-    glm::vec3 attenuation;
-    float pad2; //padding to fit the glsl struct
-
-    glm::vec4 ambient;
-    glm::vec4 diffuse;
-    glm::vec4 specular;
-
-    float outerCutoff;
-    float innerCutoff;
-    glm::vec2 pad3; //padding to fit the glsl struct
-
-};
-
 class GameWin
 {
 public:
@@ -103,6 +57,12 @@ private:
     
     GLuint m_winWidth;
     GLuint m_winHeight;
+
+    int faceCount;
+    int meshIndex;
+    bool hit;
+
+    Object* selectedObj;
 
     Atom wmDeleteMessage;
     

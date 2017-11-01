@@ -70,6 +70,11 @@ GameWin::GameWin()
         keysStatus[i] = false;
 
     mouseDrag = false;
+
+    faceCount = -1;
+    meshIndex = -1;
+    hit = false;
+    selectedObj = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -334,6 +339,7 @@ bool GameWin::initOpenGL(int width, int height)
     //------------------------------------
     m_scene.InitScene();
     m_scene.InitCamera(width, height);
+    selectedObj = &m_scene.GetObject(1);
 
     // make sure the viewport is updated
     reshape(width,height);
@@ -422,12 +428,22 @@ void GameWin::drawing()
     std::stringstream ss;
     ss << timer.getFPS();
     ss << " ";
-    glm::vec3 obj2Pos = m_scene.GetObject(1).GetPosition();
+    //glm::vec3 obj2Pos = m_scene.GetObject(1).GetPosition();
+    glm::vec3 obj2Pos = selectedObj->GetPosition();
     ss << obj2Pos.x;
     ss << " ";
     ss << obj2Pos.y;
     ss << " ";
     ss << obj2Pos.z;
+    ss << " ";
+    ss << faceCount;
+    ss << " ";
+    ss << meshIndex;
+    ss << " ";
+    if (hit)
+        ss << "Hit!";
+    else
+        ss << "Miss :(";
 
     font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
@@ -566,7 +582,20 @@ int GameWin::BeginGame()
                 }
 
                 if (event.xbutton.button == Button3)
+                {
                     std::cout << "right button pressed\n";
+                    Point cursorPoint;
+                    cursorPoint.x = event.xbutton.x;
+                    cursorPoint.y = event.xbutton.y;
+                    Object* pObj = m_scene.PickObject(cursorPoint,faceCount, meshIndex);
+                    if (pObj != nullptr)
+                    {
+                        selectedObj = pObj;
+                        hit = 1;
+                    }
+                    else
+                        hit = 0;
+                }
 
             }break;
 

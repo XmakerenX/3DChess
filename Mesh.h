@@ -17,6 +17,7 @@ public:
     void Draw(unsigned int subMeshIndex);
 	void addSubMesh(SubMesh subMesh);
 
+    bool IntersectTriangle(glm::vec3& rayObjOrigin,glm::vec3& rayObjDir, int& faceCount, int& subMeshIndex);
     void CalcVertexNormals(GLfloat angle);
 
     std::vector<GLuint>& getDefaultMaterials();

@@ -2,14 +2,15 @@
 #define  _SCENE_H
 
 #include <vector>
+#include <glm/gtx/intersect.hpp>
 #include "AssetManager.h"
 #include "FreeCam.h"
 #include "Object.h"
 #include "input.h"
 
-struct LIGHT_PREFS2
+struct LIGHT_PREFS
 {
-    LIGHT_PREFS2()
+    LIGHT_PREFS()
 	:pos(0.0f, 0.0f, 0.0f),
 	dir(0.0f, 0.0f, 0.0f, 0.0f),
 	attenuation(0.0f, 0.0f, 0.0f),
@@ -19,7 +20,7 @@ struct LIGHT_PREFS2
 	outerCutoff(0.0f)
     {}
 
-    LIGHT_PREFS2(glm::vec3& newPos, glm::vec4& newDir, glm::vec3& newAtten, glm::vec4& newAmbient,
+    LIGHT_PREFS(glm::vec3& newPos, glm::vec4& newDir, glm::vec3& newAtten, glm::vec4& newAmbient,
 		glm::vec4 newDiffuse, glm::vec4 newSpecular, float newSpecPower)
 	:pos(newPos),
 	 dir(newDir),
@@ -65,6 +66,7 @@ public:
     void reshape(int width, int height);
     void processInput(float timeDelta, bool keysStatus[], float X, float Y);
 
+    Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
     Object& GetObject(int objIndex);
 
 
@@ -78,12 +80,13 @@ private:
     GLuint ubMaterialIndex;
     GLuint ubMaterial;
 
-    LIGHT_PREFS2 light[4];
+    LIGHT_PREFS light[4];
     int nActiveLights;
     GLuint ubLightIndex;
     GLuint ubLight;
 
     std::vector<Object> m_objects;
+    Object* curObj;
     Attribute m_lastUsedAttrib;
 };
 

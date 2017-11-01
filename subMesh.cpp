@@ -10,10 +10,15 @@ struct OBJnode
 //-----------------------------------------------------------------------------
 // Name : SubMesh (constructor)
 //-----------------------------------------------------------------------------
+// TODO: make vertices and indices movable to reduce overhead
 SubMesh::SubMesh(std::vector<Vertex> vertices, std::vector<GLushort> indices)
 {
     this->vertices = vertices;
     this->indices = indices;
+
+    this->VAO = 0;
+    this->VBO = 0;
+    this->EBO = 0;
 
     // Now that we have all the required data, set the vertex buffers and its attribute pointers.
     this->setupMesh();
@@ -31,6 +36,29 @@ void SubMesh::Draw()
 
     glBindVertexArray(0);
 
+}
+
+//-----------------------------------------------------------------------------
+// Name : IntersectTriangle
+//-----------------------------------------------------------------------------
+bool SubMesh::IntersectTriangle(glm::vec3& rayObjOrigin ,glm::vec3& rayObjDir, int& faceCount)
+{
+    for (int i = 0; i < indices.size(); i += 3)
+    {
+        glm::vec3& v0 = vertices[indices[i]].Position;
+        glm::vec3& v1 = vertices[indices[i+1]].Position;
+        glm::vec3& v2 = vertices[indices[i+2]].Position;
+        glm::vec3 bray;
+
+        if (glm::intersectRayTriangle(rayObjOrigin, rayObjDir, v0, v1,v2, bray))
+        {
+            faceCount = i / 3;
+            return true;
+        }
+    }
+
+    // ray didn't intersect with any triangle
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -146,6 +174,8 @@ void SubMesh::CalcVertexNormals(GLfloat angle)
     }
     delete[] members;
 
+    //setupMesh();
+
 }
 
 //-----------------------------------------------------------------------------
@@ -154,9 +184,14 @@ void SubMesh::CalcVertexNormals(GLfloat angle)
 void SubMesh::setupMesh()
 {
     // Create buffers/arrays
-    glGenVertexArrays(1, &this->VAO);
-    glGenBuffers(1, &this->VBO);
-    glGenBuffers(1, &this->EBO);
+    if (this->VAO == 0)
+        glGenVertexArrays(1, &this->VAO);
+
+    if (this->VBO == 0)
+        glGenBuffers(1, &this->VBO);
+
+    if (this->EBO == 0)
+        glGenBuffers(1, &this->EBO);
 
     glBindVertexArray(this->VAO);
     // Load data into vertex buffers
