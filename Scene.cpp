@@ -30,6 +30,10 @@ void Scene::InitScene()
 {
     meshShader =  m_assetManager.getShader(meshShaderPath2);
 
+    projectionLoc = glGetUniformLocation(meshShader->Program, "projection");
+    matWorldLoc = glGetUniformLocation(meshShader->Program, "matWorld");
+    matWorldInverseLoc = glGetUniformLocation(meshShader->Program, "matWorldInverseT");
+
     // Init the material unifrom buffer
     ubMaterialIndex = glGetUniformBlockIndex(meshShader->Program, "Material");
     glGenBuffers(1, &ubMaterial);
@@ -132,7 +136,8 @@ void Scene::Darwing()
         {
             SetAttribute(attribVector[i]);
 
-            obj.Draw(meshShader, i, projViewMat);
+            //obj.Draw(meshShader, i, projViewMat);
+            obj.Draw(projectionLoc, matWorldLoc, matWorldInverseLoc, i, projViewMat);
         }
     }
 }

@@ -247,9 +247,28 @@ void Object::Draw(Shader* shader, unsigned int attributeIndex, const glm::mat4x4
             glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(temp));
             glUniformMatrix4fv(glGetUniformLocation(shader->Program, "matWorld"), 1, GL_FALSE, glm::value_ptr(GetWorldMatrix()));
             glUniformMatrix4fv(glGetUniformLocation(shader->Program, "matWorldInverseT"), 1, GL_FALSE, glm::value_ptr(glm::inverse(GetWorldMatrix())));
-            //glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(matViewProj * GetWorldMatrix()));
 			m_pMesh->Draw(i);
 			break;
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Name : Draw
+//-----------------------------------------------------------------------------
+void Object::Draw(GLuint projectionLoc, GLuint matWorldLoc, GLuint matWorldInverseLoc, unsigned int attributeIndex, const glm::mat4x4& matViewProj)
+{
+    for (unsigned int i = 0; i < m_meshAttributes.size(); ++i)
+    {
+        if (m_meshAttributes[i] == attributeIndex)
+        {
+            //glm::mat4x4 temp =  m_mtxTranslate * matViewProj;
+            glm::mat4x4 temp =  matViewProj * GetWorldMatrix();
+            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(temp));
+            glUniformMatrix4fv(matWorldLoc, 1, GL_FALSE, glm::value_ptr(GetWorldMatrix()));
+            glUniformMatrix4fv(matWorldInverseLoc, 1, GL_FALSE, glm::value_ptr(glm::inverse(GetWorldMatrix())));
+            m_pMesh->Draw(i);
+            break;
+        }
+    }
 }

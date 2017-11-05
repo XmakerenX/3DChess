@@ -74,6 +74,11 @@ private:
     AssetManager m_assetManager;
 
     Shader* meshShader;
+    // cache for unifrom variable location
+    GLuint projectionLoc;
+    GLuint matWorldLoc;
+    GLuint matWorldInverseLoc;
+    GLuint vecEyeLoc;
 
     FreeCam m_camera;
 

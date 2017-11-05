@@ -34,6 +34,7 @@ public:
 	void 		AddObjectAttribute(unsigned int attribute);
 	
 	void 		Draw			(Shader* shader, unsigned int attributeIndex, const glm::mat4x4 &matViewProj);
+    void        Draw            (GLuint projectionLoc, GLuint matWorldLoc, GLuint matWorldInverseLoc, unsigned int attributeIndex, const glm::mat4x4& matViewProj);
 
 private:
     //glm::mat4x4 m_mtxTranslate;
