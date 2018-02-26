@@ -1,6 +1,6 @@
 #include "Scene.h"
 
-const char* meshShaderPath2 = "objectShader2";
+const char* meshShaderPath2 = "objectShader4";
 
 //-----------------------------------------------------------------------------
 // Name : Scene (constructor)
@@ -118,10 +118,14 @@ void Scene::InitObjects()
 //-----------------------------------------------------------------------------
 void Scene::Darwing()
 {
+    //clear m_lastUsedAttrib
     m_lastUsedAttrib.matIndex = -1;
     m_lastUsedAttrib.shaderIndex = "";
     m_lastUsedAttrib.texIndex = "";
 
+    // sets the camera position in the shader
+    // TODO: this call should only happen if the camera had moved since previous frame
+    // should add a flag to represent that.
     meshShader->Use();
     glm::vec3 eye = m_camera.GetPosition();
     glUniform3f(glGetUniformLocation(meshShader->Program, "vecEye"), eye.x, eye.y, eye.z);
