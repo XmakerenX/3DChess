@@ -11,6 +11,14 @@ struct Point
     int y;
 };
 
+struct Rect
+{
+    int left;
+    int top;
+    int right;
+    int botoom;
+};
+
 struct Material
 {
 	glm::vec4 diffuse;
