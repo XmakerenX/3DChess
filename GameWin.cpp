@@ -5,7 +5,7 @@
 //const char* meshShaderPath = "shader";
 //const char* meshShaderPath = "shader3";
 //const char* meshShaderPath = "objectShader";
-const char* meshShaderPath = "objectShader2";
+const char* meshShaderPath = "objectShader4";
 
 /* Helper function to convert GLSL types to storage sizes */
 size_t TypeSize(GLenum type)
