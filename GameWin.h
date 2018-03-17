@@ -26,6 +26,7 @@
 #include "FreeCam.h"
 #include "input.h"
 #include "Scene.h"
+#include "Sprite.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -90,7 +91,9 @@ private:
     Point oldCursorLoc;
     bool mouseDrag;
 
+    AssetManager m_asset;
     mkFont font_;
+    Sprite m_sprite;
 };
 
 #endif  //_GAMEWIN_H

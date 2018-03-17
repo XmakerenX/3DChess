@@ -348,6 +348,8 @@ bool GameWin::initOpenGL(int width, int height)
         std::cout << gluErrorString(err);
     }
 
+    m_sprite.Init();
+
     return true;
 }
 
@@ -442,6 +444,11 @@ void GameWin::drawing()
 
     font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
+    int textureName = m_asset.getTexture("gold.png");
+    m_sprite.AddQuad(textureName, Rect(0,0, 64, 64), Rect(0,0, 1024, 1024),
+                     glm::vec3(0.0f, 0.0f, 0.0f));
+    m_sprite.Render();
+    m_sprite.Clear();
     
     err = glGetError();
     if (err != GL_NO_ERROR)
@@ -449,6 +456,7 @@ void GameWin::drawing()
         std::cout <<"Drawing: ERROR bitches " << err << "\n";
         std::cout << gluErrorString(err);
     }
+
 
     glXSwapBuffers (m_display, m_win);
 }
