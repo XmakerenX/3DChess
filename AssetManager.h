@@ -31,13 +31,9 @@ public:
     ~AssetManager();
 
     GLuint getTexture(const std::string& filePath);
-    GLuint loadPng(const std::string& filePath);
-    GLuint loadBMP(const std::string& filePath);
-    GLuint loadJPEG(const std::string& filePath);
+
 
     Mesh*  getMesh(const std::string& meshPath);
-    Mesh*  loadObjMesh(const std::string& meshPath);
-    Mesh*  loadFBXMesh(const std::string& meshPath);
 	
 	Shader* getShader(const std::string& shaderPath);
 	int 	getMaterialIndex(const Material& mat);
@@ -49,6 +45,13 @@ public:
 
 private:
     GLuint createTexture(GLsizei width, GLsizei height, GLenum format,unsigned char* data);
+
+    GLuint loadPng(const std::string& filePath);
+    GLuint loadBMP(const std::string& filePath);
+    GLuint loadJPEG(const std::string& filePath);
+
+    Mesh*  loadObjMesh(const std::string& meshPath);
+    Mesh*  loadFBXMesh(const std::string& meshPath);
 
     const unsigned long START_TEXTURE_SIZE = 100;
 
