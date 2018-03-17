@@ -143,7 +143,7 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         // Render quad
-        glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
+        glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, indices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
@@ -200,7 +200,7 @@ void mkFont::renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfl
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     // Render quad
-    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_SHORT, indices);
+    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, indices);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

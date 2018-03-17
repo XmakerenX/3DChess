@@ -11,7 +11,7 @@ struct OBJnode
 // Name : SubMesh (constructor)
 //-----------------------------------------------------------------------------
 // TODO: make vertices and indices movable to reduce overhead
-SubMesh::SubMesh(std::vector<Vertex> vertices, std::vector<GLushort> indices)
+SubMesh::SubMesh(std::vector<Vertex> vertices, std::vector<VertexIndex> indices)
 {
     this->vertices = vertices;
     this->indices = indices;
@@ -31,11 +31,7 @@ void SubMesh::Draw()
 {
     // Draw mesh
     glBindVertexArray(this->VAO);
-    //glDrawElements(GL_TRIANGLE_STRIP, this->indices.size(), GL_UNSIGNED_SHORT, 0);
-    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_SHORT, 0);
-
-    glBindVertexArray(0);
-
+    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -203,19 +199,19 @@ void SubMesh::setupMesh()
     //glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLushort), this->indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(VertexIndex), this->indices.data(), GL_STATIC_DRAW);
     //glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint), &this->indices[0], GL_STATIC_DRAW);
 
     // Set the vertex attribute pointers
     // Vertex Positions
-    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
     // Vertex Normals
-    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Normal));
+    glEnableVertexAttribArray(1);
     // Vertex Texture Coords
-    glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, TexCoords));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 }

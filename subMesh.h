@@ -7,6 +7,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/intersect.hpp>
+#include "RenderTypes.h"
 #include "Shader.h"
 
 struct Vertex {
@@ -27,9 +28,9 @@ class SubMesh {
 
 public:
     std::vector<Vertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<VertexIndex> indices;
 
-    SubMesh(std::vector<Vertex> vertices, std::vector<GLushort> indices);
+    SubMesh(std::vector<Vertex> vertices, std::vector<VertexIndex> indices);
 
     void Draw();
 

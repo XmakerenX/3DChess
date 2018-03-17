@@ -24,7 +24,7 @@ struct Group
 	GLuint numTrinagles;
 
 	std::vector<Vertex> vertices;
-	std::vector<GLushort> indices;
+    std::vector<VertexIndex> indices;
 
 	GLuint material;
 };

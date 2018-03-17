@@ -35,7 +35,7 @@ bool FbxLoader::LoadMesh(std::string meshPath, std::vector<SubMesh>& subMeshes)
     pImporter->Destroy();
 
     std::vector<Vertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<VertexIndex> indices;
 
     std::vector<GLuint> meshMaterials;
     //std::vector<SubMesh> subMeshes;

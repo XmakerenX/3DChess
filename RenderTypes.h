@@ -3,16 +3,34 @@
 
 #include<string>
 #include<vector>
-#include <glm/glm.hpp>
+#include<glm/glm.hpp>
+
+typedef unsigned int VertexIndex;
 
 struct Point
 {
+    Point() {}
+    Point (int newX, int newY)
+    {
+        x = newX;
+        y = newY;
+    }
+
     int x;
     int y;
 };
 
 struct Rect
 {
+    Rect() {}
+    Rect(int left , int _top , int right , int bottom)
+    {
+        this->left = left;
+        this->top = top;
+        this->right = right;
+        this->botoom = bottom;
+    }
+
     int left;
     int top;
     int right;

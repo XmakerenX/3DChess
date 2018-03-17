@@ -11,6 +11,7 @@
 #include FT_FREETYPE_H
 #include <cmath>
 #include <string>
+#include "RenderTypes.h"
 #include "Shader.h"
 #include "monoBuffer.h"
 
@@ -105,7 +106,7 @@ private:
     std::map<std::string, FontString> stringTextures;
     GLuint VAO;
     GLuint VBO;
-    GLushort indices[6];
+    VertexIndex indices[6];
     //TODO: find a way to make font ignorant of screen size
     int height_;
 
