@@ -2,6 +2,7 @@
 #define _SPRITE_H
 
 #include <vector>
+#include <list>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -12,47 +13,47 @@ struct VertexSprite
 
     VertexSprite(float fX, float fY, float fZ, const glm::vec3& diffuseCOlor, float ftu = 0.0f, float ftv = 0.0f)
     {
-    pos.x = fX;
-    pos.y = fY;
-    pos.z = fZ;
-    pos.w = 1;
-	diffuse = diffuseCOlor;
-    uv.x = ftu;
-    uv.y = ftv;
+        pos.x = fX;
+        pos.y = fY;
+        pos.z = fZ;
+        pos.w = 1;
+        diffuse = diffuseCOlor;
+        uv.x = ftu;
+        uv.y = ftv;
     }
 
     glm::vec4 pos;
-//    float x;
-//    float y;
-//    float z;
-//    float rhw;
     glm::vec3 diffuse;
     glm::vec2 uv;
-//    float tu;
-//    float tv;
 };
+
+//struct Quad
+//{
+//    VertexSprite vertices[4];
+//    GLuint indices[6];
+//};
 
 struct StreamOfVertices
 {
+    StreamOfVertices(GLuint textureName);
+
+    //void addQuad(Rect &srcRect, Point quadPos, glm::vec3 tintColor);
+    void addQuad(Rect& spriteRect, Rect& texRect, glm::vec3 tintColor, Point scale);
+
     GLuint textureName;
 
-    // TODO: use vector instead..
-    VertexSprite* pVertices;
-    GLuint* pIndices;
-
-    GLuint nVertices;
-    GLuint nIndices;
-
+    std::vector<VertexSprite> vertices;
+    std::vector<VertexIndex> indices;
 };
 
-struct BufferBounds
-{
-    GLuint textureNmae;
-    GLuint bufferStartVertex;
-    GLuint bufferEndVertex;
-    GLuint bufferStartIndex;
-    GLuint bufferEndIndex;
-};
+//struct BufferBounds
+//{
+//    GLuint textureNmae;
+//    GLuint bufferStartVertex;
+//    GLuint bufferEndVertex;
+//    GLuint bufferStartIndex;
+//    GLuint bufferEndIndex;
+//};
 
 class Sprite
 {
@@ -62,7 +63,10 @@ public:
     Sprite();
     ~Sprite();
 
-    bool CreateQuad(GLuint textureName, Rect& srcRect, Point quadPos, glm::vec3 tintColor, STREAMTYPE vertexType);
+    bool AddQuad(GLuint textureName, Rect& spriteRect, Rect& texRect, glm::vec3 tintColor);
+    //bool AddQuad(GLuint textureName, Rect& srcRect, Point quadPos, glm::vec3 tintColor);
+    bool AddQuad(GLuint textureName, Rect& spriteRect, Rect& texRect, glm::vec3 tintColor, Point scale);
+    void Clear();
 
     bool Init();
     bool Render();
@@ -74,7 +78,7 @@ private:
     GLuint m_vertexBuffer;
     GLuint m_indicesBuffer;
 
-    std::vector<StreamOfVertices> m_vertexStreams[STREAMTYPE_MAX];
+    std::vector<StreamOfVertices> m_vertexStreams;
 
     float m_fScaleWidth;
     float m_fScaleHeight;
