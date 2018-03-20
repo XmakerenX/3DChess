@@ -7,6 +7,7 @@
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 #include "RenderTypes.h"
+#include "Shader.h"
 
 struct VertexSprite
 {
@@ -38,7 +39,7 @@ struct StreamOfVertices
     StreamOfVertices(GLuint textureName);
 
     //void addQuad(Rect &srcRect, Point quadPos, glm::vec3 tintColor);
-    void addQuad(Rect& spriteRect, Rect& texRect, glm::vec3 tintColor, Point scale);
+    void addQuad(Rect spriteRect, Rect texRect, glm::vec3 tintColor, Point scale);
 
     GLuint textureName;
 
@@ -63,13 +64,15 @@ public:
     Sprite();
     ~Sprite();
 
-    bool AddQuad(GLuint textureName, Rect& spriteRect, Rect& texRect, glm::vec3 tintColor);
+    bool AddTintedQuad(Rect&& spriteRect, glm::vec3 tintColor);
+    bool AddTexturedQuad(Rect&& spriteRect, GLuint textureName, Rect&& texRect);
+    bool AddTintedTexturedQuad(Rect &&spriteRect, glm::vec3 tintColor, GLuint textureName, Rect &&texRect);
     //bool AddQuad(GLuint textureName, Rect& srcRect, Point quadPos, glm::vec3 tintColor);
-    bool AddQuad(GLuint textureName, Rect& spriteRect, Rect& texRect, glm::vec3 tintColor, Point scale);
+    bool AddQuad(const Rect &&spriteRect, glm::vec3 tintColor, GLuint textureName, const Rect &&texRect, Point scale);
     void Clear();
 
     bool Init();
-    bool Render();
+    bool Render(Shader *shader);
 
 private:
     const GLuint MAX_QUADS = 200;
