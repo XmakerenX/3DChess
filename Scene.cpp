@@ -84,7 +84,7 @@ void Scene::InitLights()
 //-----------------------------------------------------------------------------
 void Scene::InitObjects()
 {
-    Mesh* pMesh = m_assetManager.loadObjMesh("porsche.obj");
+    Mesh* pMesh = m_assetManager.getMesh("porsche.obj");
     //pMesh->CalcVertexNormals(90.0f);
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
