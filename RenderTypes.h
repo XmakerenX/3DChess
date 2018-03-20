@@ -7,6 +7,9 @@
 
 typedef unsigned int VertexIndex;
 
+//-----------------------------------------------------------------------------
+// Common render types
+//-----------------------------------------------------------------------------
 struct Point
 {
     Point() {}
@@ -23,7 +26,7 @@ struct Point
 struct Rect
 {
     Rect() {}
-    Rect(int left , int _top , int right , int bottom)
+    Rect(int left , int top , int right , int bottom)
     {
         this->left = left;
         this->top = top;
@@ -63,5 +66,12 @@ struct Attribute
 		return (texIndex == atrib.texIndex && matIndex == atrib.matIndex && shaderIndex == atrib.shaderIndex);
 	}
 };
+
+//-----------------------------------------------------------------------------
+// Common render consts
+//-----------------------------------------------------------------------------
+const Rect EMPTY_RECT = Rect(0,0,0,0);
+const glm::vec3 WHITE_COLOR = glm::vec3(1.0f, 1.0f, 1.0f);
+const GLuint NO_TEXTURE = 0;
 
 #endif // _RENDERTYPES_H
