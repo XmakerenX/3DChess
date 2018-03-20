@@ -85,7 +85,8 @@ private:
 
     Shader* textShader;
     Shader* textureShader;
-    Shader* projShader;
+    Shader* spriteShader;
+    //Shader* projShader;
 
     bool keysStatus[256];
     Point oldCursorLoc;

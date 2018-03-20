@@ -327,7 +327,8 @@ bool GameWin::initOpenGL(int width, int height)
     // complie shaders
     textShader = new Shader("text.vs", "text.frag");
     textureShader = new Shader("texture.vs", "texture.frag");
-    projShader = new Shader("shader2.vs", "shader2.frag");
+    spriteShader = new Shader("sprite.vs", "sprite.frag");
+    //projShader = new Shader("shader2.vs", "shader2.frag");
 
     //------------------------------------
     // Init Scene
@@ -341,14 +342,14 @@ bool GameWin::initOpenGL(int width, int height)
     // init our font
     font_.init(height);
 
+    m_sprite.Init();
+
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
         std::cout <<"Init: ERROR bitches\n";
         std::cout << gluErrorString(err);
     }
-
-    m_sprite.Init();
 
     return true;
 }
@@ -444,10 +445,29 @@ void GameWin::drawing()
 
     font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
+    //spriteShader->Use();
+
     int textureName = m_asset.getTexture("gold.png");
-    m_sprite.AddQuad(textureName, Rect(0,0, 64, 64), Rect(0,0, 1024, 1024),
-                     glm::vec3(0.0f, 0.0f, 0.0f));
-    m_sprite.Render();
+
+    m_sprite.AddTexturedQuad(Rect(20,20, 276, 276), textureName, Rect(0,0, 1024, 1024));
+//    m_sprite.AddQuad(textureName, Rect(20,20, 276, 276), Rect(0,0, 1024, 1024),
+//                     glm::vec3(1.0f, 1.0f, 1.0f));
+
+    m_sprite.AddTexturedQuad(Rect(400,400, 464, 464), textureName, Rect(0,0, 1024, 1024));
+//    m_sprite.AddQuad(textureName, Rect(400,400, 464, 464), Rect(0,0, 1024, 1024),
+//                     glm::vec3(1.0f, 1.0f, 1.0f));
+
+    textureName = m_asset.getTexture("yor.png");
+
+    m_sprite.AddTexturedQuad(Rect(200,400, 264, 464), textureName,Rect(0,0, 509, 322));
+//    m_sprite.AddQuad(textureName, Rect(200,400, 264, 464), Rect(0,0, 509, 322),
+//                     glm::vec3(1.0f, 1.0f, 1.0f));
+
+    m_sprite.AddTintedQuad(Rect(100,400, 164, 464), glm::vec3(0.5f, 0.0f, 0.0f));
+//    m_sprite.AddQuad(0, Rect(100,400, 164, 464), Rect(0,0, 509, 322),
+//                     glm::vec3(0.5f, 0.0f, 0.0f));
+
+    m_sprite.Render(spriteShader);
     m_sprite.Clear();
     
     err = glGetError();
@@ -456,7 +476,6 @@ void GameWin::drawing()
         std::cout <<"Drawing: ERROR bitches " << err << "\n";
         std::cout << gluErrorString(err);
     }
-
 
     glXSwapBuffers (m_display, m_win);
 }
@@ -485,6 +504,8 @@ void GameWin::reshape(int width, int height)
         glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
         textureShader->Use();
         glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
+        spriteShader->Use();
+        glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
     }
     else
         std::cout <<"reshape ignored\n";
