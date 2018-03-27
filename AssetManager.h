@@ -24,6 +24,8 @@
 #include "Mesh.h"
 #include "ObjLoader.h"
 
+#define MAX_PATH 256
+
 class AssetManager
 {
 public:

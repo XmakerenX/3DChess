@@ -3,6 +3,7 @@
 
 #include<string>
 #include<vector>
+#include<GL/glew.h>
 #include<glm/glm.hpp>
 
 typedef unsigned int VertexIndex;
@@ -25,19 +26,44 @@ struct Point
 
 struct Rect
 {
-    Rect() {}
+    Rect()
+    {
+        left = top = right = bottom = 0;
+    }
+
     Rect(int left , int top , int right , int bottom)
     {
         this->left = left;
         this->top = top;
         this->right = right;
-        this->botoom = bottom;
+        this->bottom = bottom;
+    }
+
+    Rect(const Rect& copy)
+    {
+        left = copy.left;
+        top = copy.top;
+        right = copy.right;
+        bottom = copy.bottom;
+    }
+
+    void offset(int x , int y)
+    {
+        left   += x;
+        right  += x;
+        top    += y;
+        bottom += y;
+    }
+
+    void offset(Point pt)
+    {
+        offset(pt.x, pt.y);
     }
 
     int left;
     int top;
     int right;
-    int botoom;
+    int bottom;
 };
 
 struct Material
@@ -71,7 +97,7 @@ struct Attribute
 // Common render consts
 //-----------------------------------------------------------------------------
 const Rect EMPTY_RECT = Rect(0,0,0,0);
-const glm::vec3 WHITE_COLOR = glm::vec3(1.0f, 1.0f, 1.0f);
+const glm::vec4 WHITE_COLOR = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 const GLuint NO_TEXTURE = 0;
 
 #endif // _RENDERTYPES_H
