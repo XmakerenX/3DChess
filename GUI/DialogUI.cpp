@@ -136,156 +136,81 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     // Init Button elements
     //-------------------------------------
     // loads the button default texture
-    if (!initButtonControlGFX(assetManger, ControlUI::BUTTON, "data/textures/button.png", Rect(0, 0, 256, 128),  Rect(0, 128, 256, 256), elementFontVec))
+    const std::vector<Rect> buttonTexturesRects = {Rect(0, 0, 256, 128), Rect(0, 128, 256, 256)};
+    if (!initControlGFX(assetManger, ControlUI::BUTTON, "data/textures/button.png", buttonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init CheckBox elements
     //-------------------------------------
-    if (!initButtonControlGFX(assetManger, ControlUI::CHECKBOX, "data/textures/tex.dds", Rect(0, 54, 27, 81 ), Rect(27, 54, 54, 81 ), elementFontVec))
+    const std::vector<Rect> checkboxTexturesRects = {Rect(0, 54, 27, 81 ), Rect(27, 54, 54, 81 )};
+    if (!initControlGFX(assetManger, ControlUI::CHECKBOX, "data/textures/tex.dds", checkboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init RadioButton elements
     //-------------------------------------
-    if (!initButtonControlGFX(assetManger, ControlUI::RADIOBUTTON, "data/textures/tex.dds", Rect(54, 54, 81, 81), Rect(81, 54, 108, 81), elementFontVec))
+    const std::vector<Rect> radioButtonTexturesRects = {Rect(54, 54, 81, 81), Rect(81, 54, 108, 81)};
+    if (!initControlGFX(assetManger, ControlUI::RADIOBUTTON, "data/textures/tex.dds", radioButtonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init ComboBox elements
     //-------------------------------------
-    elementGFXvec.clear();
-    textureIndex = assetManger.getTexture("data/textures/tex.dds");
+    const std::vector<Rect> comboboxTexturesRects = {Rect(7, 81, 247, 123),   // Main textrue rect
+                                                     Rect(98, 189, 151, 238), // Button textrue rect
+                                                     Rect(13, 123, 241, 160), // Drop down textrue rect
+                                                     Rect(12, 163, 239, 183)};// selection textrue rect
 
-    //-------------------------------------
-    // ComboBox - Main
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(7, 81, 247, 123), Rect(7, 81, 247, 123));
-
-    //-------------------------------------
-    // ComboBox - Button
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(98, 189, 151, 238), Rect(98, 189, 151, 238));
-
-    //-------------------------------------
-    // ComboBox - Dropdown
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(13, 123, 241, 160), Rect(13, 123, 241, 160));
-
-    //-------------------------------------
-    // ComboBox - Selection
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(12, 163, 239, 183), Rect(12, 163, 239, 183));
-
-    // create the ComboBox control default GFX and adds to the vector
-    m_defaultControlsGFX.emplace_back(ControlUI::COMBOBOX, elementGFXvec, elementFontVec);
+    if (!initControlGFX(assetManger, ControlUI::COMBOBOX, "data/textures/tex.dds", comboboxTexturesRects, elementFontVec))
+        return false;
 
     //-------------------------------------
     // Init ScrollBar elements
     //-------------------------------------
-    elementGFXvec.clear();
-
-    //-------------------------------------
-    // ScrollBar - Track
-    //-------------------------------------
     int nScrollBarStartX = 196;
     int nScrollBarStartY = 191;
-    elementGFXvec.emplace_back(textureIndex, Rect(nScrollBarStartX + 0, nScrollBarStartY + 21, nScrollBarStartX + 22, nScrollBarStartY + 32),
-                               Rect(nScrollBarStartX + 0, nScrollBarStartY + 21, nScrollBarStartX + 22, nScrollBarStartY + 32));
+    const std::vector<Rect> scrollBarTexturesRects = {Rect(nScrollBarStartX + 0, nScrollBarStartY + 21, nScrollBarStartX + 22, nScrollBarStartY + 32),   // Track textrue rect
+                                                     Rect(nScrollBarStartX + 0, nScrollBarStartY + 1, nScrollBarStartX + 22, nScrollBarStartY + 21),  // Up Arrow textrue rect
+                                                     Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53), // Down Arrow textrue rect
+                                                    Rect(220, 192, 238, 234)};                                                                        // Button textrue rect
 
-    //-------------------------------------
-    // ScrollBar - Up Arrow
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(nScrollBarStartX + 0, nScrollBarStartY + 1, nScrollBarStartX + 22, nScrollBarStartY + 21),
-                               Rect(nScrollBarStartX + 0, nScrollBarStartY + 1, nScrollBarStartX + 22, nScrollBarStartY + 21));
-
-    //-------------------------------------
-    // ScrollBar - Down Arrow
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53),
-                               Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53));
-
-    //-------------------------------------
-    // ScrollBar - Button
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect(220, 192, 238, 234), Rect(220, 192, 238, 234));
-
-    // create the ScrollBar control default GFX and adds to the vector
-    m_defaultControlsGFX.emplace_back(ControlUI::SCROLLBAR, elementGFXvec, elementFontVec);
+    if (!initControlGFX(assetManger, ControlUI::SCROLLBAR, "data/textures/tex.dds", scrollBarTexturesRects, elementFontVec))
+        return false;
 
     //-------------------------------------
     // Init ListBox elements
     //-------------------------------------
-    elementGFXvec.clear();
+    const std::vector<Rect> listTexturesRects = {Rect( 13, 123, 241, 160),      // Main texture rect
+                                                     Rect( 16, 166, 240, 183)}; // Selection texture rect
 
-    //-------------------------------------
-    // ListBox - Main
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect( 13, 123, 241, 160), Rect( 13, 123, 241, 160));
-
-    //-------------------------------------
-    //ListBox - Selection
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect( 16, 166, 240, 183), Rect( 16, 166, 240, 183));
-
-    // create the ListBox control default GFX and adds to the vector
-    m_defaultControlsGFX.emplace_back(ControlUI::LISTBOX, elementGFXvec, elementFontVec);
+    if (!initControlGFX(assetManger, ControlUI::LISTBOX, "data/textures/tex.dds", listTexturesRects, elementFontVec))
+        return false;
 
     //-------------------------------------
     // Init Slider elements
     //-------------------------------------
-    elementGFXvec.clear();
+    const std::vector<Rect> sliderTexturesRects = {Rect( 1, 187, 93, 228),       // Track texture rect
+                                                     Rect( 151, 193, 192, 234)}; // Button texture rect
+
+    if (!initControlGFX(assetManger, ControlUI::SLIDER, "data/textures/tex.dds", sliderTexturesRects, elementFontVec))
+        return false;
 
     //-------------------------------------
-    // Slider - Track
+    // Init EditBox elements
     //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect( 1, 187, 93, 228), Rect( 1, 187, 93, 228));
+    const std::vector<Rect> editboxTexturesRects = {Rect( 14, 90, 241, 113),       // text area texture rect
+                                                   Rect( 8, 82, 14, 90 ),         // top left border texture rect
+                                                   Rect( 14, 82, 241, 90 ),       // top border
+                                                   Rect( 241, 82, 246, 90 ),      // top right border
+                                                   Rect( 8, 90, 14, 113 ),        // left border
+                                                   Rect( 241, 90, 246, 113 ),     // right border
+                                                   Rect( 8, 113, 14, 121 ),       // lower left border
+                                                   Rect( 14, 113, 241, 121 ),     // lower border
+                                                   Rect( 241, 113, 246, 121 )};   // lower right border
 
-    //-------------------------------------
-    // Slider - Button
-    //-------------------------------------
-    elementGFXvec.emplace_back(textureIndex, Rect( 151, 193, 192, 234), Rect( 151, 193, 192, 234));
-
-    // create the Slider control default GFX and adds to the vector
-    m_defaultControlsGFX.emplace_back(ControlUI::SLIDER, elementGFXvec, elementFontVec);
-
-    //-------------------------------------
-    // EditBox
-    //-------------------------------------
-    elementGFXvec.clear();
-
-    // Element assignment:
-    //   0 - text area
-    //   1 - top left border
-    //   2 - top border
-    //   3 - top right border
-    //   4 - left border
-    //   5 - right border
-    //   6 - lower left border
-    //   7 - lower border
-    //   8 - lower right border
-
-    // Assign the style
-    elementGFXvec.emplace_back(textureIndex, Rect( 14, 90, 241, 113), Rect( 14, 90, 241, 113));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 8, 82, 14, 90 ), Rect( 8, 82, 14, 90 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 14, 82, 241, 90 ), Rect( 14, 82, 241, 90 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 241, 82, 246, 90 ), Rect( 241, 82, 246, 90 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 8, 90, 14, 113 ), Rect( 8, 90, 14, 113 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 241, 90, 246, 113 ), Rect( 241, 90, 246, 113 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 8, 113, 14, 121 ), Rect( 8, 113, 14, 121 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 14, 113, 241, 121 ), Rect( 14, 113, 241, 121 ));
-
-    elementGFXvec.emplace_back(textureIndex, Rect( 241, 113, 246, 121 ), Rect( 241, 113, 246, 121 ));
-
-    // create the Slider control default GFX and adds to the vector
-    m_defaultControlsGFX.emplace_back(ControlUI::EDITBOX, elementGFXvec, elementFontVec);
+    if (!initControlGFX(assetManger, ControlUI::EDITBOX, "data/textures/tex.dds", editboxTexturesRects, elementFontVec))
+        return false;
 
     return true;
 }
@@ -293,32 +218,27 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
 //-----------------------------------------------------------------------------
 // Name : initControlGFX ()
 //-----------------------------------------------------------------------------
-bool DialogUI::initButtonControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType,std::string texturePath,Rect rcTexture, Rect rcTexMouseOver, std::vector<ELEMENT_FONT>& elementFontVec)
+bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType,std::string texturePath,const std::vector<Rect> textureRects,std::vector<ELEMENT_FONT>& elementFontVec)
 {
     GLuint textureIndex = assetManger.getTexture(texturePath);
     if (textureIndex == NO_TEXTURE)
         return false;
 
     std::vector<ELEMENT_GFX>  elementGFXvec;
-    // add the main button element
-    elementGFXvec.emplace_back(textureIndex,
-                               rcTexture, // sets what parts of the texture to use for the button
-                               rcTexture);
-
-    // add the mouse over button element
-    elementGFXvec.emplace_back(textureIndex,
-                               rcTexMouseOver,
-                               rcTexMouseOver);
+    for (const Rect& textureElementRect : textureRects)
+        elementGFXvec.emplace_back(textureIndex,textureElementRect);
 
     // create the button control default GFX and adds to the vector
     m_defaultControlsGFX.emplace_back(controlType, elementGFXvec, elementFontVec);
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
 // Name : OnRender ()
 // Desc : renders the dialog and all of his controls
 //-----------------------------------------------------------------------------
-bool DialogUI::OnRender(float fElapsedTime, glm::vec3 vPos, Sprite& sprite, AssetManager& assetManger)
+bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, AssetManager& assetManger)
 {
     GLuint textureName = NO_TEXTURE;
 
@@ -332,7 +252,7 @@ bool DialogUI::OnRender(float fElapsedTime, glm::vec3 vPos, Sprite& sprite, Asse
             return false;
     }
 
-    sprite.AddTintedTexturedQuad(Rect(m_x, m_y, m_width, m_height), m_dialogColor, textureName);
+    sprite.AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, textureName);
 
     if (m_bCaption)
         sprite.AddTintedQuad(m_rcCaptionBox, glm::vec4(0.78125f, 1.0f, 0.0f, 1.0f));
@@ -341,8 +261,8 @@ bool DialogUI::OnRender(float fElapsedTime, glm::vec3 vPos, Sprite& sprite, Asse
 
     for(GLuint i = 0; i < m_Controls.size(); i++)
     {
-//        if (m_Controls[i] != s_pControlFocus)
-//            m_Controls[i]->Render(assetManger);
+        //if (m_Controls[i] != s_pControlFocus)
+            m_Controls[i]->Render(sprite, assetManger);
     }
 
 //    if (drawFocusedControl)

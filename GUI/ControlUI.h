@@ -87,21 +87,19 @@ struct ELEMENT_GFX
         iTexture = 0;
     }
 
-    ELEMENT_GFX(GLuint newITexture, Rect newRcTexture, Rect newRcTexMouseOver)
+    ELEMENT_GFX(GLuint newITexture, Rect newRcTexture)
     {
-        setGFX(newITexture, newRcTexture, newRcTexMouseOver);
+        setGFX(newITexture, newRcTexture);
     }
 
-    void setGFX(GLuint newITexture, Rect newRcTexture, Rect newRcTexMouseOver)
+    void setGFX(GLuint newITexture, Rect newRcTexture)
     {
         iTexture	   = newITexture;
         rcTexture	   = newRcTexture;
-        rcTexMouseOver = newRcTexMouseOver;
     }
 
     GLuint iTexture;
     Rect rcTexture;
-    Rect rcTexMouseOver;
 
 };
 

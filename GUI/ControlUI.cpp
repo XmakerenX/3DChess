@@ -246,10 +246,11 @@ void ControlUI::renderRect(Sprite& sprite, Rect& rcWindow, GLuint textureName, R
     Rect offsetedWindowRect(rcWindow);
     offsetedWindowRect.offset(offset);
 
+    //sprite.AddTintedQuad(offsetedWindowRect, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     if (textureName != NO_TEXTURE)
-        sprite.AddTintedTexturedQuad(rcWindow, color, textureName, rcTexture);
+        sprite.AddTintedTexturedQuad(offsetedWindowRect, color, textureName, rcTexture);
     else
-        sprite.AddTintedQuad(rcWindow, color);
+        sprite.AddTintedQuad(offsetedWindowRect, color);
 }
 
 //-----------------------------------------------------------------------------

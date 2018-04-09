@@ -45,43 +45,34 @@ void ButtonUI::Render( Sprite& sprite, AssetManager& assetManger)
 {
     if (m_bVisible)
     {
-        //GLuint textureName;
-
         //no texture was given abort rendering
         if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1)
             return;
-
-        //acquire a pointer to the texture we need to render the button
-        //textureName = assetManger.getTexturePtr(m_elementsGFX[0].iTexture);
 
         Point dialogPos = m_pParentDialog->getLocation();
         long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
         dialogPos.y += dialogCaptionHeihgt;
 
         //calculate the the button rendering rect
-        Rect rcWindow(m_x, m_y, m_width, m_height);
+        Rect rcWindow(m_x, m_y, m_x + m_width, m_y + m_height);
 
         //if the button is not pressed or doesn't have the cursor on it render it normally
         if (!m_bMouseOver)
         {
             if (!m_bEnabled)
                 renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.4f, 0.4f, 0.4f ), dialogPos);
-                //renderRect(m_elementsGFX[BUTTON].rcTexture, rcWindow, sprite, textureName, glm::vec4( 255, 100, 100, 100 ), REGLUAR, dialogPos);
             else
                 renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.785f, 0.785f, 0.785f ), dialogPos);
-                //renderRect(m_elementsGFX[BUTTON].rcTexture, rcWindow, sprite, textureName, glm::vec4( 255, 200, 200, 200 ), REGLUAR, dialogPos );
         }
         else
         {
             // if the button is pressed and the cursor is on it darken it to showed it is pressed
             if (m_bMouseOver && m_bPressed)
-                renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexMouseOver, glm::vec4( 1.0f, 0.6f, 0.6f, 0.6f ), dialogPos);
-                //renderRect(m_elementsGFX[MOUSEOVER].rcTexMouseOver, rcWindow, sprite, textureName, D3DCOLOR_ARGB( 255, 150, 150, 150 ), REGLUAR, dialogPos );
+                renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 1.0f, 0.6f, 0.6f, 0.6f ), dialogPos);
             else
                 // if the button has the cursor on it high light
                 if (m_bMouseOver)
-                    renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexMouseOver, glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f ), dialogPos);
-                    //renderRect(m_elementsGFX[MOUSEOVER].rcTexMouseOver, rcWindow, sprite, textureName, D3DCOLOR_ARGB( 255, 255, 255, 255 ), HiGHLIGHT, dialogPos);
+                    renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f ), dialogPos);
         }
 
 //        LPD3DXFONT pFont;

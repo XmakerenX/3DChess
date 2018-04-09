@@ -62,7 +62,9 @@ public:
     virtual ~DialogUI(void);
 
     bool init    (GLuint width, GLuint height, int nCaptionHeight, std::string captionText, std::string newTexturePath, glm::vec4 dialogColor, AssetManager& assetManger);
-    bool initButtonControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType, std::string texturePath, Rect rcTexture, Rect rcTexMouseOver, std::vector<ELEMENT_FONT> &elementFontVec);
+    bool initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType, std::string texturePath, const std::vector<Rect> textureRects, std::vector<ELEMENT_FONT>& elementFontVec);
+
+
     bool initDefControlElements(AssetManager& assetManger);
     //bool initWoodControlElements(AssetManager& assetManager);
 
@@ -73,7 +75,7 @@ public:
     //void    SetCallback( PCALLBACKGUIEVENT pCallback);
     void    connectToControlRightClicked( const signal_controlClicked::slot_type& subscriber);
 
-    virtual bool OnRender(float fElapsedTime, glm::vec3 vPos, Sprite &sprite, AssetManager& assetManger);
+    virtual bool OnRender(float fElapsedTime, Sprite &sprite, AssetManager& assetManger);
 
     void	UpdateRects();
 
