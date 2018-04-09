@@ -27,6 +27,7 @@
 #include "input.h"
 #include "Scene.h"
 #include "Sprite.h"
+#include "GUI/DialogUI.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -95,6 +96,8 @@ private:
     AssetManager m_asset;
     mkFont font_;
     Sprite m_sprite;
+    DialogUI m_dialog;
+
 };
 
 #endif  //_GAMEWIN_H

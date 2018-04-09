@@ -344,6 +344,19 @@ bool GameWin::initOpenGL(int width, int height)
 
     m_sprite.Init();
 
+    //------------------------------------
+    // Init Dialog
+    //------------------------------------
+    GLuint buttonTexture = m_asset.getTexture("woodGUI2.png");
+    m_dialog.init(300,300, 18, "Caption!", "", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), m_asset);
+    m_dialog.setLocation(50, 100);
+    ButtonUI* pButton;
+    m_dialog.addButton(1, "button text", 20,20, 200, 25, 0, &pButton);
+    std::vector<ELEMENT_GFX> buttonGFX;
+    buttonGFX.emplace_back(buttonTexture, Rect(0, 0, 84, 34));
+    buttonGFX.emplace_back(buttonTexture, Rect(0, 34, 84, 68));
+    pButton->setControlGFX(buttonGFX);
+
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
@@ -445,31 +458,16 @@ void GameWin::drawing()
 
     font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
 
-    //spriteShader->Use();
-
     int textureName = m_asset.getTexture("gold.png");
 
-    m_sprite.AddTexturedQuad(Rect(20,20, 276, 276), textureName, Rect(0,0, 1024, 1024));
-//    m_sprite.AddQuad(textureName, Rect(20,20, 276, 276), Rect(0,0, 1024, 1024),
-//                     glm::vec3(1.0f, 1.0f, 1.0f));
+    glDisable(GL_DEPTH_TEST);
 
-    m_sprite.AddTexturedQuad(Rect(400,400, 464, 464), textureName, Rect(0,0, 1024, 1024));
-//    m_sprite.AddQuad(textureName, Rect(400,400, 464, 464), Rect(0,0, 1024, 1024),
-//                     glm::vec3(1.0f, 1.0f, 1.0f));
-
-    textureName = m_asset.getTexture("yor.png");
-
-    m_sprite.AddTexturedQuad(Rect(200,400, 264, 464), textureName,Rect(0,0, 509, 322));
-//    m_sprite.AddQuad(textureName, Rect(200,400, 264, 464), Rect(0,0, 509, 322),
-//                     glm::vec3(1.0f, 1.0f, 1.0f));
-
-    m_sprite.AddTintedQuad(Rect(100,400, 164, 464), glm::vec3(0.5f, 0.0f, 0.0f));
-//    m_sprite.AddQuad(0, Rect(100,400, 164, 464), Rect(0,0, 509, 322),
-//                     glm::vec3(0.5f, 0.0f, 0.0f));
-
+    m_dialog.OnRender(0, m_sprite, m_asset);
     m_sprite.Render(spriteShader);
     m_sprite.Clear();
     
+    glEnable(GL_DEPTH_TEST);
+
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
