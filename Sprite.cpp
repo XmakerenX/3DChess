@@ -54,20 +54,35 @@ void StreamOfVertices::addQuad(const Rect& spriteRect, const Rect& texRect, cons
     spriteWidth = spriteRect.right - spriteRect.left;
     spriteHeight = spriteRect.bottom - spriteRect.top;
 
+    //startU = 0.5;
+    //widthU = 0.5;
+    startV = 1 - startV;
+
     Point quadPos = Point(spriteRect.left, spriteRect.top);
 
     GLuint vIndex = vertices.size();
 
     // creates the four vertices of our quad
+//    vertices.emplace_back(quadPos.x, quadPos.y, 0, tintColor,
+//                          startU, startV - heightV);
+//    vertices.emplace_back(quadPos.x + spriteWidth * scale.x, quadPos.y, 0,tintColor,
+//                          startU + widthU, startV - heightV);
+//    vertices.emplace_back(quadPos.x, quadPos.y + spriteHeight * scale.y, 0, tintColor,
+//                          startU, startV);
+//    vertices.emplace_back(quadPos.x + spriteWidth * scale.x,
+//                          quadPos.y + spriteHeight * scale.y, 0, tintColor,
+//                          startU + widthU, startV);
+
+
     vertices.emplace_back(quadPos.x, quadPos.y, 0, tintColor,
-                          startU, startV + heightV);
-    vertices.emplace_back(quadPos.x + spriteWidth * scale.x, quadPos.y, 0,tintColor,
-                          startU + widthU, startV + heightV);
-    vertices.emplace_back(quadPos.x, quadPos.y + spriteHeight * scale.y, 0, tintColor,
                           startU, startV);
+    vertices.emplace_back(quadPos.x + spriteWidth * scale.x, quadPos.y, 0,tintColor,
+                          startU + widthU, startV);
+    vertices.emplace_back(quadPos.x, quadPos.y + spriteHeight * scale.y, 0, tintColor,
+                          startU, startV - heightV);
     vertices.emplace_back(quadPos.x + spriteWidth * scale.x,
                           quadPos.y + spriteHeight * scale.y, 0, tintColor,
-                          startU + widthU, startV);
+                          startU + widthU, startV - heightV);
 
     // triangle 201
 //    indices.push_back(vIndex + 2); // #2 vertex  0---1 4---5
