@@ -14,10 +14,19 @@
 #include "RenderTypes.h"
 #include "Shader.h"
 #include "monoBuffer.h"
+#include "Sprite.h"
 
 // Holds all state information relevant to a character glyph as loaded using FreeType
 struct CharGlyph {
     GLuint     TextureID;
+    glm::ivec2 Size;
+    glm::ivec2 Bearing;     // Offset from baseline to left/top of glyph
+    long       Advance;     // Horizontal offset to advance to next glyph
+};
+
+struct CharGlyphAtlas
+{
+    Rect textureRect;
     glm::ivec2 Size;
     glm::ivec2 Bearing;     // Offset from baseline to left/top of glyph
     long       Advance;     // Horizontal offset to advance to next glyph
@@ -89,9 +98,12 @@ public:
     mkFont(std::__cxx11::string fontName);
     ~mkFont();
 
-    int init(int height);
+    int init(int fontSize, int height, int hDpi, int vDpi);
     void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    void renderTextAtlas(Sprite &sprite, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec4 color);
+    void renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 color);
     void renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    GLuint renderFontAtlas(Sprite& sprite);
     std::string getFontPath(std::string fontName);
 
     void setScreenHeight(int height);
@@ -102,6 +114,7 @@ public:
 private:
     std::string fontPath;
     std::map<GLchar, CharGlyph> charGlyphs;
+    std::map<GLchar, CharGlyphAtlas> charGlyphsAtlas;
     std::map<GLchar, CharGlyphBat> charGlyphsBat;
     std::map<std::string, FontString> stringTextures;
     GLuint VAO;
@@ -113,9 +126,16 @@ private:
     int maxHeight_;
     int maxOffset_;
 
+    GLuint maxWidth;
+    GLuint maxRows;
+    GLuint avgWidth;
+
+    GLuint textureAtlas;
+
     bool cacheTextTexutre(std::string text);
     void cacheGlyth(FT_Library ft, FT_Face face);
     void cacheGlythBatched(FT_Library ft, FT_Face face, int maxHeight, int maxOffset);
+    void createFontAtlas(FT_Library ft, FT_Face face);
 };
 
 #endif  //_FONT_H

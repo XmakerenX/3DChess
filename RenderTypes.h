@@ -60,6 +60,16 @@ struct Rect
         offset(pt.x, pt.y);
     }
 
+    GLuint getWidth()
+    {
+        return right - left;
+    }
+
+    GLuint getHeight()
+    {
+        return bottom - top;
+    }
+
     int left;
     int top;
     int right;
