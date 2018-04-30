@@ -23,6 +23,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "ObjLoader.h"
+#include "Font.h"
 
 #define MAX_PATH 256
 
@@ -42,6 +43,7 @@ public:
     Material& getMaterial(int materialIndex);
 	int getAttribute(const std::string& texPath, const Material& mat,const std::string& shaderPath);
     int getAttribute(const std::string& texPath, GLuint matIndex,const std::string& shaderPath);
+    mkFont *getFont(std::string fontName, int fontSize, bool isPath = false);
 
     const std::vector<Attribute>& getAttributeVector();
 
@@ -60,6 +62,8 @@ private:
     std::unordered_map<std::string,GLuint> m_textureCache;
 	std::unordered_map<std::string, Mesh> m_meshCache;
 	std::unordered_map<std::string, Shader*> m_shaderCache;
+    //std::unordered_map< std::pair<std::string, GLuint>, mkFont> m_fontCache;
+    std::unordered_map< std::string, mkFont> m_fontCache;
 	std::vector<Material> m_materials;
 	std::vector<Attribute> m_attributes;
 

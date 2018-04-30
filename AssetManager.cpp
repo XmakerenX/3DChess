@@ -1,4 +1,5 @@
 #include "AssetManager.h"
+#include <sstream>
 
 //-----------------------------------------------------------------------------
 // Name : AssetManager (constructor)
@@ -557,6 +558,39 @@ int AssetManager::getAttribute(const std::string &texPath, GLuint matIndex, cons
     return m_attributes.size() - 1;
 }
 
+//-----------------------------------------------------------------------------
+// Name : getFont
+//-----------------------------------------------------------------------------
+mkFont* AssetManager::getFont(std::string fontName, int fontSize, bool isPath/* = false*/)
+{
+    std::string fontPath;
+    if (isPath)
+        fontPath = fontName;
+    else
+        fontPath = mkFont::getFontPath(fontName);
+
+
+    std::string fontFileName = mkFont::getFontNameFromPath(fontPath);
+    std::stringstream fontNameStream;
+    fontNameStream << fontFileName << fontSize;
+
+    // check if the font is loaded in the cache
+    if (m_fontCache.count(fontNameStream.str()) != 0)
+    {
+        return &m_fontCache[fontNameStream.str()];
+    }
+    else
+    {
+        mkFont newFont(fontPath, true);
+        if (newFont.init(fontSize, 0, 96, 96) == 0)
+        {
+            m_fontCache.insert(std::pair<std::string, mkFont>(fontNameStream.str(), std::move(newFont)));
+            return &m_fontCache[fontNameStream.str()];
+        }
+        else
+            return nullptr;
+    }
+}
 //-----------------------------------------------------------------------------
 // Name : getAttributeVector
 //-----------------------------------------------------------------------------
