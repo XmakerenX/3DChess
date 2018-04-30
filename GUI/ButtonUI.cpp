@@ -41,7 +41,7 @@ ButtonUI::~ButtonUI(void)
 // Name : Render ()
 // Desc : renders the button
 //-----------------------------------------------------------------------------
-void ButtonUI::Render( Sprite& sprite, AssetManager& assetManger)
+void ButtonUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetManger)
 {
     if (m_bVisible)
     {
@@ -61,6 +61,7 @@ void ButtonUI::Render( Sprite& sprite, AssetManager& assetManger)
         {
             if (!m_bEnabled)
                 renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.4f, 0.4f, 0.4f ), dialogPos);
+                //renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.4f, 0.4f, 1.0f ), dialogPos);
             else
                 renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.785f, 0.785f, 0.785f ), dialogPos);
         }
@@ -75,31 +76,12 @@ void ButtonUI::Render( Sprite& sprite, AssetManager& assetManger)
                     renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f ), dialogPos);
         }
 
-//        LPD3DXFONT pFont;
-//        //acquire a pointer to the font we need to use to render the text
-//        if (m_elementsFonts.size() > 0)
-//            pFont = assetManger.getFontPtr(m_elementsFonts[0].fontIndex);
-//        else
-//            return;
-
-        // continue to render the text only if we got a valid pointer
-//        if (pFont)
-//        {
-//            LPD3DXSPRITE pSprite = assetManger.getSprite();
-
-//            if (!pSprite)
-//                return;
-
-//            SetRect(&rcWindow, 0, 0, m_width, m_height);
-//            OffsetRect(&rcWindow, m_x + dialogPos.x, m_y + dialogPos.y);
-
-//            D3DXMATRIXA16 matTransform;
-//            D3DXMatrixScaling( &matTransform, 1.0f, 1.0f, 1.0f );
-
-//            pSprite->SetTransform( &matTransform );
-
-//            pFont->DrawTextA(pSprite, m_strText, -1, &rcWindow, DT_NOCLIP | DT_CENTER | DT_VCENTER, m_textColor);
-//        }
+        if (m_elementsFonts.size() > 0)
+        {
+            Rect rcTextRect(rcWindow);
+            rcTextRect.offset(dialogPos.x, dialogPos.y);
+            m_elementsFonts[0].font->renderToRect(textSprite, m_strText, rcTextRect, m_textColor, mkFont::TextFormat::Center);
+        }
     }
 }
 

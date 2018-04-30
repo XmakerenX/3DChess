@@ -15,7 +15,7 @@ public:
     ButtonUI					(std::istream& inputFile);
     virtual ~ButtonUI			(void);
 
-    virtual void	Render				(Sprite &sprite, AssetManager& assetManger);
+    virtual void	Render				(Sprite &sprite, Sprite& textSprite ,AssetManager& assetManger);
 
     //virtual bool    HandleKeyboard		( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
     virtual bool    HandleMouse			(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );

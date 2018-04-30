@@ -16,7 +16,7 @@ public:
 
 	const std::string getText() const;
 
-	void			Render		( Sprite& sprite, AssetManager& assetManger);
+    void			Render		( Sprite& sprite, Sprite& textSprite ,AssetManager& assetManger);
 
 	virtual bool		SaveToFile	( std::ostream& SaveFile );
 

@@ -62,7 +62,7 @@ const std::string StaticUI::getText() const
 // Desc : Render the text store in the static to the screen
 // TODO : use the RenderText function instead of the code in the render function
 //-----------------------------------------------------------------------------
-void StaticUI::Render(Sprite& sprite, AssetManager& assetManger)
+void StaticUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetManger)
 {
     if (m_bVisible)
     {

@@ -27,6 +27,7 @@ DialogUI::DialogUI(void)
     m_texturePath[0] = '\0';
     m_captionText[0] = '\0';
 
+    m_captionFont = nullptr;
     m_pMouseOverControl = nullptr;
 
     s_pControlFocus = nullptr;
@@ -59,11 +60,12 @@ bool DialogUI::init(GLuint width, GLuint height, int nCaptionHeight, std::string
     GLuint textureName;
 
     setSize(width,height);
+    m_rcBoundingBox = Rect(m_x, m_y, m_x + m_width, m_y + m_height);
+
     m_nCaptionHeight = nCaptionHeight;
     m_captionText = captionText;
-
-    m_rcBoundingBox = Rect(m_x, m_y, m_x + m_width, m_y + m_height);
     m_rcCaptionBox = Rect(m_x, m_y , m_x + m_width, m_y + m_nCaptionHeight);
+    m_captionFont = assetManger.getFont("Times New Roman:bold", 12);
 
     // sets dialog background texture
     // checks first that there is a texutre to load
@@ -103,13 +105,13 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     GLuint textureIndex, fontIndex;
 
     // create the controls font
-//    if (!assetManger.getFont("times new roman",12, 12, FW_BOLD, FALSE, fontIndex))
+//    mkFont* font = assetManger.getFont("Times New Roman:bold", 12);
+//    if (!font)
 //        return false;
 
-//    GLuint nFontHeight = assetManger.getFontItem(fontIndex).height;
-//    ELEMENT_FONT elementFont(fontIndex,nFontHeight, assetManger.getFontItem(fontIndex).width);
+//    ELEMENT_FONT elementFont(FontInfo("Times New Roman", 12), font);
 
-    ELEMENT_GFX elementGFX;
+    //ELEMENT_GFX elementGFX;
 
     //-------------------------------------
     // Init Static elements
@@ -117,12 +119,12 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     // sets the Static default font
     // this font is also used for all other controls ... for now..
     // create the controls font
-//    if (!assetManger.getFont("times new roman",16, 8, FW_BOLD, FALSE, fontIndex))
-//        return false;
+    mkFont* controlsFont = assetManger.getFont("Times New Roman", 16);
+    if (!controlsFont)
+        return false;
 
-//    nFontHeight = assetManger.getFontItem(fontIndex).height;
 //    ELEMENT_FONT elementFont2(fontIndex,nFontHeight, assetManger.getFontItem(fontIndex).width);
-    ELEMENT_FONT elementFont2;
+    ELEMENT_FONT elementFont2(FontInfo("Times New Roman",16), controlsFont);
 
     elementFontVec.push_back(elementFont2);
     elementGFXvec.clear();
@@ -216,6 +218,119 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
 }
 
 //-----------------------------------------------------------------------------
+// Name : initWoodControlElements ()
+//-----------------------------------------------------------------------------
+bool DialogUI::initWoodControlElements(AssetManager& assetManager)
+{
+    std::vector<ELEMENT_GFX>  elementGFXvec;
+    std::vector<ELEMENT_FONT> elementFontVec;
+    CONTROL_GFX	controlGFX;
+
+    GLuint textureIndex, fontIndex;
+
+    //-------------------------------------
+    // Init Static elements
+    //-------------------------------------
+    // sets the Static default font
+    // this font is also used for all other controls ... for now..
+    // create the controls font
+    mkFont* controlsFont = assetManager.getFont("Times New Roman", 16);
+    if (!controlsFont)
+        return false;;
+
+    ELEMENT_FONT elementFont2(FontInfo("Times New Roman",16), controlsFont);
+    elementFontVec.push_back(elementFont2);
+    elementGFXvec.clear();
+
+    controlGFX.nControlType =  ControlUI::STATIC;
+    controlGFX.elementsGFXvec = elementGFXvec;
+    controlGFX.elementsFontVec = elementFontVec;
+    m_defaultControlsGFX.push_back(controlGFX);
+
+    //-------------------------------------
+    // Init Button elements
+    //-------------------------------------
+    // loads our wood GUI texture
+    const std::vector<Rect> buttonTexturesRects = {Rect(0, 0, 84, 34), Rect(0, 34, 84, 68)};
+    if (!initControlGFX(assetManager, ControlUI::BUTTON, "woodGUI2.png", buttonTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // Init CheckBox elements
+    //-------------------------------------
+    const std::vector<Rect> checkboxTexturesRects = {Rect(0, 115, 15, 130 ), Rect(60, 112, 76, 130 )};
+    if (!initControlGFX(assetManager, ControlUI::CHECKBOX, "woodGUI2.png", checkboxTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // Init RadioButton elements
+    //-------------------------------------
+    const std::vector<Rect> radioButtonTexturesRects = {Rect(1, 145, 19, 163), Rect(61, 145, 79, 163)};
+    if (!initControlGFX(assetManager, ControlUI::RADIOBUTTON, "woodGUI2.png", radioButtonTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // Init ComboBox elements
+    //-------------------------------------
+    const std::vector<Rect> comboboxTexturesRects = {Rect(97, 0, 323, 34),   // Main textrue rect
+                                                     Rect(323, 0, 367, 34), // Button textrue rect
+                                                     Rect(102, 116, 461, 301), // Drop down textrue rect
+                                                     Rect(99, 304, 463, 326)};// selection textrue rect
+
+    if (!initControlGFX(assetManager, ControlUI::COMBOBOX, "woodGUI2.png", comboboxTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // Init ListBox elements
+    //-------------------------------------
+    const std::vector<Rect> listTexturesRects = {Rect( 102, 116, 461, 331),      // Main texture rect
+                                                     Rect( 359, 215, 586, 323)}; // Selection texture rect
+
+    if (!initControlGFX(assetManager, ControlUI::LISTBOX, "woodGUI2.png", listTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // Init Slider elements
+    //-------------------------------------
+    const std::vector<Rect> sliderTexturesRects = {Rect( 102, 84, 243, 90),       // Track texture rect
+                                                     Rect( 243, 81, 259, 100)}; // Button texture rect
+
+    if (!initControlGFX(assetManager, ControlUI::SLIDER, "woodGUI2.png", sliderTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // EditBox
+    //-------------------------------------
+    const std::vector<Rect> editboxTexturesRects = {Rect( 91, 36, 321, 66),       // text area texture rect
+                                                   Rect( 97, 34, 100, 37 ),         // top left border texture rect
+                                                   Rect( 100, 34, 354, 36 ),       // top border
+                                                   Rect( 354, 34, 357, 37 ),      // top right border
+                                                   Rect( 97, 38, 99, 65 ),        // left border
+                                                   Rect( 355, 37, 357, 65 ),     // right border
+                                                   Rect( 97, 65, 100, 98 ),       // lower left border
+                                                   Rect( 100, 66, 354, 68 ),     // lower border
+                                                   Rect( 354, 65, 357, 68 )};   // lower right border
+
+    if (!initControlGFX(assetManager, ControlUI::EDITBOX, "woodGUI2.png", editboxTexturesRects, elementFontVec))
+        return false;
+
+    //-------------------------------------
+    // Init ScrollBar elements
+    //-------------------------------------
+    int nScrollBarStartX = 196;
+    int nScrollBarStartY = 191;
+    const std::vector<Rect> scrollBarTexturesRects = {Rect(nScrollBarStartX + 0, nScrollBarStartY + 21, nScrollBarStartX + 22, nScrollBarStartY + 32),   // Track textrue rect
+                                                     Rect(nScrollBarStartX + 0, nScrollBarStartY + 1, nScrollBarStartX + 22, nScrollBarStartY + 21 ),  // Up Arrow textrue rect
+                                                     Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53), // Down Arrow textrue rect
+                                                    Rect(220, 192, 238, 234)};                                                                        // Button textrue rect
+
+    if (!initControlGFX(assetManager, ControlUI::SCROLLBAR, "woodGUI2.png", scrollBarTexturesRects, elementFontVec))
+        return false;
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 // Name : initControlGFX ()
 //-----------------------------------------------------------------------------
 bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType,std::string texturePath,const std::vector<Rect> textureRects,std::vector<ELEMENT_FONT>& elementFontVec)
@@ -238,7 +353,7 @@ bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS con
 // Name : OnRender ()
 // Desc : renders the dialog and all of his controls
 //-----------------------------------------------------------------------------
-bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, AssetManager& assetManger)
+bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, Sprite& textSprite, AssetManager& assetManger)
 {
     GLuint textureName = NO_TEXTURE;
 
@@ -262,18 +377,17 @@ bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, AssetManager& assetM
     for(GLuint i = 0; i < m_Controls.size(); i++)
     {
         //if (m_Controls[i] != s_pControlFocus)
-            m_Controls[i]->Render(sprite, assetManger);
+            m_Controls[i]->Render(sprite, textSprite,assetManger);
     }
 
 //    if (drawFocusedControl)
 //            s_pControlFocus->Render(assetManger);
 
-//    LPD3DXFONT pFont = assetManger.getFontPtr(0);
-//    if (pFont)
-//    {
-//        if (m_bCaption)
-//            pFont->DrawTextA(pTopSprite, m_captionText, -1, &m_rcCaptionBox, DT_LEFT, d3d::WHITE);
-//    }
+    if (m_captionFont != nullptr)
+    {
+        if (m_bCaption)
+            m_captionFont->renderToRect(textSprite, m_captionText, m_rcCaptionBox, WHITE_COLOR, mkFont::TextFormat::Center);
+    }
 
     return true;
 }

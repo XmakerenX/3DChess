@@ -9,7 +9,7 @@
 #include "../AssetManager.h"
 #include "ControlUI.h"
 #include "ButtonUI.h"
-//#include "StaticUI.h"
+#include "StaticUI.h"
 //#include "CheckBoxUI.h"
 //#include "RadioButtonUI.h"
 //#include "ComboBoxUI.h"
@@ -66,7 +66,7 @@ public:
 
 
     bool initDefControlElements(AssetManager& assetManger);
-    //bool initWoodControlElements(AssetManager& assetManager);
+    bool initWoodControlElements(AssetManager& assetManager);
 
     virtual bool    MsgProc	 (GLuint uMsg, Timer *timer, bool windowed );
     void	OnMouseMove(Point pt);
@@ -75,7 +75,7 @@ public:
     //void    SetCallback( PCALLBACKGUIEVENT pCallback);
     void    connectToControlRightClicked( const signal_controlClicked::slot_type& subscriber);
 
-    virtual bool OnRender(float fElapsedTime, Sprite &sprite, AssetManager& assetManger);
+    virtual bool OnRender(float fElapsedTime, Sprite &sprite, Sprite& textSprite,AssetManager& assetManger);
 
     void	UpdateRects();
 
@@ -149,17 +149,21 @@ public:
     long	getCaptionHeight ();
 
 private:
-    Rect m_rcBoundingBox;
-    Rect m_rcCaptionBox;
-
-    int m_nCaptionHeight;
-    std::string m_captionText;
-
     int  m_x, m_y;
     GLuint m_width;
     GLuint m_height;
+    Rect m_rcBoundingBox;
+
     GLint m_texWidth;
     GLint m_texHeight;
+    std::string m_texturePath;
+
+    int m_nCaptionHeight;
+    Rect m_rcCaptionBox;
+    std::string m_captionText;
+    mkFont* m_captionFont;
+
+    glm::vec4 m_dialogColor;
 
     //TODO: delete the  vars that aren't needed for the drag operation
     Point m_startDragPos;
@@ -170,18 +174,15 @@ private:
     bool m_bMinimized;
     bool m_bDrag;
 
-    std::string m_texturePath;
-    glm::vec4 m_dialogColor;
-
     std::vector<ControlUI*> m_Controls;
+    //Default graphics for the controls elements stuff like : textures,Rects
+    std::vector<CONTROL_GFX> m_defaultControlsGFX;
 
+    //TODO: map seems to fit defInfo use better..
     std::vector<DEF_INFO> m_defInfo;
 
     static ControlUI* s_pControlFocus; // The control which has focus
     ControlUI* m_pMouseOverControl;
-
-    //Default graphics for the controls elements stuff like : textures,Rects
-    std::vector<CONTROL_GFX> m_defaultControlsGFX;
 
     // Pointer to the callback event function that the dialog sends events to
     //PCALLBACKGUIEVENT m_pCallbackEvent;

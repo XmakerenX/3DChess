@@ -8,6 +8,7 @@
 #include "../timer.h"
 #include "../AssetManager.h"
 #include "../Sprite.h"
+#include "../Font.h"
 
 //-----------------------GLuint------------------------------------------------------
 // Typedefs, Structures and Enumerators
@@ -56,28 +57,23 @@ struct ELEMENT_FONT
 {
     ELEMENT_FONT()
     {
-        fontIndex = -1;
-        nFontHeight = -1;
-        nFontWidth = -1;
+        font = nullptr;
     }
 
-    ELEMENT_FONT(GLuint newFontIndex, GLuint newNFontHeight, GLuint newNFontWidth)
+    ELEMENT_FONT(FontInfo newFontInfo, mkFont* newFont)
+        :fontInfo(newFontInfo)
     {
-        fontIndex = newFontIndex;
-        nFontHeight = newNFontHeight;
-        nFontWidth = newNFontWidth;
+        font = newFont;
     }
 
-    void setFont(GLuint newFontIndex, GLuint newNFontHeight, GLuint newNFontWidth)
+    void setFont(FontInfo& newFontInfo, mkFont* newFont)
     {
-        fontIndex = newFontIndex;
-        nFontHeight = newNFontHeight;
-        nFontWidth =  newNFontWidth;
+        fontInfo = newFontInfo;
+        font = newFont;
     }
 
-    GLuint fontIndex;
-    long nFontHeight;
-    long nFontWidth;
+    FontInfo fontInfo;
+    mkFont* font;
 };
 
 struct ELEMENT_GFX
@@ -144,7 +140,7 @@ public:
     //virtual bool    MsgProc				(GLuint uMsg, WPARAM wParam, LPARAM lParam );
 
      //TODO: need to decide how time between frames will be given to the render function
-    virtual void    Render	(Sprite& sprite ,AssetManager& assetManger) = 0; //pure abstract function
+    virtual void    Render	(Sprite& sprite, Sprite& textSprite ,AssetManager& assetManger) = 0; //pure abstract function
 
     void	renderRect		(Sprite& sprite, Rect &rcWindow, GLuint textureName, Rect &rcTexture, glm::vec4 color, Point offset);
     //void	RenderText		(const char strText[], Rect rcDest, LPD3DXFONT pFont, DWORD format, LPD3DXSPRITE pSprite, D3DCOLOR textColor, POINT offset);
@@ -175,7 +171,7 @@ public:
     int		getY				();
     int		getWidth			();
     int		getHeight			();
-    DialogUI *getParentDialog();
+    DialogUI* getParentDialog();
 
     virtual bool	SaveToFile  (std::ostream& SaveFile);
 
