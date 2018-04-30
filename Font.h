@@ -16,6 +16,30 @@
 #include "monoBuffer.h"
 #include "Sprite.h"
 
+struct FontInfo
+{
+    FontInfo()
+    {
+        fontName = "";
+        fontSize = 0;
+    }
+
+    FontInfo(const FontInfo& toCopy)
+    {
+        fontName = toCopy.fontName;
+        fontSize = toCopy.fontSize;
+    }
+
+    FontInfo(std::string fontName, int fontSize)
+    {
+        this->fontName = fontName;
+        this->fontSize = fontSize;
+    }
+
+    std::string fontName;
+    int fontSize;
+};
+
 // Holds all state information relevant to a character glyph as loaded using FreeType
 struct CharGlyph {
     GLuint     TextureID;
@@ -95,16 +119,22 @@ struct FontString {
 class mkFont
 {
 public:
-    mkFont(std::__cxx11::string fontName);
+    enum class TextFormat{Left, HorizCenter, Center, Right};
+
+    mkFont();
+    mkFont(std::string fontName, bool isPath = false);
+    mkFont(const mkFont&  toCopy);
+    mkFont(mkFont&& toMove);
     ~mkFont();
 
     int init(int fontSize, int height, int hDpi, int vDpi);
     void renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
     void renderTextAtlas(Sprite &sprite, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec4 color);
-    void renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 color);
+    void renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 color, TextFormat format = TextFormat::Left);
     void renderTextBatched(Shader *shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
-    GLuint renderFontAtlas(Sprite& sprite);
-    std::string getFontPath(std::string fontName);
+    GLuint renderFontAtlas(Sprite& sprite, const Rect &rc);
+    static std::string getFontPath(std::string fontName);
+    static std::string getFontNameFromPath(std::string path);
 
     void setScreenHeight(int height);
 
@@ -131,6 +161,7 @@ private:
     GLuint avgWidth;
 
     GLuint textureAtlas;
+    GLuint fontSize;
 
     bool cacheTextTexutre(std::string text);
     void cacheGlyth(FT_Library ft, FT_Face face);

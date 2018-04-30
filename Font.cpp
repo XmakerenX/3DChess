@@ -7,17 +7,88 @@
 //-----------------------------------------------------------------------------
 // Name : mkFont (constructor)
 //-----------------------------------------------------------------------------
-mkFont::mkFont(std::string fontName)
+mkFont::mkFont()
 {
     VAO = 0;
     VBO = 0;
 
-    fontPath = getFontPath(fontName);
+    fontPath = "";
+    fontSize = 0;
 
     maxHeight_ = 0;
     maxOffset_ = 0;
 
     textureAtlas = 0;
+}
+
+//-----------------------------------------------------------------------------
+// Name : mkFont (constructor)
+//-----------------------------------------------------------------------------
+mkFont::mkFont(std::string fontName, bool isPath/* = false*/)
+{
+    VAO = 0;
+    VBO = 0;
+
+    if (isPath)
+        fontPath = fontName;
+    else
+        fontPath = mkFont::getFontPath(fontName);
+    fontSize = 0;
+
+    maxHeight_ = 0;
+    maxOffset_ = 0;
+
+    textureAtlas = 0;
+}
+
+//-----------------------------------------------------------------------------
+// Name : mkFont (constructor)
+//-----------------------------------------------------------------------------
+mkFont::mkFont(const mkFont& toCopy)
+{
+    fontPath = toCopy.fontPath;
+    init(toCopy.fontSize, toCopy.height_, 96, 96);
+}
+
+//-----------------------------------------------------------------------------
+// Name : mkFont (constructor)
+//-----------------------------------------------------------------------------
+mkFont::mkFont(mkFont&& toMove)
+    :charGlyphs(std::move(toMove.charGlyphs)), charGlyphsAtlas(std::move(toMove.charGlyphsAtlas))
+    ,charGlyphsBat(std::move(toMove.charGlyphsBat)), stringTextures(std::move(toMove.stringTextures))
+{
+    fontPath = toMove.fontPath;
+    fontSize = toMove.fontSize;
+
+    this->VAO = toMove.VAO;
+    this->VBO = toMove.VBO;
+
+    for (int i = 0; i < 6; i++)
+        indices[i] = toMove.indices[i];
+
+    height_ = toMove.height_;
+
+    maxHeight_ = toMove.maxHeight_;
+    maxOffset_ = toMove.maxOffset_;
+
+    maxWidth = toMove.maxWidth;
+    maxRows = toMove.maxRows;
+    avgWidth = toMove.avgWidth;
+
+    textureAtlas = toMove.textureAtlas;
+
+    toMove.fontPath = "";
+    toMove.fontSize = 0;
+    toMove.VAO = 0;
+    toMove.VBO = 0;
+
+    toMove.height_ = 0;
+    toMove.maxHeight_ = 0;
+    toMove.maxOffset_ = 0;
+    toMove.maxWidth = 0;
+    toMove.maxRows = 0;
+    toMove.avgWidth = 0;
+    toMove.textureAtlas = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -38,6 +109,9 @@ mkFont::~mkFont()
         FontString& f = it->second;
         glDeleteTextures(1,&f.texID);
     }
+
+    if (textureAtlas != 0)
+        glDeleteTextures(1, &textureAtlas);
 }
 
 //-----------------------------------------------------------------------------
@@ -45,15 +119,22 @@ mkFont::~mkFont()
 //-----------------------------------------------------------------------------
 int mkFont::init(int fontSize,int height, int hDpi, int vDpi)
 {
+    this->fontSize = fontSize;
      FT_Library ft;
      // All functions return a value different than 0 whenever an error occurred
      if (FT_Init_FreeType(&ft))
+     {
          std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+         return -1;
+     }
 
      // Load font as face
      FT_Face face;
      if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
+     {
          std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+         return -1;
+     }
 
      // Set size to load glyphs as
      //FT_Set_Char_Size(face, 72*64, 72*64, hDpi, vDpi);
@@ -109,6 +190,7 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
 {
     // Activate corresponding render state
     shader->Use();
+
     glUniform3f(glGetUniformLocation(shader->Program, "textColor"), color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
@@ -147,6 +229,14 @@ void mkFont::renderText(Shader *shader, std::string text, GLfloat x, GLfloat y, 
 
         // Render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+
+        int err = glGetError();
+        if (err != GL_NO_ERROR)
+        {
+            std::cout <<"Font: ERROR bitches " << *c << "\n";
+            return;
+        }
+
         // Update content of VBO memory
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         // Be sure to use glBufferSubData and not glBufferData
@@ -204,14 +294,15 @@ void mkFont::renderTextAtlas(Sprite& sprite, std::string text, GLfloat x, GLfloa
 //-----------------------------------------------------------------------------
 // Name : renderToRect
 //-----------------------------------------------------------------------------
-void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 color)
+void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 color, TextFormat format/* = TextFormat::Left*/)
 {
+    // holds the text that will be rendered
     std::string textInRect;
+
     int textWidth = 0;
     int maxCharHeight = 0;
-
     std::string::iterator c;
-
+    // calcuate textWidth that fits the Rect and max Char height
     for (c = text.begin(); c != text.end(); c++)
     {
         CharGlyph& ch = charGlyphs[*c];
@@ -220,6 +311,7 @@ void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 c
         int offset = (ch.Advance >> 6) - (ch.Bearing.x + ch.Size.x);
         if ( (textWidth - offset) > rc.getWidth())
         {
+            // clip the string so it fits the Rect
             textInRect = std::string(text.begin(), c);
             break;
         }
@@ -227,18 +319,62 @@ void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 c
         maxCharHeight = std::max(ch.Size.y, maxCharHeight);
     }
 
+    GLuint maxTextHeight = 0;
+
+    // check if text Height fits the Rect
     for (auto c2 = text.begin(); c2 != c; c2++)
     {
         CharGlyph& ch = charGlyphs[*c2];
-        GLfloat ypos = rc.top + (ch.Size.y - ch.Bearing.y) + (maxCharHeight - ch.Size.y);
-        if ( (ypos + ch.Size.y) - rc.top > rc.getHeight() )
+        GLuint textHeight = maxCharHeight + ch.Size.y - ch.Bearing.y;
+        if ( textHeight > rc.getHeight() )
             return;
+
+        maxTextHeight = std::max(maxTextHeight, textHeight);
+
+        //textHeight = rc.top + (ch.Size.y - ch.Bearing.y) + (maxCharHeight - ch.Size.y);
+//        if ( (textHeight + ch.Size.y) - rc.top > rc.getHeight() )
+//            return;
+//        GLfloat ypos = rc.top + (ch.Size.y - ch.Bearing.y) + (maxCharHeight - ch.Size.y);
+//        if ( (ypos + ch.Size.y) - rc.top > rc.getHeight() )
+//            return;
+        //if ((c2 + 1) == c)
+            //textHeight = ((rc.top + (ch.Size.y - ch.Bearing.y) + (maxCharHeight - ch.Size.y)) + ch.Size.y) - rc.top;
+            //textHeight = maxCharHeight + ch.Size.y - ch.Bearing.y;
     }
 
+    GLuint x = rc.left;
+    GLuint y = rc.top;
+
+    // shift the x posistion based on the given format
+    switch(format)
+    {
+    case TextFormat::HorizCenter:
+    {
+        x = rc.left + (rc.getWidth() - textWidth) / 2;
+    }break;
+
+    case TextFormat::Center:
+    {
+        x = rc.left + (rc.getWidth() - textWidth) / 2;
+//        int temp1 = rc.getHeight();
+//        int temp2 = textHeight;
+//        int temp3 = temp1 - temp2;
+        y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
+    }break;
+
+    case TextFormat::Right:
+    {
+        x = rc.right - textWidth;
+    }break;
+
+    }
+
+    // if c got to the end of the string the enitre string fits the Rect
     if ( c == text.end())
         textInRect = text;
 
-    renderTextAtlas(sprite,textInRect, rc.left, rc.top, 1.0f, color );
+    renderTextAtlas(sprite,textInRect, x, y, 1.0f, color );
+
 
 }
 
@@ -421,6 +557,7 @@ void mkFont::cacheGlyth(FT_Library ft, FT_Face face)
 {
     maxHeight_ = 0;
     maxOffset_ = 0;
+    maxRows = 0;
 
     int sumWidth = 0;
 
@@ -590,11 +727,10 @@ void mkFont::createFontAtlas(FT_Library ft, FT_Face face)
     GLuint j = 6;
     while (i <= 11 || j <= 11)
     {
-        //int bitmapPerWidth = std::pow(2, i) / maxWidth;
         int bitmapPerWidth = std::pow(2, i) / avgWidth;
         int bitmapPerRow = std::pow(2, j) / maxRows;
 
-        if ((bitmapPerWidth * bitmapPerRow) >= 128)
+        if ((bitmapPerWidth * bitmapPerRow) > 128)
         {
             std::cout << "texture useage will be " << (128 / (float)(bitmapPerWidth * bitmapPerRow))*100 << "%\n";
             break;
@@ -632,7 +768,7 @@ void mkFont::createFontAtlas(FT_Library ft, FT_Face face)
     int textureWidthOffset = 0;
     int textureHeightOffset = 0;
 
-    int bitmapPerWidth = std::pow(2, i) / maxWidth;
+    int bitmapPerWidth = std::pow(2, i) / avgWidth;
     int bitmapPerRow = std::pow(2, j) / maxRows;
 
     // Load first 128 characters of ASCII set
@@ -762,12 +898,20 @@ std::string mkFont::getFontPath(std::string fontName)
 }
 
 //-----------------------------------------------------------------------------
+// Name : getFontNameFromPath
+//-----------------------------------------------------------------------------
+std::string mkFont::getFontNameFromPath(std::string path)
+{
+    std::size_t found = path.find_last_of("/");
+    return path.substr(found+1);
+}
+
+//-----------------------------------------------------------------------------
 // Name : renderFontAtlas
 //-----------------------------------------------------------------------------
-GLuint mkFont::renderFontAtlas(Sprite& sprite)
+GLuint mkFont::renderFontAtlas(Sprite& sprite, const Rect& rc)
 {
     CharGlyph ch = charGlyphs['A'];
-    //sprite.AddTexturedQuad(Rect(0,0, 1024, 1024), ch.TextureID, Rect(0,0,0,0));
-    sprite.AddTexturedQuad(Rect(200, 0, 712, 512), textureAtlas, Rect(0, 0, 0, 0));
+    sprite.AddTexturedQuad(rc, textureAtlas, Rect(0, 0, 0, 0));
     return ch.TextureID;
 }
