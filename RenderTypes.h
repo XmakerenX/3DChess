@@ -60,6 +60,19 @@ struct Rect
         offset(pt.x, pt.y);
     }
 
+    bool isPointInRect(int x, int y)
+    {
+        if (x >= left && x <= right && y >= top && y <= bottom)
+            return true;
+        else
+            return false;
+    }
+
+    bool isPointInRect(Point pt)
+    {
+        return isPointInRect(pt.x, pt.y);
+    }
+
     GLuint getWidth()
     {
         return right - left;
