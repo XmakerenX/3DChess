@@ -146,6 +146,8 @@ bool Sprite::Init()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexSprite), (GLvoid*)offsetof(VertexSprite, uv));
 
     glBindVertexArray(0);
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
