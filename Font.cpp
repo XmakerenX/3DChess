@@ -548,6 +548,8 @@ bool mkFont::cacheTextTexutre(std::string text)
     // cache the texture generated in the map
     FontString ff = {textureID, monBuffer.width_,monBuffer.height_};
     stringTextures.insert( std::pair< std::string, FontString>(text,ff));
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
