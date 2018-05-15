@@ -5,10 +5,12 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/bind/bind.hpp>
 #include "../RenderTypes.h"
+#include "../virtualKeysGame.h"
 #include "../timer.h"
 #include "../AssetManager.h"
 #include "../Sprite.h"
 #include "../Font.h"
+#include "../mouseEventsGame.h"
 
 //-----------------------GLuint------------------------------------------------------
 // Typedefs, Structures and Enumerators
@@ -126,11 +128,13 @@ public:
     //-------------------------------------------------------------------------
     // functions that handle user input
     //-------------------------------------------------------------------------
-    //virtual bool    HandleKeyboard		( HWND hWnd, GLuint uMsg, WPARAM wParam, LPARAM lParam );
+    virtual bool    handleKeyEvent		(unsigned char key , bool down);
+    virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down);
+    virtual bool    handleMouseEvent    (MouseEvent event, Point cursorPos, bool down, float timeStamp);
     //virtual bool	HandleMouse			( HWND hWnd, GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
 
-    //virtual bool	Pressed				( HWND hWnd, Point pt, INPUT_STATE inputState, Timer* timer);
-    //virtual bool    Released			( HWND hWnd, Point pt);
+    virtual bool	Pressed				( Point pt, INPUT_STATE inputState, float timeStamp);
+    virtual bool    Released			( Point pt);
     virtual bool    Scrolled			( int nScrollAmount);
     virtual bool    Dragged				( Point pt);
 

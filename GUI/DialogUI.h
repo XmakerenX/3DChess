@@ -10,6 +10,8 @@
 #include "ControlUI.h"
 #include "ButtonUI.h"
 #include "StaticUI.h"
+#include "../virtualKeysGame.h"
+#include "../mouseEventsGame.h"
 //#include "CheckBoxUI.h"
 //#include "RadioButtonUI.h"
 //#include "ComboBoxUI.h"
@@ -70,6 +72,11 @@ public:
 
     virtual bool    MsgProc	 (GLuint uMsg, Timer *timer, bool windowed );
     void	OnMouseMove(Point pt);
+
+    bool handleKeyEvent(unsigned char key, bool down);
+    bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down);
+    bool handleMouseEvent(MouseEvent event, Point cursorPos, bool down);
+
 
     //void    SendEvent(GLuint nEvent, bool bTriggeredByUser, int nControlID, HWND hWnd = NULL );
     //void    SetCallback( PCALLBACKGUIEVENT pCallback);
@@ -181,7 +188,7 @@ private:
     //TODO: map seems to fit defInfo use better..
     std::vector<DEF_INFO> m_defInfo;
 
-    static ControlUI* s_pControlFocus; // The control which has focus
+    static ControlUI* m_pControlFocus; // The control which has focus
     ControlUI* m_pMouseOverControl;
 
     // Pointer to the callback event function that the dialog sends events to

@@ -86,32 +86,95 @@ void ButtonUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetMan
 }
 
 //-----------------------------------------------------------------------------
+// Name : handleMouseEvent ()
+// Desc : handles mouse events for this button
+//-----------------------------------------------------------------------------
+bool ButtonUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down, float timeStamp)
+{
+    switch(event)
+    {
+    case MouseEvent::LeftButton:
+    case MouseEvent::DoubleLeftButton:
+    {
+        if (down)
+        {
+            if (Pressed(cursorPos, INPUT_STATE(), timeStamp))
+                return true;
+        }
+        else
+        {
+            if (Released(cursorPos))
+                return true;
+        }
+    }break;
+    }
+    return false;
+}
+
+//-----------------------------------------------------------------------------
 // Name : HandleMouse ()
 // Desc : handles mouse events for this button
 //-----------------------------------------------------------------------------
-bool ButtonUI::HandleMouse(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer )
+//bool ButtonUI::HandleMouse(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer )
+//{
+////    if (!m_bEnabled || !m_bVisible)
+////        return false;
+
+////    switch(uMsg)
+////    {
+////    case WM_LBUTTONDOWN:
+////    case WM_LBUTTONDBLCLK:
+////        {
+////            if (Pressed(hWnd, mousePoint, inputstate, timer))
+////                return true;
+////        }break;
+
+////    case WM_LBUTTONUP:
+////        {
+////            if (Released(hWnd, mousePoint))
+////                return true;
+////        }break;
+////    }
+
+//    return false;
+//}
+
+//-----------------------------------------------------------------------------
+// Name : handleKeyEvent ()
+// Desc : handles key events for this button
+//-----------------------------------------------------------------------------
+bool ButtonUI::handleKeyEvent(unsigned char key, bool down)
 {
-//    if (!m_bEnabled || !m_bVisible)
-//        return false;
-
-//    switch(uMsg)
-//    {
-//    case WM_LBUTTONDOWN:
-//    case WM_LBUTTONDBLCLK:
-//        {
-//            if (Pressed(hWnd, mousePoint, inputstate, timer))
-//                return true;
-//        }break;
-
-//    case WM_LBUTTONUP:
-//        {
-//            if (Released(hWnd, mousePoint))
-//                return true;
-//        }break;
-//    }
+    if (key == ' ')
+    {
+        if (down)
+        {
+            m_bPressed = true;
+            return true;
+        }
+        else
+        {
+            if (m_bPressed)
+            {
+                m_bPressed = false;
+                //TODO: send clicked signal
+                //m_pParentDialog->SendEvent(1, true, m_ID, hWnd);
+                return true;
+            }
+        }
+    }
 
     return false;
 }
+
+//-----------------------------------------------------------------------------
+// Name : handleVirtualKey ()
+// Desc : handles key events for this button
+//-----------------------------------------------------------------------------
+//bool ButtonUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down)
+//{
+
+//}
 
 //-----------------------------------------------------------------------------
 // Name : HandleKeyboard ()
@@ -155,42 +218,38 @@ bool ButtonUI::HandleMouse(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate
 //-----------------------------------------------------------------------------
 // Name : Pressed ()
 //-----------------------------------------------------------------------------
-//bool ButtonUI::Pressed( HWND hWnd, Point pt, INPUT_STATE inputState, Timer* timer)
-//{
-//    if ( ContainsPoint( pt ) )
-//    {
-//        m_bPressed = true;
+bool ButtonUI::Pressed (Point pt, INPUT_STATE inputState, float timeStamp)
+{
+    if ( ContainsPoint( pt ) )
+    {
+        std::cout << "Button pressed\n";
+        m_bPressed = true;
 
-//        SetCapture(hWnd);
+        if( !m_bHasFocus )
+            m_pParentDialog->RequestFocus( this );
 
-//        if( !m_bHasFocus )
-//            m_pParentDialog->RequestFocus( this );
-
-//        return true;
-//    }
-//    return false;
-//}
+        return true;
+    }
+    return false;
+}
 
 //-----------------------------------------------------------------------------
 // Name : Released ()
 //-----------------------------------------------------------------------------
-//bool ButtonUI::Released(HWND hWnd, POINT pt)
-//{
-//    if (m_bPressed)
-//    {
-//        m_bPressed = false;
-//        ReleaseCapture();
+bool ButtonUI::Released(Point pt)
+{
+    if (m_bPressed)
+    {
+        m_bPressed = false;
 
-//        //TODO: something here about keyboard input from dialog...
+        //TODO: something here about keyboard input from dialog... ????
+        if (ContainsPoint(pt))
+            m_clickedSig(this);
 
-//        if (ContainsPoint(pt))
-//            m_clickedSig(this);
-//            //m_pParentDialog->SendEvent(1, true, m_ID, hWnd);
-
-//        return true;
-//    }
-//    return false;
-//}
+        return true;
+    }
+    return false;
+}
 
 //-----------------------------------------------------------------------------
 // Name : setHotKey ()

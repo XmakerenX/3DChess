@@ -17,9 +17,13 @@ public:
 
     virtual void	Render				(Sprite &sprite, Sprite& textSprite ,AssetManager& assetManger);
 
-    //virtual bool    HandleKeyboard		( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-    virtual bool    HandleMouse			(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
+    virtual bool handleKeyEvent(unsigned char key, bool down);
+    //virtual bool handleVirtualKey(GK_VirtualKey virtualKey, bool down);
+    virtual bool handleMouseEvent(MouseEvent event, Point cursorPos, bool down, float timeStamp);
+    //virtual bool    HandleMouse			(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
 
+    virtual bool Pressed (Point pt, INPUT_STATE inputState, float timeStamp);
+    virtual bool Released(Point pt);
     //virtual bool	Pressed				(HWND hWnd, Point pt, INPUT_STATE inputState, Timer *timer);
     //virtual bool    Released			( HWND hWnd, POINT pt);
 

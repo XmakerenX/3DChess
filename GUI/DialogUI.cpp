@@ -2,7 +2,7 @@
 #include <iostream>
 #include <limits>
 
-ControlUI* DialogUI::s_pControlFocus = nullptr;
+ControlUI* DialogUI::m_pControlFocus = nullptr;
 
 //-----------------------------------------------------------------------------
 // Name : DialogUI (constructor)
@@ -30,7 +30,7 @@ DialogUI::DialogUI(void)
     m_captionFont = nullptr;
     m_pMouseOverControl = nullptr;
 
-    s_pControlFocus = nullptr;
+    m_pControlFocus = nullptr;
 }
 
 
@@ -393,6 +393,139 @@ bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, Sprite& textSprite, 
 }
 
 //-----------------------------------------------------------------------------
+// Name : handleKeyEvent ()
+//-----------------------------------------------------------------------------
+bool DialogUI::handleKeyEvent(unsigned char key, bool down)
+{
+        // If a control is in focus, it belongs to this dialog, and it's enabled, then give
+        // it the first chance at handling the message.
+        if( m_pControlFocus && m_pControlFocus->getEnabled() )
+        {
+            // If the control handles it, then we don't.
+            if (m_pControlFocus->handleKeyEvent(key, down))
+                return true;
+        }
+
+        return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : handleVirtualKeyEvent ()
+//-----------------------------------------------------------------------------
+bool DialogUI::handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down)
+{
+    // If a control is in focus, it belongs to this dialog, and it's enabled, then give
+    // it the first chance at handling the message.
+    if( m_pControlFocus && m_pControlFocus->getEnabled() )
+    {
+        // If the control handles it, then we don't.
+        if (m_pControlFocus->handleVirtualKey(virtualKey, down))
+            return true;
+    }
+
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : handleMouseEvent ()
+//-----------------------------------------------------------------------------
+bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
+{
+    if (!m_bVisible)
+        return false;
+
+    //let controls handle the mouse event first
+    // If a control is in focus and it's enabled, then give
+    // it the first chance at handling the message.
+    if( m_pControlFocus && m_pControlFocus->getEnabled() )
+    {
+        if( m_pControlFocus->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
+            return true;
+//        if( s_pControlFocus->HandleMouse( hWnd, uMsg, mousePoint, curInputState, timer ) )
+//            return true;
+    }
+
+    for (GLuint i = 0; i < m_Controls.size(); i++)
+    {
+        if (m_Controls[i]->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
+        {
+            return true;
+        }
+    }
+
+    // the event was not for any of the controls in the dialog
+    // the dialog will attemt to handle the event
+    switch (event)
+    {
+    case MouseEvent::LeftButton:
+    {
+        if (down)
+        {
+            // Mouse not over any controls in this dialog since none of them handled the event
+            // set no control to be in focus
+            if(m_pControlFocus)
+            {
+                m_pControlFocus->OnFocusOut();
+                m_pControlFocus = nullptr;
+            }
+
+            if (m_rcCaptionBox.isPointInRect(cursorPos))
+            {
+                m_bDrag = true;
+                return true;
+            }
+        }
+        else
+        {
+            if (m_bDrag)
+            {
+                m_bDrag = false;
+                return true;
+            }
+        }
+    }break;
+
+    case MouseEvent::DoubleRightButton:
+    {
+        cursorPos.x -= m_x;
+        cursorPos.y -= m_y + getCaptionHeight();
+
+        ControlUI* pControl = getControlAtPoint(cursorPos);
+        if( pControl != nullptr && pControl->getEnabled() )
+        {
+            RemoveControl( pControl->getID() );
+        }
+    }break;
+
+    case MouseEvent::RightButton:
+    {
+        if (down)
+        {
+            cursorPos.x -= getLocation().x;
+            cursorPos.y -= getLocation().y + getCaptionHeight();
+
+            m_pControlFocus = getControlAtPoint(cursorPos);
+
+            if (m_pControlFocus != nullptr)
+                m_controlRightClkSig(m_pControlFocus);
+        }
+    }break;
+
+    case MouseEvent::MouseMoved:
+
+    {
+                    // check if we need to highlight a control as the mouse is over it
+                    OnMouseMove(cursorPos);
+                    // return false to allow others to proceess this event
+                    return false;
+    }break;
+
+    }
+
+    return false;
+}
+
+//-----------------------------------------------------------------------------
 // Name : MsgProc ()
 // Desc : process messages that were sent to the dialog
 //-----------------------------------------------------------------------------
@@ -646,39 +779,42 @@ void DialogUI::ClearRadioButtonGruop(GLuint nButtonGroup)
 //-----------------------------------------------------------------------------
 void DialogUI::OnMouseMove(Point pt)
 {
-//    if (m_bDrag)
-//    {
-//        int dx = pt.x - m_startDragPos.x;
-//        int dy = pt.y - m_startDragPos.y;
+    if (m_bDrag)
+    {
+        int dx = pt.x - m_startDragPos.x;
+        int dy = pt.y - m_startDragPos.y;
 
-//        //TODO: use setLocation instead of manually adding the values
-//        //setLocation(m_x + dx, m_y + dy);
-//        m_x += dx;
-//        m_y += dy;
-//        UpdateRects();
+        setLocation(m_x + dx, m_y + dy);
+        UpdateRects();
 
-//        m_startDragPos = pt;
-//        return;
-//    }
+        m_startDragPos = pt;
+        return;
+    }
 
-//    pt.x -= m_x;
-//    pt.y -= m_y;
-//    pt.y -= getCaptionHeight();
+    pt.x -= m_x;
+    pt.y -= m_y;
+    pt.y -= getCaptionHeight();
 
-//    ControlUI* pControl = getControlAtPoint(pt);
+    ControlUI* pControl = getControlAtPoint(pt);
+    ControlUI* pPrevMouseOverControl = m_pMouseOverControl;
 
-//    // check if the current control was already highlighted
-//    if (pControl == m_pMouseOverControl)
-//        return;
+    if (pControl != nullptr)
+    {
+        // check if the current control was already highlighted
+        if (pControl == m_pMouseOverControl)
+            return;
 
-//    // if there was a control highlighted restore it to normal
-//    if (m_pMouseOverControl)
-//        m_pMouseOverControl->onMouseLeave();
+        // sets the new mouseOverControl and highlight it
+        m_pMouseOverControl = pControl;
+        pControl->onMouseEnter();
+    }
 
-//    // sets the new mouseOverControl and highlight it
-//    m_pMouseOverControl = pControl;
-//    if (pControl)
-//        pControl->onMouseEnter();
+    // if there was a control highlighted restore it to normal
+    if (pPrevMouseOverControl)
+    {
+        m_pMouseOverControl->onMouseLeave();
+        m_pMouseOverControl = nullptr;
+    }
 
 }
 
@@ -1049,7 +1185,7 @@ void DialogUI::RemoveControl(int ID)
         if (m_Controls[i]->getID() == ID)
         {
             // clear the focus reference to this control
-            if (s_pControlFocus == m_Controls[i])
+            if (m_pControlFocus == m_Controls[i])
                 ClearFocus();
 
             // clear the mouseOver reference to this control
@@ -1082,8 +1218,8 @@ void DialogUI::RemoveControl(int ID)
 //-----------------------------------------------------------------------------
 void DialogUI::RemoveAllControls()
 {
-    if( s_pControlFocus && s_pControlFocus->getParentDialog() == this )
-        s_pControlFocus = nullptr;
+    if( m_pControlFocus && m_pControlFocus->getParentDialog() == this )
+        m_pControlFocus = nullptr;
 
     m_pMouseOverControl = nullptr;
 
@@ -1214,7 +1350,10 @@ GLuint DialogUI::getHeight()
 //-----------------------------------------------------------------------------
 long DialogUI::getCaptionHeight()
 {
-    return m_rcCaptionBox.bottom - m_rcCaptionBox.top;
+    if (m_bCaption)
+        return m_nCaptionHeight;
+    else
+        return 0;
 }
 
 
@@ -1223,17 +1362,17 @@ long DialogUI::getCaptionHeight()
 //-----------------------------------------------------------------------------
 void DialogUI::RequestFocus( ControlUI* pControl)
 {
-    if( s_pControlFocus == pControl )
+    if( m_pControlFocus == pControl )
         return;
 
     if( !pControl->CanHaveFocus() )
         return;
 
-    if( s_pControlFocus )
-        s_pControlFocus->OnFocusOut();
+    if( m_pControlFocus )
+        m_pControlFocus->OnFocusOut();
 
     pControl->OnFocusIn();
-    s_pControlFocus = pControl;
+    m_pControlFocus = pControl;
 }
 
 //-----------------------------------------------------------------------------
@@ -1241,10 +1380,10 @@ void DialogUI::RequestFocus( ControlUI* pControl)
 //-----------------------------------------------------------------------------
 void DialogUI::ClearFocus()
 {
-    if( s_pControlFocus )
+    if( m_pControlFocus )
     {
-        s_pControlFocus->OnFocusOut();
-        s_pControlFocus = NULL;
+        m_pControlFocus->OnFocusOut();
+        m_pControlFocus = NULL;
     }
 
     //ReleaseCapture();

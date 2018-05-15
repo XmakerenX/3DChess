@@ -84,15 +84,34 @@ bool ControlUI::onInit()
 }
 
 //-----------------------------------------------------------------------------
-// Name : HandleKeyboard()
+// Name : handleKeyEvent()
 // Desc : handles keyboard input
 // Note : returns false by default for the basic control class which means
 //        the control does nothing with the keyboard input
 //-----------------------------------------------------------------------------
-//bool ControlUI::HandleKeyboard( HWND hWnd, GLuint uMsg, WPARAM wParam, LPARAM lParam )
-//{
-//    return false;
-//}
+bool ControlUI::handleKeyEvent(unsigned char key, bool down)
+{
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : handleVirtualKey()
+// Desc : handles Virtual keys input
+// Note : returns false by default for the basic control class which means
+//        the control does nothing with the Virtual keys input
+//-----------------------------------------------------------------------------
+bool ControlUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down)
+{
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : handleMouseEvent()
+//-----------------------------------------------------------------------------
+bool ControlUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down, float timeStamp)
+{
+    return false;
+}
 
 //-----------------------------------------------------------------------------
 // Name : HandleMouse()
@@ -108,18 +127,18 @@ bool ControlUI::onInit()
 //-----------------------------------------------------------------------------
 // Name : Pressed()
 //-----------------------------------------------------------------------------
-//bool CControlUI::Pressed( HWND hWnd, POINT pt, INPUT_STATE inputState, CTimer* timer )
-//{
-//	return false;
-//}
+bool ControlUI::Pressed(Point pt, INPUT_STATE inputState, float timeStamp)
+{
+    return false;
+}
 
 //-----------------------------------------------------------------------------
 // Name : Released()
 //-----------------------------------------------------------------------------
-//bool CControlUI::Released( HWND hWnd, POINT pt)
-//{
-//	return false;
-//}
+bool ControlUI::Released( Point pt)
+{
+    return false;
+}
 
 //-----------------------------------------------------------------------------
 // Name : Dragged()
@@ -154,10 +173,12 @@ bool ControlUI::Scrolled( int nScrollAmount)
 //-----------------------------------------------------------------------------
 bool ControlUI::ContainsPoint(Point pt)
 {
-    if ((pt.x >= m_x) && (pt.x <= m_x + m_width) && (pt.y >= m_y) && (pt.y <= m_y + m_height))
-        return true;
-    else
-        return false;
+    return m_rcBoundingBox.isPointInRect(pt);
+//    if(m_rcBoundingBox.isPointInRect(pt))
+//    if ((pt.x >= m_x) && (pt.x <= m_x + m_width) && (pt.y >= m_y) && (pt.y <= m_y + m_height))
+//        return true;
+//    else
+//        return false;
 }
 
 //-----------------------------------------------------------------------------
