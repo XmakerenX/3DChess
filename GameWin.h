@@ -14,6 +14,7 @@
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <X11/extensions/Xrandr.h>
 
 #include <sstream>
 
@@ -45,7 +46,7 @@ public:
     void drawing        ();
     void reshape        (int width, int height);
     
-    void ProcessInput   (float timeDelta);
+    void ProcessInput   (double timeDelta);
 
     int  BeginGame      ();
     bool Shutdown       ();
@@ -79,6 +80,8 @@ private:
     //AssetManager assetManager_;
 
     int height_;
+    float m_hDpi;
+    float m_vDpi;
 
     static bool ctxErrorOccurred;
     
@@ -87,6 +90,7 @@ private:
     Shader* textShader;
     Shader* textureShader;
     Shader* spriteShader;
+    Shader* spriteTextShader;
     //Shader* projShader;
 
     bool keysStatus[256];
@@ -94,9 +98,15 @@ private:
     bool mouseDrag;
 
     AssetManager m_asset;
-    mkFont font_;
+    mkFont* font_;
     Sprite m_sprite;
+    Sprite m_textSprite;
     DialogUI m_dialog;
+
+    //crap to delete
+    GLuint VAO;
+    GLuint VBO;
+    VertexIndex indices[6];
 
 };
 

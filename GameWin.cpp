@@ -1,6 +1,8 @@
 #include "GameWin.h"
 #include <GL/glut.h>
 #include <unistd.h>
+#include <cmath>
+#include "virtualKeysLinux.h"
 
 /* Helper function to convert GLSL types to storage sizes */
 size_t TypeSize(GLenum type)
@@ -54,8 +56,9 @@ bool GameWin::ctxErrorOccurred = false;
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
 GameWin::GameWin()
-    :font_("NotoMono")
+//    :font_("NotoMono")
 {
+    font_ = nullptr;
     m_display = nullptr;
     
     gameRunning = true;
@@ -191,13 +194,19 @@ bool GameWin::initOpenGL(int width, int height)
     swa.background_pixmap = None ;
     swa.border_pixel      = 0;
     swa.event_mask        = StructureNotifyMask | ExposureMask | KeyPressMask | KeyReleaseMask |
-                            ButtonPressMask | ButtonReleaseMask;
+                            ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
     
     std::cout << "Creating window\n";
     m_win = XCreateWindow( m_display, RootWindow( m_display, vi->screen ),
                               0, 0, width, height, 0, vi->depth, InputOutput,
                               vi->visual, 
                               CWBorderPixel|CWColormap|CWEventMask, &swa );
+
+    int sizes;
+    XRRScreenSize* screenSize = XRRSizes(m_display, vi->screen, &sizes);
+
+    m_hDpi = screenSize->mwidth ? std::round((screenSize->width *10 * 25.4f) / screenSize->mwidth) : 0.0f;
+    m_vDpi = screenSize->mheight ? std::round((screenSize->height *10 * 25.4f) / screenSize->mheight) : 0.0f;
 
     if ( !m_win )
     {
@@ -328,6 +337,7 @@ bool GameWin::initOpenGL(int width, int height)
     textShader = new Shader("text.vs", "text.frag");
     textureShader = new Shader("texture.vs", "texture.frag");
     spriteShader = new Shader("sprite.vs", "sprite.frag");
+    spriteTextShader = new Shader("spriteText.vs", "spriteText.frag");
     //projShader = new Shader("shader2.vs", "shader2.frag");
 
     //------------------------------------
@@ -337,12 +347,15 @@ bool GameWin::initOpenGL(int width, int height)
     m_scene.InitCamera(width, height);
     selectedObj = &m_scene.GetObject(1);
 
+    // init our font
+    font_ = m_asset.getFont("NotoMono", 40);
+    //font_.init(40, height, (int)m_hDpi, (int)m_vDpi);
     // make sure the viewport is updated
     reshape(width,height);
-    // init our font
-    font_.init(height);
+
 
     m_sprite.Init();
+    m_textSprite.Init();
 
     //------------------------------------
     // Init Dialog
@@ -350,12 +363,30 @@ bool GameWin::initOpenGL(int width, int height)
     GLuint buttonTexture = m_asset.getTexture("woodGUI2.png");
     m_dialog.init(300,300, 18, "Caption!", "", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), m_asset);
     m_dialog.setLocation(50, 100);
+    m_dialog.initDefControlElements(m_asset);
+    //m_dialog.initWoodControlElements(m_asset);
+    //m_dialog.initDefControlElements(m_asset);
     ButtonUI* pButton;
     m_dialog.addButton(1, "button text", 20,20, 200, 25, 0, &pButton);
-    std::vector<ELEMENT_GFX> buttonGFX;
-    buttonGFX.emplace_back(buttonTexture, Rect(0, 0, 84, 34));
-    buttonGFX.emplace_back(buttonTexture, Rect(0, 34, 84, 68));
-    pButton->setControlGFX(buttonGFX);
+    //std::vector<ELEMENT_GFX> buttonGFX;
+    //buttonGFX.emplace_back(buttonTexture, Rect(0, 0, 84, 34));
+    //buttonGFX.emplace_back(buttonTexture, Rect(0, 34, 84, 68));
+    //pButton->setControlGFX(buttonGFX);
+    pButton->setEnabled(false);
+    m_dialog.addButton(2, "enabled button", 20, 60, 200, 25, 0);
+    m_dialog.addCheckBox(3, 100,100, 50, 50, 0);
+    m_dialog.addRadioButton(4, 30, 150, 25,25,0,1);
+    m_dialog.addRadioButton(5, 90, 150, 25,25,0,1);
+    ComboBoxUI* pCombo;
+    //m_dialog.addComboBox(6, "Box", 20, 200, 200, 40, 0, &pCombo);
+    m_dialog.addComboBox(6, "Box", 20, 200, 300, 60, 0, &pCombo);
+    pCombo->AddItem("Sunday", (void*)1);
+    pCombo->AddItem("Monday", (void*)2);
+    pCombo->AddItem("Tuesday", (void*)3);
+    pCombo->AddItem("Wednesday", (void*)4);
+    pCombo->AddItem("Thursday", (void*)5);
+    pCombo->AddItem("Friday", (void*)6);
+    pCombo->AddItem("Saturday", (void*)7);
 
     err = glGetError();
     if (err != GL_NO_ERROR)
@@ -363,6 +394,30 @@ bool GameWin::initOpenGL(int width, int height)
         std::cout <<"Init: ERROR bitches\n";
         std::cout << gluErrorString(err);
     }
+
+    //----------------------------------
+    // usesless crap a head!
+    //----------------------------------
+    // Configure VAO/VBO for texture quads
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // set indices for quad rendering
+    // first triangle
+    indices[0] = 0;
+    indices[1] = 1;
+    indices[2] = 2;
+    // secound triangle
+    indices[3] = 0;
+    indices[4] = 3;
+    indices[5] = 2;
 
     return true;
 }
@@ -456,23 +511,74 @@ void GameWin::drawing()
     else
         ss << "Miss :(";
 
-    font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_.renderTextBatched(textShader, "60 18.5 -0 5 0 -1 -1 Miss :(", 0, -7,  1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    //font_.renderTextBatched(textShader, "60 18.5 -0 5 0 -1 -1 Miss :(", 0, 100,  1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
 
-    int textureName = m_asset.getTexture("gold.png");
+    //int textureName = m_asset.getTexture("gold.png");
+    int textureName = m_asset.getTexture("yor.bmp");
 
     glDisable(GL_DEPTH_TEST);
 
-    m_dialog.OnRender(0, m_sprite, m_asset);
+//    textShader->Use();
+
+//    glUniform3f(glGetUniformLocation(textShader->Program, "textColor"), 1.0f, 1.0f, 1.0f);
+//    glBindVertexArray(VAO);
+//    // Update VBO for each character
+//    GLfloat vertices[4][4] = {
+//        { 0,            0 + 200,   0.0, 1.0 },
+//        { 0,            0,       0.0, 0.0 },
+//        { 0 + 200, 0,       1.0, 0.0 },
+//        { 0 + 200, 0 + 200,   1.0, 1.0 }
+//    };
+
+//    // Render glyph texture over quad
+//    glBindTexture(GL_TEXTURE_2D, font_.renderFontAtlas(m_sprite));
+//    // Update content of VBO memory
+//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//    // Be sure to use glBufferSubData and not glBufferData
+//    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+
+//    // Render quad
+//    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, indices);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+
+
+
+    //mkFont* ff = &m_asset.getFont("Time New Roman bold2", 12);
+    //ff->renderFontAtlas(m_sprite, Rect(0,0,256,128));
+    //mkFont* ff2 = &m_asset.getFont("Liberation Serif", 12);
+    //ff2->renderFontAtlas(m_sprite, Rect(0,128,128,256));
+   // mkFont* ff3 = &m_asset.getFont("Times New Roman:bold", 12);
+    //ff3->renderFontAtlas(m_sprite, Rect(0,128,256,384));
+    //m_sprite.AddTexturedQuad(Rect(0,0,1024,1024), textureName, Rect(0,0,0,0));
+    //std::cout << "time !!" << timer.getTimeElapsed() << "\n";
+    m_dialog.OnRender(m_sprite, m_textSprite, m_asset, timer.getCurrentTime());
+    //font_->renderFontAtlas(m_sprite);
+
+    //font_->renderText(textShader, "abcdefghijklmnopqrstuvwxyz", 0.0f, 20.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
+    //font_->renderTextAtlas(m_textSprite, "abcdefghijklmnopqrstuvwxyz", 0.0f, 20.0f, 1.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    //Rect rc(50,200, 646, 253);
+    //Rect rc(50,200, 630, 253);
+    Rect rc(50,300, 900, 553);
+    //font_->renderToRect(m_textSprite, "stuff to  rint to screey", rc, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), mkFont::TextFormat::Center);
+    //font_->renderToRect(m_textSprite, "stuffgjpqi to  rint to screey", rc, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), mkFont::TextFormat::Center);
+    //m_sprite.AddTintedQuad(rc, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
     m_sprite.Render(spriteShader);
     m_sprite.Clear();
+    m_textSprite.Render(spriteTextShader);
+    m_textSprite.Clear();
     
     glEnable(GL_DEPTH_TEST);
 
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
-        std::cout <<"Drawing: ERROR bitches " << err << "\n";
-        std::cout << gluErrorString(err);
+        std::cout <<"Drawing: ERROR bitches " << err << " :";
+        std::cout << gluErrorString(err) << "\n";
     }
 
     glXSwapBuffers (m_display, m_win);
@@ -494,7 +600,7 @@ void GameWin::reshape(int width, int height)
 
         height_ = height;
 
-        font_.setScreenHeight(height);
+        font_->setScreenHeight(height);
 
         m_scene.reshape(m_winWidth,m_winHeight);
 
@@ -504,6 +610,8 @@ void GameWin::reshape(int width, int height)
         glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
         spriteShader->Use();
         glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
+        spriteTextShader->Use();
+        glUniform2i( glGetUniformLocation(spriteTextShader->Program, "screenSize"), width / 2, height / 2);
     }
     else
         std::cout <<"reshape ignored\n";
@@ -512,7 +620,7 @@ void GameWin::reshape(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : ProcessInput ()
 //-----------------------------------------------------------------------------
-void GameWin::ProcessInput(float timeDelta)
+void GameWin::ProcessInput(double timeDelta)
 {
     float X = 0.0f,Y = 0.0f;
     if (mouseDrag)
@@ -530,13 +638,13 @@ void GameWin::ProcessInput(float timeDelta)
         ret = XQueryPointer(m_display, m_win, &root, &child ,&x, &y,
                             &cursorX, &cursorY, &maskRet);
 
-        std::cout <<"process input:\n";
-        std::cout << "x = " << cursorX << " y = " << cursorY << "\n";
+        //std::cout <<"process input:\n";
+        //std::cout << "x = " << cursorX << " y = " << cursorY << "\n";
 
         X = (float)(cursorX - oldCursorLoc.x) / 3.0f;
         Y = (float)(cursorY - oldCursorLoc.y) / 3.0f;
 
-        XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, oldCursorLoc.x, oldCursorLoc.y);
+        //XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, oldCursorLoc.x, oldCursorLoc.y);
         XFlush(m_display);
     }
     m_scene.processInput(timeDelta, keysStatus, X, Y);
@@ -573,19 +681,61 @@ int GameWin::BeginGame()
                 KeySym key;
 
                 std::cout << "key pressed\n";
+                event.xkey.keycode;
                 std::cout << event.xkey.keycode << "\n";
                 XLookupString(&event.xkey, buf, 128, &key, nullptr);
-                std::cout << "KeySym: " << key << " " << "char: " <<  buf <<"\n";
+                std::cout << "KeySym: " << key << " " << "char: " <<  buf << "\n";
+                if (buf[0] == '\0')
+                {
+                    std::cout << "no valid ascii\n";
+                    if (key > 0xff && key <= 0xffff)
+                    {
+                        int temp = key - 0xff00;
+                        GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
+                        std::cout << "Virtual key was " << (int)vKey << "\n";
+                        m_dialog.handleVirtualKeyEvent(vKey, true);
+                    }
+                }
+                else
+                {
+                    m_dialog.handleKeyEvent(buf[0], true);
+                }
 
                 keysStatus[event.xkey.keycode] = true;
             }break;
 
             case KeyRelease:
             {
+                char buf[128];
+                KeySym key;
                 std::cout << "key released\n";
                 std::cout << event.xkey.keycode << "\n";
 
-                keysStatus[event.xkey.keycode] = false;
+                XLookupString(&event.xkey, buf, 128, &key, nullptr);
+                if (buf[0] == '\0')
+                {
+                    if (key > 0xff && key <= 0xffff)
+                    {
+                        GK_VirtualKey vKey = linuxVirtualKeysTable[key - 0xff00];
+                        m_dialog.handleVirtualKeyEvent(vKey, false);
+                    }
+                }
+                else
+                {
+                    m_dialog.handleKeyEvent(buf[0], false);
+                }
+
+                if (event.xkey.keycode < 256)
+                    keysStatus[event.xkey.keycode] = false;
+                else
+                    std::cout << "Invalid keycode\n";
+            }break;
+
+            case MotionNotify:
+            {
+                m_dialog.handleMouseEvent( MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0));
+                //std::cout << "mouse moved\n";
+                //std::cout << "x: " << event.xmotion.x << " y:" << event.xmotion.y << "\n";
             }break;
 
             case ButtonPress:
@@ -593,11 +743,13 @@ int GameWin::BeginGame()
                 if (event.xbutton.button == Button1)
                 {
                     std::cout << "left button pressed\n";
+                    //std::cout << "Time : "<< event.xbutton.time << "\n";
                     oldCursorLoc.x = event.xbutton.x;
                     oldCursorLoc.y = event.xbutton.y;
-                    mouseDrag = true;
-                    int ret = XDefineCursor(m_display, m_win, emptyCursorPixmap);
-                    ret++;
+                    //mouseDrag = true;
+                    //int ret = XDefineCursor(m_display, m_win, emptyCursorPixmap);
+                    //ret++;
+                    m_dialog.handleMouseEvent( MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0));
 
 //                    std::cout <<"loop:\n";
 //                    std::cout << "x = " << event.xbutton.x << " y = " << event.xbutton.y << "\n";
@@ -617,6 +769,20 @@ int GameWin::BeginGame()
                     }
                     else
                         hit = 0;
+
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0));
+                }
+
+                if (event.xbutton.button == Button4)
+                {
+                    std::cout << "mouse scroll up\n";
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1));
+                }
+
+                if (event.xbutton.button == Button5)
+                {
+                    std::cout << "mouse scroll down\n";
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1));
                 }
 
             }break;
@@ -627,10 +793,15 @@ int GameWin::BeginGame()
                 {
                     std::cout << "left button released\n";
                     mouseDrag = false;
-                    XUndefineCursor(m_display, m_win);
+                    //XUndefineCursor(m_display, m_win);
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0));
                 }
-                else
-                    std::cout << "mouse released\n";
+
+                if (event.xbutton.button == Button3)
+                {
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0));
+                }
+
             }break;
 
             // got quit message, quitting the game loop
@@ -645,9 +816,9 @@ int GameWin::BeginGame()
         
         timer.frameAdvanced();
 
-        int err = glGetError();
-        if (err != GL_NO_ERROR)
-            std::cout <<"MsgLoop: ERROR bitches\n";
+//        int err = glGetError();
+//        if (err != GL_NO_ERROR)
+//            std::cout <<"MsgLoop: ERROR bitches\n";
 
         if (!timer.isCap())
         {
