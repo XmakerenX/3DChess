@@ -20,6 +20,12 @@ struct Point
         y = newY;
     }
 
+    Point(const Point& p)
+    {
+        x = p.x;
+        y = p.y;
+    }
+
     int x;
     int y;
 };
