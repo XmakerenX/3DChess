@@ -6,6 +6,7 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL // needed for gtx extensions
 #include <glm/gtx/intersect.hpp>
 #include "RenderTypes.h"
 #include "Shader.h"

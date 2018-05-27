@@ -44,9 +44,10 @@ bool SubMesh::IntersectTriangle(glm::vec3& rayObjOrigin ,glm::vec3& rayObjDir, i
         glm::vec3& v0 = vertices[indices[i]].Position;
         glm::vec3& v1 = vertices[indices[i+1]].Position;
         glm::vec3& v2 = vertices[indices[i+2]].Position;
-        glm::vec3 bray;
+        glm::vec2 bray;
 
-        if (glm::intersectRayTriangle(rayObjOrigin, rayObjDir, v0, v1,v2, bray))
+        float distance;
+        if (glm::intersectRayTriangle(rayObjOrigin, rayObjDir, v0, v1,v2, bray, distance))
         {
             faceCount = i / 3;
             return true;

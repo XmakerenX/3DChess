@@ -2,7 +2,7 @@
 #define  _SCENE_H
 
 #include <vector>
-#include <glm/gtx/intersect.hpp>
+//#include <glm/gtx/intersect.hpp>
 #include "AssetManager.h"
 #include "FreeCam.h"
 #include "Object.h"

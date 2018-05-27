@@ -148,9 +148,9 @@ void Object::SetPos(glm::vec3 newPos)
 //-----------------------------------------------------------------------------
 void Object::SetRotAngles(glm::vec3 newRotAngles)
 {
-    glm::mat4x4 mtxRotX;
-    glm::mat4x4 mtxRotY;
-    glm::mat4x4 mtxRotZ;
+    glm::mat4x4 mtxRotX(1.0f);
+    glm::mat4x4 mtxRotY(1.0f);
+    glm::mat4x4 mtxRotZ(1.0f);
 
     m_rotAngles = newRotAngles;
 
@@ -174,9 +174,9 @@ void Object::SetScale(glm::vec3 newScale)
 //-----------------------------------------------------------------------------
 void Object::Rotate(float x, float y, float z)
 {
-    glm::mat4x4 mtxRotX;
-    glm::mat4x4 mtxRotY;
-    glm::mat4x4 mtxRotZ;
+    glm::mat4x4 mtxRotX(1.0f);
+    glm::mat4x4 mtxRotY(1.0f);
+    glm::mat4x4 mtxRotZ(1.0f);
 
     m_rotAngles.x += x;
     m_rotAngles.y += y;
@@ -263,6 +263,7 @@ void Object::Draw(GLuint projectionLoc, GLuint matWorldLoc, GLuint matWorldInver
         if (m_meshAttributes[i] == attributeIndex)
         {
             //glm::mat4x4 temp =  m_mtxTranslate * matViewProj;
+            glm::mat4x4 temp2 = GetWorldMatrix();
             glm::mat4x4 temp =  matViewProj * GetWorldMatrix();
             glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(temp));
             glUniformMatrix4fv(matWorldLoc, 1, GL_FALSE, glm::value_ptr(GetWorldMatrix()));
