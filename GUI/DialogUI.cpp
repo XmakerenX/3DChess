@@ -139,21 +139,21 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     //-------------------------------------
     // loads the button default texture
     const std::vector<Rect> buttonTexturesRects = {Rect(0, 0, 256, 128), Rect(0, 128, 256, 256)};
-    if (!initControlGFX(assetManger, ControlUI::BUTTON, "data/textures/button.png", buttonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::BUTTON, "tex.png", buttonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init CheckBox elements
     //-------------------------------------
     const std::vector<Rect> checkboxTexturesRects = {Rect(0, 54, 27, 81 ), Rect(27, 54, 54, 81 )};
-    if (!initControlGFX(assetManger, ControlUI::CHECKBOX, "data/textures/tex.dds", checkboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::CHECKBOX, "tex.png", checkboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init RadioButton elements
     //-------------------------------------
     const std::vector<Rect> radioButtonTexturesRects = {Rect(54, 54, 81, 81), Rect(81, 54, 108, 81)};
-    if (!initControlGFX(assetManger, ControlUI::RADIOBUTTON, "data/textures/tex.dds", radioButtonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::RADIOBUTTON, "tex.png", radioButtonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -164,7 +164,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
                                                      Rect(13, 123, 241, 160), // Drop down textrue rect
                                                      Rect(12, 163, 239, 183)};// selection textrue rect
 
-    if (!initControlGFX(assetManger, ControlUI::COMBOBOX, "data/textures/tex.dds", comboboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::COMBOBOX, "tex.png", comboboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -177,7 +177,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
                                                      Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53), // Down Arrow textrue rect
                                                     Rect(220, 192, 238, 234)};                                                                        // Button textrue rect
 
-    if (!initControlGFX(assetManger, ControlUI::SCROLLBAR, "data/textures/tex.dds", scrollBarTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::SCROLLBAR, "tex.png", scrollBarTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -186,7 +186,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     const std::vector<Rect> listTexturesRects = {Rect( 13, 123, 241, 160),      // Main texture rect
                                                      Rect( 16, 166, 240, 183)}; // Selection texture rect
 
-    if (!initControlGFX(assetManger, ControlUI::LISTBOX, "data/textures/tex.dds", listTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::LISTBOX, "tex.png", listTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -195,7 +195,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     const std::vector<Rect> sliderTexturesRects = {Rect( 1, 187, 93, 228),       // Track texture rect
                                                      Rect( 151, 193, 192, 234)}; // Button texture rect
 
-    if (!initControlGFX(assetManger, ControlUI::SLIDER, "data/textures/tex.dds", sliderTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::SLIDER, "tex.png", sliderTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -211,7 +211,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
                                                    Rect( 14, 113, 241, 121 ),     // lower border
                                                    Rect( 241, 113, 246, 121 )};   // lower right border
 
-    if (!initControlGFX(assetManger, ControlUI::EDITBOX, "data/textures/tex.dds", editboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::EDITBOX, "tex.png", editboxTexturesRects, elementFontVec))
         return false;
 
     return true;
@@ -353,7 +353,7 @@ bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS con
 // Name : OnRender ()
 // Desc : renders the dialog and all of his controls
 //-----------------------------------------------------------------------------
-bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, Sprite& textSprite, AssetManager& assetManger)
+bool DialogUI::OnRender(Sprite& sprite, Sprite& textSprite, AssetManager& assetManger, double timeStamp)
 {
     GLuint textureName = NO_TEXTURE;
 
@@ -377,7 +377,7 @@ bool DialogUI::OnRender(float fElapsedTime, Sprite& sprite, Sprite& textSprite, 
     for(GLuint i = 0; i < m_Controls.size(); i++)
     {
         //if (m_Controls[i] != s_pControlFocus)
-            m_Controls[i]->Render(sprite, textSprite,assetManger);
+            m_Controls[i]->Render(sprite, textSprite,timeStamp);
     }
 
 //    if (drawFocusedControl)
@@ -429,25 +429,29 @@ bool DialogUI::handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down)
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent ()
 //-----------------------------------------------------------------------------
-bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
+bool DialogUI::handleMouseEvent(MouseEvent event)
 {
     if (!m_bVisible)
         return false;
 
+    Point& cursorPos = event.cursorPos;
+    bool& down = event.down;
     //let controls handle the mouse event first
     // If a control is in focus and it's enabled, then give
     // it the first chance at handling the message.
     if( m_pControlFocus && m_pControlFocus->getEnabled() )
     {
-        if( m_pControlFocus->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
+        if( m_pControlFocus->handleMouseEvent(MouseEvent(event.type, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight),
+                                                         event.down, event.timeStamp, event.nLinesToScroll)))
+        //if( m_pControlFocus->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
             return true;
-//        if( s_pControlFocus->HandleMouse( hWnd, uMsg, mousePoint, curInputState, timer ) )
-//            return true;
     }
 
     for (GLuint i = 0; i < m_Controls.size(); i++)
     {
-        if (m_Controls[i]->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
+        if( m_Controls[i]->handleMouseEvent(MouseEvent(event.type, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight),
+                                                         event.down, event.timeStamp, event.nLinesToScroll)))
+        //if (m_Controls[i]->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
         {
             return true;
         }
@@ -455,9 +459,9 @@ bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
 
     // the event was not for any of the controls in the dialog
     // the dialog will attemt to handle the event
-    switch (event)
+    switch (event.type)
     {
-    case MouseEvent::LeftButton:
+    case MouseEventType::LeftButton:
     {
         if (down)
         {
@@ -472,6 +476,7 @@ bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
             if (m_rcCaptionBox.isPointInRect(cursorPos))
             {
                 m_bDrag = true;
+                m_startDragPos = cursorPos;
                 return true;
             }
         }
@@ -485,7 +490,7 @@ bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
         }
     }break;
 
-    case MouseEvent::DoubleRightButton:
+    case MouseEventType::DoubleRightButton:
     {
         cursorPos.x -= m_x;
         cursorPos.y -= m_y + getCaptionHeight();
@@ -497,7 +502,7 @@ bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
         }
     }break;
 
-    case MouseEvent::RightButton:
+    case MouseEventType::RightButton:
     {
         if (down)
         {
@@ -511,8 +516,7 @@ bool DialogUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down)
         }
     }break;
 
-    case MouseEvent::MouseMoved:
-
+    case MouseEventType::MouseMoved:
     {
                     // check if we need to highlight a control as the mouse is over it
                     OnMouseMove(cursorPos);
@@ -760,15 +764,15 @@ void DialogUI::connectToControlRightClicked(const signal_controlClicked::slot_ty
 //-----------------------------------------------------------------------------
 void DialogUI::ClearRadioButtonGruop(GLuint nButtonGroup)
 {
-//    for (GLuint i = 0; i < m_Controls.size(); i++)
-//    {
-//        if (m_Controls[i]->getType() == ControlUI::CONTROLS::RADIOBUTTON)
-//        {
-//            RadioButtonUI* curRadioButton = (RadioButtonUI*)m_Controls[i];
-//            if (curRadioButton->getButtonGroup() == nButtonGroup)
-//                curRadioButton->setChecked(false);
-//        }
-//    }
+    for (GLuint i = 0; i < m_Controls.size(); i++)
+    {
+        if (m_Controls[i]->getType() == ControlUI::CONTROLS::RADIOBUTTON)
+        {
+            RadioButtonUI* curRadioButton = (RadioButtonUI*)m_Controls[i];
+            if (curRadioButton->getButtonGroup() == nButtonGroup)
+                curRadioButton->setChecked(false);
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -815,7 +819,6 @@ void DialogUI::OnMouseMove(Point pt)
         m_pMouseOverControl->onMouseLeave();
         m_pMouseOverControl = nullptr;
     }
-
 }
 
 //-----------------------------------------------------------------------------
@@ -845,21 +848,20 @@ ControlUI* DialogUI::getControlAtPoint(Point pt)
 //-----------------------------------------------------------------------------
 bool DialogUI::addStatic(int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated/* = NULL*/, std::string strID /*= ""*/)
 {
-//    //initialized the static control
-//    StaticUI* pStatic = new StaticUI(this ,ID, strText, x, y, width, height);
+    //initialized the static control
+    StaticUI* pStatic = new StaticUI(this ,ID, strText, x, y, width, height);
 
-//    initControl(pStatic);
+    initControl(pStatic);
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pStatic);
-//    // add the control info the Definition Vector
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pStatic);
+    // add the control info the Definition Vector
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppStaticCreated != NULL)
-//        *ppStaticCreated = pStatic;
+    if (ppStaticCreated != NULL)
+        *ppStaticCreated = pStatic;
 
-//    return true;
-    return false;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -887,64 +889,64 @@ bool DialogUI::addButton(int ID, const std::string &strText, int x, int y, int w
 // Name : addCheckBox()
 // Desc : add a control of type checkBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addCheckBox(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated/* = NULL*/,  std::string strID /*= ""*/)
-//{
-//    //initialized the checkBox control
-//    CheckboxUI* pCheckBox = new CheckboxUI(this, ID, x, y, width, height, nHotkey);
+bool DialogUI::addCheckBox(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated/* = NULL*/,  std::string strID /*= ""*/)
+{
+    //initialized the checkBox control
+    CheckboxUI* pCheckBox = new CheckboxUI(this, ID, x, y, width, height, nHotkey);
 
-//    initControl(pCheckBox);
+    initControl(pCheckBox);
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pCheckBox);
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pCheckBox);
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppCheckBoxCreated != NULL)
-//        *ppCheckBoxCreated = pCheckBox;
+    if (ppCheckBoxCreated != NULL)
+        *ppCheckBoxCreated = pCheckBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addRadioButton()
 // Desc : add a control of type radio button to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addRadioButton(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated/* = NULL*/ ,std::string strID /*= ""*/)
-//{
-//    RadioButtonUI* pRadioButton = new RadioButtonUI(this, ID, x, y, width, height, nHotkey, nButtonGroup);
+bool DialogUI::addRadioButton(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated/* = NULL*/ ,std::string strID /*= ""*/)
+{
+    RadioButtonUI* pRadioButton = new RadioButtonUI(this, ID, x, y, width, height, nHotkey, nButtonGroup);
 
-//    initControl(pRadioButton);
+    initControl(pRadioButton);
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pRadioButton);
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pRadioButton);
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppRadioButtonCreated != NULL)
-//        *ppRadioButtonCreated = pRadioButton;
+    if (ppRadioButtonCreated != NULL)
+        *ppRadioButtonCreated = pRadioButton;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addComboBox()
 // Desc : add a control of type Combobox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addComboBox(int ID, LPCTSTR strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated/* = NULL*/ , std::string strID /*= ""*/)
-//{
-//    ComboBoxUI* pComboBox = new ComboBoxUI(this, ID, strText, x, y, width, height, nHotkey);
+bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated/* = NULL*/ , std::string strID /*= ""*/)
+{
+    ComboBoxUI* pComboBox = new ComboBoxUI(this, ID, strText, x, y, width, height, nHotkey);
 
-//    initControl(pComboBox);
+    initControl(pComboBox);
 
-//    pComboBox->UpdateRects();
+    pComboBox->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pComboBox);
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pComboBox);
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppComboxCreated != NULL)
-//        *ppComboxCreated = pComboBox;
+    if (ppComboxCreated != NULL)
+        *ppComboxCreated = pComboBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addListBox()
@@ -1056,61 +1058,61 @@ bool DialogUI::addButtonFromFile(std::istream& InputFIle, ButtonUI** ppButtonCre
 // Name : addCheckBoxFromFile()
 // Desc : loads from file a control of type CheckBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addCheckBoxFromFile(std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated /* = NULL */)
-//{
-//    //initialized the checkBox control from file
-//    CheckboxUI* pCheckBox = new CheckboxUI(InputFIle);
+bool DialogUI::addCheckBoxFromFile(std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated /* = NULL */)
+{
+    //initialized the checkBox control from file
+    CheckboxUI* pCheckBox = new CheckboxUI(InputFIle);
 
-//    initControl(pCheckBox);
+    initControl(pCheckBox);
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pCheckBox);
+    //add it to the controls vector
+    m_Controls.push_back(pCheckBox);
 
-//    if (ppCheckBoxCreated != NULL)
-//        *ppCheckBoxCreated = pCheckBox;
+    if (ppCheckBoxCreated != NULL)
+        *ppCheckBoxCreated = pCheckBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addRadioButtonFromFile()
 // Desc : loads from file a control of type RadioButton to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addRadioButtonFromFile(std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated /* = NULL */)
-//{
-//    RadioButtonUI* pRadioButton = new RadioButtonUI(InputFIle);
+bool DialogUI::addRadioButtonFromFile(std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated /* = NULL */)
+{
+    RadioButtonUI* pRadioButton = new RadioButtonUI(InputFIle);
 
-//    initControl(pRadioButton);
+    initControl(pRadioButton);
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pRadioButton);
+    //add it to the controls vector
+    m_Controls.push_back(pRadioButton);
 
-//    if (ppRadioButtonCreated != NULL)
-//        *ppRadioButtonCreated = pRadioButton;
+    if (ppRadioButtonCreated != NULL)
+        *ppRadioButtonCreated = pRadioButton;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addComboBoxFromFile()
 // Desc : loads from file a control of type ComboBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addComboBoxFromFile(std::istream& InputFIle, ComboBoxUI** ppComboxCreated /* = NULL */)
-//{
-//    ComboBoxUI* pComboBox = new ComboBoxUI(InputFIle);
+bool DialogUI::addComboBoxFromFile(std::istream& InputFIle, ComboBoxUI** ppComboxCreated /* = NULL */)
+{
+    ComboBoxUI* pComboBox = new ComboBoxUI(InputFIle);
 
-//    initControl(pComboBox);
+    initControl(pComboBox);
 
-//    pComboBox->UpdateRects();
+    pComboBox->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pComboBox);
+    //add it to the controls vector
+    m_Controls.push_back(pComboBox);
 
-//    if (ppComboxCreated != NULL)
-//        *ppComboxCreated = pComboBox;
+    if (ppComboxCreated != NULL)
+        *ppComboxCreated = pComboBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addListBoxFromFile()
@@ -1601,42 +1603,42 @@ ControlUI* DialogUI::getControl( int ID, GLuint nControlType )
 //-----------------------------------------------------------------------------
 // Name : getStatic
 //-----------------------------------------------------------------------------
-//StaticUI* DialogUI::getStatic( int ID )
-//{
-//    return static_cast< CStaticUI* >(getControl( ID, ControlUI::STATIC ) );
-//}
+StaticUI* DialogUI::getStatic( int ID )
+{
+    return static_cast< StaticUI* >(getControl( ID, ControlUI::STATIC ) );
+}
 
 //-----------------------------------------------------------------------------
 // Name : getButton
 //-----------------------------------------------------------------------------
-//ButtonUI* DialogUI::getButton( int ID )
-//{
-//    return static_cast< CButtonUI* > (getControl(ID, ControlUI::BUTTON) );
-//}
+ButtonUI* DialogUI::getButton( int ID )
+{
+    return static_cast< ButtonUI* > (getControl(ID, ControlUI::BUTTON) );
+}
 
 //-----------------------------------------------------------------------------
 // Name : getCheckBox
 //-----------------------------------------------------------------------------
-//CheckboxUI * DialogUI::getCheckBox( int ID )
-//{
-//    return static_cast< CCheckboxUI* > ( getControl(ID, ControlUI::CHECKBOX) );
-//}
+CheckboxUI * DialogUI::getCheckBox( int ID )
+{
+    return static_cast< CheckboxUI* > ( getControl(ID, ControlUI::CHECKBOX) );
+}
 
 //-----------------------------------------------------------------------------
 // Name : getRadioButton
 //-----------------------------------------------------------------------------
-//RadioButtonUI * DialogUI::getRadioButton ( int ID )
-//{
-//    return static_cast< CRadioButtonUI* > ( getControl(ID, ControlUI::RADIOBUTTON) );
-//}
+RadioButtonUI * DialogUI::getRadioButton ( int ID )
+{
+    return static_cast< RadioButtonUI* > ( getControl(ID, ControlUI::RADIOBUTTON) );
+}
 
 //-----------------------------------------------------------------------------
 // Name : GetComboBox
 //-----------------------------------------------------------------------------
-//ComboBoxUI * DialogUI::getComboBox( int ID )
-//{
-//    return static_cast< CComboBoxUI* > (getControl(ID, ControlUI::COMBOBOX));
-//}
+ComboBoxUI * DialogUI::getComboBox( int ID )
+{
+    return static_cast< ComboBoxUI* > (getControl(ID, ControlUI::COMBOBOX));
+}
 
 //-----------------------------------------------------------------------------
 // Name : GetSlider

@@ -16,7 +16,7 @@ public:
 
 	const std::string getText() const;
 
-    void			Render		( Sprite& sprite, Sprite& textSprite ,AssetManager& assetManger);
+    void			Render		(Sprite& sprite, Sprite& textSprite , double timeStamp);
 
 	virtual bool		SaveToFile	( std::ostream& SaveFile );
 

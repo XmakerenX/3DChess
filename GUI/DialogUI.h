@@ -12,9 +12,9 @@
 #include "StaticUI.h"
 #include "../virtualKeysGame.h"
 #include "../mouseEventsGame.h"
-//#include "CheckBoxUI.h"
-//#include "RadioButtonUI.h"
-//#include "ComboBoxUI.h"
+#include "CheckboxUI.h"
+#include "RadioButtonUI.h"
+#include "ComboBoxUI.h"
 //#include "ListBoxUI.h"
 //#include "SliderUI.h"
 //#include "EditBoxUI.h"
@@ -75,14 +75,14 @@ public:
 
     bool handleKeyEvent(unsigned char key, bool down);
     bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down);
-    bool handleMouseEvent(MouseEvent event, Point cursorPos, bool down);
+    bool handleMouseEvent(MouseEvent event);
 
 
     //void    SendEvent(GLuint nEvent, bool bTriggeredByUser, int nControlID, HWND hWnd = NULL );
     //void    SetCallback( PCALLBACKGUIEVENT pCallback);
     void    connectToControlRightClicked( const signal_controlClicked::slot_type& subscriber);
 
-    virtual bool OnRender(float fElapsedTime, Sprite &sprite, Sprite& textSprite,AssetManager& assetManger);
+    virtual bool OnRender(Sprite &sprite, Sprite& textSprite, AssetManager& assetManger, double timeStamp);
 
     void	UpdateRects();
 
@@ -94,18 +94,18 @@ public:
 
     bool			 addStatic				( int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated = NULL, std::string strID = "");
     bool             addButton              (int ID, const std::string& strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI **ppButtonCreated = NULL, std::string strID = "");
-//    bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = NULL, std::string strID = "");
-//    bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = NULL, std::string strID = "");
-//    bool			 addComboBox			( int ID, std::string&& strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
+    bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = NULL, std::string strID = "");
+    bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = NULL, std::string strID = "");
+    bool			 addComboBox			( int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
 //    bool		     addListBox				(int ID, int x, int y, int width, int height, DWORD style = 0, ListBoxUI** ppListBoxCreated = NULL, std::string strID = "");
 //    bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
 //    bool			 addEditbox				( int ID, std::string&& strText, int x, int y, int width, int height, CTimer* timer, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
 
     bool			 addStaticFromFile		( std::istream& InputFIle, StaticUI** ppStaticCreated = NULL);
     bool			 addButtonFromFile		( std::istream& InputFIle, ButtonUI** ppButtonCreated = NULL);
-//    bool			 addCheckBoxFromFile    ( std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = NULL);
-//    bool			 addRadioButtonFromFile ( std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = NULL);
-//    bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
+    bool			 addCheckBoxFromFile    ( std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = NULL);
+    bool			 addRadioButtonFromFile ( std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = NULL);
+    bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
 //    bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI** ppListBoxCreated = NULL);
 //    bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
 //    bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, CEditBoxUI** ppEditBoxCreated = NULL);
@@ -115,11 +115,11 @@ public:
 
     ControlUI     * getControl				( int ID );
     ControlUI     * getControl			    (int ID, GLuint nControlType );
-//    StaticUI      * getStatic			    ( int ID );
-//    ButtonUI      * getButton		        ( int ID );
-//    CheckboxUI    * getCheckBox             ( int ID );
-//    RadioButtonUI * getRadioButton			( int ID );
-//    ComboBoxUI	   * getComboBox			( int ID );
+    StaticUI      * getStatic			    ( int ID );
+    ButtonUI      * getButton		        ( int ID );
+    CheckboxUI    * getCheckBox             ( int ID );
+    RadioButtonUI * getRadioButton			( int ID );
+    ComboBoxUI	   * getComboBox			( int ID );
 //    SliderUI	   * getSlider				( int ID );
 //    EditBoxUI	   * getEditBox				( int ID );
 //    ListBoxUI	   * getListBox			    ( int ID );

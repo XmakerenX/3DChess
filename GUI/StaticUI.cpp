@@ -2,7 +2,7 @@
 #include "DialogUI.h"
 
 //-----------------------------------------------------------------------------
-// Name : CStaticUI (Constructor)
+// Name : StaticUI (Constructor)
 //-----------------------------------------------------------------------------
 StaticUI::StaticUI(DialogUI* pParentDialog, int ID, const std::string& strText, int x, int y, GLuint width, GLuint height)
     :ControlUI(pParentDialog, ID, x, y, width, height)
@@ -15,7 +15,7 @@ StaticUI::StaticUI(DialogUI* pParentDialog, int ID, const std::string& strText, 
 }
 
 //-----------------------------------------------------------------------------
-// Name : CStaticUI (constructor from InputFile)
+// Name : StaticUI (constructor from InputFile)
 //-----------------------------------------------------------------------------
 StaticUI::StaticUI(std::istream& inputFile)
     :ControlUI(inputFile)
@@ -35,7 +35,7 @@ StaticUI::StaticUI(std::istream& inputFile)
 }
 
 //-----------------------------------------------------------------------------
-// Name : CStaticUI (Destructor)
+// Name : StaticUI (Destructor)
 //-----------------------------------------------------------------------------
 StaticUI::~StaticUI(void)
 {
@@ -60,9 +60,8 @@ const std::string StaticUI::getText() const
 //-----------------------------------------------------------------------------
 // Name : Render ()
 // Desc : Render the text store in the static to the screen
-// TODO : use the RenderText function instead of the code in the render function
 //-----------------------------------------------------------------------------
-void StaticUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetManger)
+void StaticUI::Render(Sprite& sprite, Sprite &textSprite, double timeStamp)
 {
     if (m_bVisible)
     {
@@ -70,22 +69,19 @@ void StaticUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetMan
         if (m_strText[0] == '\0')
             return;
 
-//        LPD3DXFONT pFont;
-//        if (m_elementsFonts.size() > 0)
-//            pFont = assetManger.getFontPtr(m_elementsFonts[0].fontIndex);
-//        else
-//            return;
+        //calculate the the button rendering rect
+        Rect rcWindow(m_x, m_y, m_x + m_width, m_y + m_height);
 
-//        if (pFont)
-//        {
-//            Point dialogPos = m_pParentDialog->getLocation();
-//            long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
-//            dialogPos.y += dialogCaptionHeihgt;
+        Point dialogPos = m_pParentDialog->getLocation();
+        long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
+        dialogPos.y += dialogCaptionHeihgt;
 
-//            Rect rcWindow(m_x + dialogPos.x, m_y + dialogPos.y, m_width, m_height);
-
-//            pFont->DrawTextA(pSprite, m_strText, -1, &rcWindow,/* DT_NOCLIP |*/ DT_CENTER | DT_VCENTER ,m_textColor);
-//        }
+        if (m_elementsFonts.size() > 0)
+        {
+            Rect rcTextRect(rcWindow);
+            rcTextRect.offset(dialogPos.x, dialogPos.y);
+            m_elementsFonts[0].font->renderToRect(textSprite, m_strText, rcTextRect, m_textColor, mkFont::TextFormat::Center);
+        }
     }
 }
 

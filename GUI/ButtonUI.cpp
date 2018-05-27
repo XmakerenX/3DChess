@@ -41,7 +41,7 @@ ButtonUI::~ButtonUI(void)
 // Name : Render ()
 // Desc : renders the button
 //-----------------------------------------------------------------------------
-void ButtonUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetManger)
+void ButtonUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 {
     if (m_bVisible)
     {
@@ -60,16 +60,16 @@ void ButtonUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetMan
         if (!m_bMouseOver)
         {
             if (!m_bEnabled)
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.4f, 0.4f, 0.4f ), dialogPos);
+                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 0.4f, 0.4f, 0.4f, 1.0f ), dialogPos);
                 //renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.4f, 0.4f, 1.0f ), dialogPos);
             else
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.785f, 0.785f, 0.785f ), dialogPos);
+                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 0.785f, 0.785f, 0.785f, 1.0f ), dialogPos);
         }
         else
         {
             // if the button is pressed and the cursor is on it darken it to showed it is pressed
             if (m_bMouseOver && m_bPressed)
-                renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 1.0f, 0.6f, 0.6f, 0.6f ), dialogPos);
+                renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 0.6f, 0.6f, 0.6f, 1.0f ), dialogPos);
             else
                 // if the button has the cursor on it high light
                 if (m_bMouseOver)
@@ -89,55 +89,27 @@ void ButtonUI::Render(Sprite& sprite, Sprite &textSprite, AssetManager& assetMan
 // Name : handleMouseEvent ()
 // Desc : handles mouse events for this button
 //-----------------------------------------------------------------------------
-bool ButtonUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down, float timeStamp)
+bool ButtonUI::handleMouseEvent(MouseEvent event)
 {
-    switch(event)
+    switch(event.type)
     {
-    case MouseEvent::LeftButton:
-    case MouseEvent::DoubleLeftButton:
+    case MouseEventType::LeftButton:
+    case MouseEventType::DoubleLeftButton:
     {
-        if (down)
+        if (event.down)
         {
-            if (Pressed(cursorPos, INPUT_STATE(), timeStamp))
+            if (Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp))
                 return true;
         }
         else
         {
-            if (Released(cursorPos))
+            if (Released(event.cursorPos))
                 return true;
         }
     }break;
     }
     return false;
 }
-
-//-----------------------------------------------------------------------------
-// Name : HandleMouse ()
-// Desc : handles mouse events for this button
-//-----------------------------------------------------------------------------
-//bool ButtonUI::HandleMouse(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer )
-//{
-////    if (!m_bEnabled || !m_bVisible)
-////        return false;
-
-////    switch(uMsg)
-////    {
-////    case WM_LBUTTONDOWN:
-////    case WM_LBUTTONDBLCLK:
-////        {
-////            if (Pressed(hWnd, mousePoint, inputstate, timer))
-////                return true;
-////        }break;
-
-////    case WM_LBUTTONUP:
-////        {
-////            if (Released(hWnd, mousePoint))
-////                return true;
-////        }break;
-////    }
-
-//    return false;
-//}
 
 //-----------------------------------------------------------------------------
 // Name : handleKeyEvent ()

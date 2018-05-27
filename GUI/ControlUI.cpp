@@ -108,7 +108,7 @@ bool ControlUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down)
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent()
 //-----------------------------------------------------------------------------
-bool ControlUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down, float timeStamp)
+bool ControlUI::handleMouseEvent(MouseEvent event)
 {
     return false;
 }
@@ -127,7 +127,7 @@ bool ControlUI::handleMouseEvent(MouseEvent event, Point cursorPos, bool down, f
 //-----------------------------------------------------------------------------
 // Name : Pressed()
 //-----------------------------------------------------------------------------
-bool ControlUI::Pressed(Point pt, INPUT_STATE inputState, float timeStamp)
+bool ControlUI::Pressed(Point pt, INPUT_STATE inputState, double timeStamp)
 {
     return false;
 }

@@ -15,11 +15,11 @@ public:
     ButtonUI					(std::istream& inputFile);
     virtual ~ButtonUI			(void);
 
-    virtual void	Render				(Sprite &sprite, Sprite& textSprite ,AssetManager& assetManger);
+    virtual void	Render				(Sprite &sprite, Sprite& textSprite , double timeStamp);
 
     virtual bool handleKeyEvent(unsigned char key, bool down);
     //virtual bool handleVirtualKey(GK_VirtualKey virtualKey, bool down);
-    virtual bool handleMouseEvent(MouseEvent event, Point cursorPos, bool down, float timeStamp);
+    virtual bool handleMouseEvent(MouseEvent event);
     //virtual bool    HandleMouse			(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
 
     virtual bool Pressed (Point pt, INPUT_STATE inputState, float timeStamp);

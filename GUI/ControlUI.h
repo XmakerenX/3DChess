@@ -130,10 +130,10 @@ public:
     //-------------------------------------------------------------------------
     virtual bool    handleKeyEvent		(unsigned char key , bool down);
     virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down);
-    virtual bool    handleMouseEvent    (MouseEvent event, Point cursorPos, bool down, float timeStamp);
+    virtual bool    handleMouseEvent    (MouseEvent event);
     //virtual bool	HandleMouse			( HWND hWnd, GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
 
-    virtual bool	Pressed				( Point pt, INPUT_STATE inputState, float timeStamp);
+    virtual bool	Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
     virtual bool    Released			( Point pt);
     virtual bool    Scrolled			( int nScrollAmount);
     virtual bool    Dragged				( Point pt);
@@ -144,7 +144,7 @@ public:
     //virtual bool    MsgProc				(GLuint uMsg, WPARAM wParam, LPARAM lParam );
 
      //TODO: need to decide how time between frames will be given to the render function
-    virtual void    Render	(Sprite& sprite, Sprite& textSprite ,AssetManager& assetManger) = 0; //pure abstract function
+    virtual void    Render	(Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
 
     void	renderRect		(Sprite& sprite, Rect &rcWindow, GLuint textureName, Rect &rcTexture, glm::vec4 color, Point offset);
     //void	RenderText		(const char strText[], Rect rcDest, LPD3DXFONT pFont, DWORD format, LPD3DXSPRITE pSprite, D3DCOLOR textColor, POINT offset);
