@@ -298,6 +298,10 @@ bool Camera::BoundsInFrustum(const glm::vec3 &min, const glm::vec3& max)
             return false;
 
     } // Next plane
+
+
+    // Is within the frustum
+    return true;
 }
 
 //-----------------------------------------------------------------------------
