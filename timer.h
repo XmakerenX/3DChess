@@ -17,30 +17,7 @@ static const unsigned usec_per_msec = 1000;
 // These functions are written to match the win32
 // signatures and behavior as closely as possible.
 bool  QueryPerformanceFrequency(int64_t* frequency);
-/*{
-    // Sanity check.
-    assert(frequency != nullptr);
-
-    // gettimeofday reports to microsecond accuracy.
-    *frequency = usec_per_sec;
-
-    return true;
-} */
-
 bool  QueryPerformanceCounter(int64_t* performance_count);
-/*{
-    struct timeval time;
-
-    // Sanity check.
-    assert(performance_count != nullptr);
-
-    // Grab the current time.
-    gettimeofday(&time, nullptr);
-    *performance_count = time.tv_usec + // Microseconds. 
-                         time.tv_sec * usec_per_sec; // Seconds. 
-
-    return true;
-} */
 
 class Timer
 {
@@ -49,18 +26,18 @@ public:
 	virtual ~Timer(void);
 
 	void                   frameAdvanced   ();
-	float                  getTimeElapsed  ();
-	float                  getCurrentTime  ();
-	float                  getLastTime     ();
+    double                 getTimeElapsed  ();
+    double                 getCurrentTime  ();
+    double                 getLastTime     ();
 	unsigned long          getFPS          ();
-        bool                   isCap           ();
+    bool                   isCap           ();
 
 private:
 	int64_t                m_lastTime;
 	int64_t                m_PerfFreq;
-	float                  m_TimeScale;
-	float                  m_avgTimeDelta;
-	float                  m_timeDeltas[MAX_SAMPLE_COUNT];
+    double                 m_TimeScale;
+    double                 m_avgTimeDelta;
+    double                 m_timeDeltas[MAX_SAMPLE_COUNT];
 	unsigned long          m_SampleCount;
 
 	unsigned long          m_FrameRate;       // Stores current framerate

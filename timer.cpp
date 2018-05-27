@@ -17,7 +17,7 @@ bool  QueryPerformanceFrequency(int64_t* frequency)
 //-----------------------------------------------------------------------------
 // Name : QueryPerformanceCounter
 //-----------------------------------------------------------------------------
-bool  QueryPerformanceCounter(int64_t* performance_count)
+bool QueryPerformanceCounter(int64_t* performance_count)
 {
     struct timeval time;
 
@@ -65,7 +65,7 @@ void Timer::frameAdvanced()
 	int64_t currTime;
 
 	QueryPerformanceCounter( &currTime);
-	float curTimeDelta=(currTime - m_lastTime) * m_TimeScale;//the current time delta between frames
+    double curTimeDelta=(currTime - m_lastTime) * m_TimeScale;//the current time delta between frames
 	m_lastTime = currTime;
 
         if (!m_cap)
@@ -113,7 +113,7 @@ void Timer::frameAdvanced()
 //-----------------------------------------------------------------------------
 // Name : getTimeElapsed
 //-----------------------------------------------------------------------------
-float Timer::getTimeElapsed()
+double Timer::getTimeElapsed()
 {
 	return m_avgTimeDelta;
 }
@@ -129,7 +129,7 @@ unsigned long Timer::getFPS()
 //-----------------------------------------------------------------------------
 // Name : getCurrentTime
 //-----------------------------------------------------------------------------
-float Timer::getCurrentTime()
+double Timer::getCurrentTime()
 {
 	int64_t currTime;
 
@@ -141,7 +141,7 @@ float Timer::getCurrentTime()
 //-----------------------------------------------------------------------------
 // Name : getLastTime
 //-----------------------------------------------------------------------------
-float Timer::getLastTime()
+double Timer::getLastTime()
 {
 	return m_lastTime * m_TimeScale;
 } 
