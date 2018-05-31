@@ -294,10 +294,6 @@ void ComboBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
         if (m_elementsFonts.size() == 0)
             return;	// if the function returns here initDefalutElements wasn't called or Elements were not defined
 
-        // acquire the sprite and font to use for rendering
-        //FONT_ITEM font = assetManger.getFontItem(m_elementsFonts[0].fontIndex);
-        //CMySprite* sprite = assetManger.getMySprite();
-
         Point dialogPos = m_pParentDialog->getLocation();
         long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
         dialogPos.y += dialogCaptionHeihgt;

@@ -42,17 +42,11 @@ public:
     //functions that handle user Input to this control
     //-------------------------------------------------------------------------
     virtual bool    handleMouseEvent    (MouseEvent event);
-
-//    virtual bool    HandleKeyboard		( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-//    virtual bool    HandleMouse			( HWND hWnd, UINT uMsg, POINT mousePoint, INPUT_STATE inputstate, CTimer* timer );
     virtual void    OnHotkey();
 
     virtual bool	Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
     virtual bool    Released			( Point pt);
     virtual bool    Scrolled			( int nScrollAmount);
-//    virtual bool	Pressed				( HWND hWnd, POINT pt, INPUT_STATE inputState, CTimer* timer);
-//    virtual bool	Released			( HWND hWnd, POINT pt);
-//    virtual bool    Scrolled			( int nScrollAmount);
     bool			Highlight			( Point mousePoint);
 
     void			ConnectToSelectChg  ( const signal_comboBox::slot_type& subscriber);
