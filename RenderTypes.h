@@ -66,6 +66,17 @@ struct Rect
         offset(pt.x, pt.y);
     }
 
+    void inflate(int x , int y)
+    {
+        right += x;
+        bottom += y;
+    }
+
+    void inflate(Point pt)
+    {
+        inflate(pt.x, pt.y);
+    }
+
     bool isPointInRect(int x, int y)
     {
         if (x >= left && x <= right && y >= top && y <= bottom)
