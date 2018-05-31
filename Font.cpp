@@ -311,7 +311,7 @@ Point mkFont::calcTextRect(std::string text)
     int maxCharHeight = 0;
     std::string::iterator c;
     // calcuate textWidth that fits the Rect and max Char height
-    int offset;
+    int offset = 0;
     for (c = text.begin(); c != text.end(); c++)
     {
         CharGlyph& ch = charGlyphs[*c];
@@ -351,7 +351,7 @@ void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 c
     {
         std::string::iterator c;
         textWidth = 0;
-        int lastAdvance;
+        int lastAdvance = 0;
         for (c = text.begin(); c != text.end(); c++)
         {
             CharGlyph& ch = charGlyphs[*c];
@@ -367,7 +367,6 @@ void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 c
             }
         }
 
-        //textWidth -= offset;
         textWidth -= lastAdvance;
 
         if (maxTextHeight > rc.getHeight())

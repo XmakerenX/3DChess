@@ -132,7 +132,6 @@ bool ListBoxUI::Pressed( Point pt, INPUT_STATE inputState, double timeStamp)
 		// Compute the index of the clicked item
 
 		int nClicked = -1;
-		int temp = m_rcBoundingBox.top;
 
 		if( m_nTextHeight )
 		{
