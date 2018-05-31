@@ -952,23 +952,24 @@ bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width,
 // Name : addListBox()
 // Desc : add a control of type ListBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addListBox(int ID, int x, int y, int width, int height, DWORD style/* = 0*/, ListBoxUI** ppListBoxCreated/* = NULL*/, std::string strID /*= ""*/)
-//{
-//    ListBoxUI* pListBox = new ListBoxUI(this, ID, x, y, width, height, style);
+bool DialogUI::addListBox(int ID, int x, int y, int width, int height, GLuint style/* = 0*/, ListBoxUI** ppListBoxCreated/* = NULL*/, std::string strID /*= ""*/)
+{
+    ListBoxUI* pListBox = new ListBoxUI(this, ID, x, y, width, height, style);
 
-//    initControl(pListBox);
-//    // !!! list box needs to update it's Rects on init
-//    pListBox->UpdateRects();
+    initControl(pListBox);
+    // !!! list box needs to update it's Rects on init
+    // why?
+    pListBox->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pListBox);
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pListBox);
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppListBoxCreated != NULL)
-//        *ppListBoxCreated = pListBox;
+    if (ppListBoxCreated != NULL)
+        *ppListBoxCreated = pListBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addSlider()
@@ -1118,22 +1119,22 @@ bool DialogUI::addComboBoxFromFile(std::istream& InputFIle, ComboBoxUI** ppCombo
 // Name : addListBoxFromFile()
 // Desc : loads from file a control of type ListBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addListBoxFromFile(std::istream& InputFIle, ListBoxUI** ppListBoxCreated /* = NULL */)
-//{
-//    ListBoxUI* pListBox = new ListBoxUI(InputFIle);
+bool DialogUI::addListBoxFromFile(std::istream& InputFIle, ListBoxUI** ppListBoxCreated /* = NULL */)
+{
+    ListBoxUI* pListBox = new ListBoxUI(InputFIle);
 
-//    initControl(pListBox);
-//    // !!! list box needs to update it's Rects on init
-//    pListBox->UpdateRects();
+    initControl(pListBox);
+    // !!! list box needs to update it's Rects on init
+    pListBox->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pListBox);
+    //add it to the controls vector
+    m_Controls.push_back(pListBox);
 
-//    if (ppListBoxCreated != NULL)
-//        *ppListBoxCreated = pListBox;
+    if (ppListBoxCreated != NULL)
+        *ppListBoxCreated = pListBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addSliderFromFile()
@@ -1659,10 +1660,10 @@ ComboBoxUI * DialogUI::getComboBox( int ID )
 //-----------------------------------------------------------------------------
 // Name : GetListBox
 //-----------------------------------------------------------------------------
-//ListBoxUI * DialogUI::getListBox( int ID )
-//{
-//    return static_cast< CListBoxUI* > (getControl(ID, ControlUI::LISTBOX));
-//}
+ListBoxUI * DialogUI::getListBox( int ID )
+{
+    return static_cast<ListBoxUI*> (getControl(ID, ControlUI::LISTBOX));
+}
 
 //-----------------------------------------------------------------------------
 // Name : GetControlsNum

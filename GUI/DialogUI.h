@@ -15,7 +15,7 @@
 #include "CheckboxUI.h"
 #include "RadioButtonUI.h"
 #include "ComboBoxUI.h"
-//#include "ListBoxUI.h"
+#include "ListBoxUI.h"
 //#include "SliderUI.h"
 //#include "EditBoxUI.h"
 
@@ -97,7 +97,7 @@ public:
     bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = NULL, std::string strID = "");
     bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = NULL, std::string strID = "");
     bool			 addComboBox			( int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
-//    bool		     addListBox				(int ID, int x, int y, int width, int height, DWORD style = 0, ListBoxUI** ppListBoxCreated = NULL, std::string strID = "");
+    bool		     addListBox				(int ID, int x, int y, int width, int height, GLuint style = 0, ListBoxUI** ppListBoxCreated = NULL, std::string strID = "");
 //    bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
 //    bool			 addEditbox				( int ID, std::string&& strText, int x, int y, int width, int height, CTimer* timer, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
 
@@ -106,7 +106,7 @@ public:
     bool			 addCheckBoxFromFile    ( std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = NULL);
     bool			 addRadioButtonFromFile ( std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = NULL);
     bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
-//    bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI** ppListBoxCreated = NULL);
+    bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI** ppListBoxCreated = NULL);
 //    bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
 //    bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, CEditBoxUI** ppEditBoxCreated = NULL);
 
@@ -120,9 +120,9 @@ public:
     CheckboxUI    * getCheckBox             ( int ID );
     RadioButtonUI * getRadioButton			( int ID );
     ComboBoxUI	   * getComboBox			( int ID );
+    ListBoxUI	   * getListBox			    ( int ID );
 //    SliderUI	   * getSlider				( int ID );
 //    EditBoxUI	   * getEditBox				( int ID );
-//    ListBoxUI	   * getListBox			    ( int ID );
     int				 getControlsNum			();
     const char	   * getControlIDText		( int ID);
     bool			 getVisible				();
