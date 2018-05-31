@@ -147,6 +147,7 @@ public:
     virtual void    Render	(Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
 
     void	renderRect		(Sprite& sprite, Rect &rcWindow, GLuint textureName, Rect &rcTexture, glm::vec4 color, Point offset);
+    void    renderText      (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos, mkFont::TextFormat format = mkFont::TextFormat::Center);
     //void	RenderText		(const char strText[], Rect rcDest, LPD3DXFONT pFont, DWORD format, LPD3DXSPRITE pSprite, D3DCOLOR textColor, POINT offset);
 
     bool ContainsPoint(Point pt);

@@ -274,6 +274,16 @@ void ControlUI::renderRect(Sprite& sprite, Rect& rcWindow, GLuint textureName, R
 }
 
 //-----------------------------------------------------------------------------
+// Name : renderText ()
+//-----------------------------------------------------------------------------
+void ControlUI::renderText(Sprite &textSprite, mkFont *font, std::string text, glm::vec4 color, Rect& rcText, Point dialogPos, mkFont::TextFormat format/* = mkFont::TextFormat::Center*/)
+{
+    Rect rcTextRect(rcText);
+    rcTextRect.offset(dialogPos.x, dialogPos.y);
+    font->renderToRect(textSprite, text, rcTextRect, color, format);
+}
+
+//-----------------------------------------------------------------------------
 // Name : RenderText ()
 // Desc : Render the text store in the static to the screen
 //-----------------------------------------------------------------------------
