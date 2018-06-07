@@ -16,7 +16,7 @@
 #include "RadioButtonUI.h"
 #include "ComboBoxUI.h"
 #include "ListBoxUI.h"
-//#include "SliderUI.h"
+#include "SliderUI.h"
 //#include "EditBoxUI.h"
 
 // the callback function that used to send back GUI events to the main program
@@ -98,7 +98,7 @@ public:
     bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = NULL, std::string strID = "");
     bool			 addComboBox			( int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
     bool		     addListBox				(int ID, int x, int y, int width, int height, GLuint style = 0, ListBoxUI** ppListBoxCreated = NULL, std::string strID = "");
-//    bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
+    bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
 //    bool			 addEditbox				( int ID, std::string&& strText, int x, int y, int width, int height, CTimer* timer, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
 
     bool			 addStaticFromFile		( std::istream& InputFIle, StaticUI** ppStaticCreated = NULL);
@@ -107,7 +107,7 @@ public:
     bool			 addRadioButtonFromFile ( std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = NULL);
     bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
     bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI** ppListBoxCreated = NULL);
-//    bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
+    bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
 //    bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, CEditBoxUI** ppEditBoxCreated = NULL);
 
     void			 RemoveControl			( int ID);
@@ -121,7 +121,7 @@ public:
     RadioButtonUI * getRadioButton			( int ID );
     ComboBoxUI	   * getComboBox			( int ID );
     ListBoxUI	   * getListBox			    ( int ID );
-//    SliderUI	   * getSlider				( int ID );
+    SliderUI	   * getSlider				( int ID );
 //    EditBoxUI	   * getEditBox				( int ID );
     int				 getControlsNum			();
     const char	   * getControlIDText		( int ID);

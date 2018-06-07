@@ -975,23 +975,23 @@ bool DialogUI::addListBox(int ID, int x, int y, int width, int height, GLuint st
 // Name : addSlider()
 // Desc : add a control of type Slider to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addSlider( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated/* = NULL*/, std::string strID /*= ""*/ )
-//{
-//    SliderUI* pSlider = new SliderUI(this, ID, x, y, width, height, min, max, nValue);
+bool DialogUI::addSlider( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated/* = NULL*/, std::string strID /*= ""*/ )
+{
+    SliderUI* pSlider = new SliderUI(this, ID, x, y, width, height, min, max, nValue);
 
-//    initControl(pSlider);
-//    // !!! slider needs to update it's Rects on init
-//    pSlider->UpdateRects();
+    initControl(pSlider);
+    // !!! slider needs to update it's Rects on init
+    pSlider->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pSlider);
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pSlider);
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppSliderCreated != NULL)
-//        *ppSliderCreated = pSlider;
+    if (ppSliderCreated != NULL)
+        *ppSliderCreated = pSlider;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addEditbox()
@@ -1140,22 +1140,22 @@ bool DialogUI::addListBoxFromFile(std::istream& InputFIle, ListBoxUI** ppListBox
 // Name : addSliderFromFile()
 // Desc : loads from file a control of type Slider to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addSliderFromFile(std::istream& InputFIle, SliderUI** ppSliderCreated /* = NULL */)
-//{
-//    SliderUI* pSlider = new SliderUI(InputFIle);
+bool DialogUI::addSliderFromFile(std::istream& InputFIle, SliderUI** ppSliderCreated /* = NULL */)
+{
+    SliderUI* pSlider = new SliderUI(InputFIle);
 
-//    initControl(pSlider);
-//    // !!! slider needs to update it's Rects on init
-//    pSlider->UpdateRects();
+    initControl(pSlider);
+    // !!! slider needs to update it's Rects on init
+    pSlider->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pSlider);
+    //add it to the controls vector
+    m_Controls.push_back(pSlider);
 
-//    if (ppSliderCreated != NULL)
-//        *ppSliderCreated = pSlider;
+    if (ppSliderCreated != NULL)
+        *ppSliderCreated = pSlider;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addEditBoxFromFile()
@@ -1644,10 +1644,10 @@ ComboBoxUI * DialogUI::getComboBox( int ID )
 //-----------------------------------------------------------------------------
 // Name : GetSlider
 //-----------------------------------------------------------------------------
-//SliderUI * DialogUI::getSlider( int ID )
-//{
-//    return static_cast< CSliderUI* > (getControl(ID, ControlUI::SLIDER));
-//}
+SliderUI * DialogUI::getSlider( int ID )
+{
+    return static_cast< SliderUI* > (getControl(ID, ControlUI::SLIDER));
+}
 
 //-----------------------------------------------------------------------------
 // Name : GetEditBox
