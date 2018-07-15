@@ -310,6 +310,7 @@ Point mkFont::calcTextRect(std::string text)
     textWidth = 0;
     int maxCharHeight = 0;
     std::string::iterator c;
+
     // calcuate textWidth that fits the Rect and max Char height
     int offset = 0;
     for (c = text.begin(); c != text.end(); c++)
@@ -321,6 +322,10 @@ Point mkFont::calcTextRect(std::string text)
 
         maxCharHeight = std::max(ch.Size.y, maxCharHeight);
     }
+
+    // slight hack to still give a size when the string is only a single space
+    if (text == " ")
+        return Point(offset, 0);
 
     textWidth = textWidth - offset;
     maxTextHeight = 0;
@@ -385,20 +390,31 @@ void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 c
     // shift the x posistion based on the given format
     switch(format)
     {
-    case TextFormat::HorizCenter:
-    {
-        x = rc.left + (rc.getWidth() - textWidth) / 2;
-    }break;
-
     case TextFormat::Center:
     {
         x = rc.left + (rc.getWidth() - textWidth) / 2;
         y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
     }break;
 
+    case TextFormat::HorizCenter:
+    {
+        x = rc.left + (rc.getWidth() - textWidth) / 2;
+    }break;
+
+    case TextFormat::VerticalCenter:
+    {
+        y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
+    }break;
+
     case TextFormat::Right:
     {
         x = rc.right - textWidth;
+    }break;
+
+    case TextFormat::RightVerticalCenter:
+    {
+        x = rc.right - textWidth;
+        y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
     }break;
 
     }

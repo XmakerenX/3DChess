@@ -119,7 +119,7 @@ struct FontString {
 class mkFont
 {
 public:
-    enum class TextFormat{Left, HorizCenter, Center, Right};
+    enum class TextFormat{Left, Center, HorizCenter, VerticalCenter, Right, RightVerticalCenter};
 
     mkFont();
     mkFont(std::string fontName, bool isPath = false);
