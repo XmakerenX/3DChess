@@ -1,32 +1,27 @@
 #ifndef  _GAMEWIN_H
 #define  _GAMEWIN_H
 
-// must be included first becuase of conflict between x11 fbxsdk.h
+// must be included first becuase of conflict between x11 and fbxsdk.h
 #include "AssetManager.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 //#include <GL/glcorearb.h>
-#include<GL/glew.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <glm/glm.hpp>
-#include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <X11/extensions/Xrandr.h>
 
+#include <iostream>
 #include <sstream>
+#include <future>
 
 #include "timer.h"
-#include "Shader.h"
-#include "Font.h"
-#include "Mesh.h"
-#include "Object.h"
 #include "Scene.h"
-#include "FreeCam.h"
 #include "input.h"
-#include "Scene.h"
 #include "Sprite.h"
 #include "GUI/DialogUI.h"
 
@@ -52,10 +47,22 @@ public:
     bool Shutdown       ();
     
     static bool isExtensionSupported    (const char *extList, const char *extension);
-    static int  ctxErrorHandler         (Display *dpy, XErrorEvent *ev );
+    static int  ctxErrorHandler         (Display *dpy, XErrorEvent *ev);
+
+    static void copyToClipboard(const std::string& text);
+    static std::string PasteClipboard();
     
 private:
+    static void sendClipboardLoop(Window clipboardWindow);
+    static void sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength);
+
     Display * m_display;
+    static Display * clipboardDisplay;
+    static Atom s_utf8, s_targets, s_selection;
+    static std::future<void> clipboardSender;
+    static Window clipboardWindow;
+    static std::string s_clipboardString;
+
     Window m_win;
     
     GLuint m_winWidth;

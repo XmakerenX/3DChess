@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <cmath>
 #include "virtualKeysLinux.h"
+#include <linux/input-event-codes.h>
+#include <X11/Xatom.h>
+#include "gameInput.h"
 
 /* Helper function to convert GLSL types to storage sizes */
 size_t TypeSize(GLenum type)
@@ -51,15 +54,20 @@ size_t TypeSize(GLenum type)
 
 
 bool GameWin::ctxErrorOccurred = false;
+Display * GameWin::clipboardDisplay = nullptr;
+Atom GameWin::s_utf8 = None ;
+Atom GameWin::s_targets = None;
+Atom GameWin::s_selection = None;
+std::future<void> GameWin::clipboardSender;
+Window GameWin::clipboardWindow = 0;
+std::string GameWin::s_clipboardString;
 
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
 GameWin::GameWin()
-//    :font_("NotoMono")
 {
     font_ = nullptr;
-    m_display = nullptr;
     
     gameRunning = true;
     ctx = nullptr;
@@ -94,6 +102,19 @@ bool GameWin::initWindow()
         std::cout << "Failed to open X display\n";
         return false;
     }
+
+
+    clipboardDisplay = XOpenDisplay(NULL);
+    if (!clipboardDisplay)
+    {
+            std::cout << "Failed to open X display for clipboard\n";
+            return false;
+    }
+
+    // get needed atoms for the clipboard operations
+    s_selection = XInternAtom(clipboardDisplay, "CLIPBOARD", False);
+    s_utf8 = XInternAtom(clipboardDisplay, "UTF8_STRING", False);
+    s_targets = XInternAtom(clipboardDisplay, "TARGETS", False);
     
     return true;
 }
@@ -360,7 +381,7 @@ bool GameWin::initOpenGL(int width, int height)
     //------------------------------------
     // Init Dialog
     //------------------------------------
-    GLuint buttonTexture = m_asset.getTexture("woodGUI2.png");
+    //GLuint buttonTexture = m_asset.getTexture("woodGUI2.png");
     m_dialog.init(300,300, 18, "Caption!", "", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), m_asset);
     m_dialog.setLocation(50, 100);
     m_dialog.initDefControlElements(m_asset);
@@ -387,6 +408,20 @@ bool GameWin::initOpenGL(int width, int height)
     pCombo->AddItem("Thursday", (void*)5);
     pCombo->AddItem("Friday", (void*)6);
     pCombo->AddItem("Saturday", (void*)7);
+
+    ListBoxUI* pListbox;
+    m_dialog.addListBox(7, 350,200, 200,100, 0, &pListbox);
+    pListbox->AddItem("Sunday", (void*)1);
+    pListbox->AddItem("Monday", (void*)2);
+    pListbox->AddItem("Tuesday", (void*)3);
+    pListbox->AddItem("Wednesday", (void*)4);
+    pListbox->AddItem("Thursday", (void*)5);
+    pListbox->AddItem("Friday", (void*)6);
+    pListbox->AddItem("Saturday", (void*)7);
+
+    m_dialog.addSlider(8, 0, 0, 200, 40, 0, 100, 50);
+
+    m_dialog.addEditbox(9, "Test TgTy",180, 100, 100, 35, nullptr );
 
     err = glGetError();
     if (err != GL_NO_ERROR)
@@ -460,10 +495,230 @@ bool GameWin::isExtensionSupported(const char *extList, const char *extension)
 //-----------------------------------------------------------------------------
 // Name : ctxErrorHandler ()
 //-----------------------------------------------------------------------------
-int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev )
+int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev)
 {
     ctxErrorOccurred = true;
     return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Name : sendEventToXWindow ()
+// Desc : sends a SelectionNotify event to X Window with the given data
+//        if type is None it means there was no data that could be sent
+//-----------------------------------------------------------------------------
+void GameWin::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength)
+{
+    XSelectionEvent ssev;
+
+    ssev.type = SelectionNotify;
+    ssev.requestor = sev->requestor;
+    ssev.selection = sev->selection;
+    ssev.target = sev->target;
+    ssev.property = sev->property;
+    ssev.time = sev->time;
+
+    if (type != None)
+    {
+        XChangeProperty(clipboardDisplay, sev->requestor, sev->property, type, bitsPerDataElement, PropModeReplace,
+                        data, dataLength);
+        ssev.property = sev->property;
+    }
+    else
+        // send "nope" to requesting client
+        // can't convert clipboard data to client desired type
+        ssev.property = None;
+
+    XSendEvent(clipboardDisplay, sev->requestor, False, NoEventMask, (XEvent *)&ssev);
+}
+
+//-----------------------------------------------------------------------------
+// Name : sendClipboardLoop ()
+//-----------------------------------------------------------------------------
+void GameWin::sendClipboardLoop(Window clipboardWindow)
+{
+    while(1)
+    {
+        XEvent ev;
+        XSelectionRequestEvent *sev;
+
+        XNextEvent(clipboardDisplay, &ev);
+        std::cout <<"got event :" << ev.type << "\n";
+        switch (ev.type)
+        {
+            case SelectionClear:
+            {
+                    std::cout << "Lost selection ownership\n";
+                    // close our temp window
+                    XDestroyWindow(clipboardDisplay, clipboardWindow);
+                    clipboardWindow = 0;
+                    return;
+            }break;
+
+            case SelectionRequest:
+                sev = (XSelectionRequestEvent*)&ev.xselectionrequest;
+                if (sev->target == s_utf8)
+                {
+                    std::cout << "sent utf8 \n";
+                    sendEventToXWindow(sev, s_utf8, 8, reinterpret_cast<unsigned char*>(const_cast<char*>(s_clipboardString.c_str())), s_clipboardString.length());
+                }
+                else
+                    if (sev->target == s_targets)
+                    {
+                        std::cout << "sent targets\n";
+                        Atom supportedFormats[] = {s_targets , s_utf8};
+                        sendEventToXWindow(sev, XA_ATOM, 32, reinterpret_cast<unsigned char*>(supportedFormats), sizeof(Atom) * 2);
+                    }
+                    else
+                    {
+                        std::cout << "got unknown\n";
+                        sendEventToXWindow(sev, None, 0, nullptr, 0);
+                    }
+                break;
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+// Name : copyToClipboard ()
+//-----------------------------------------------------------------------------
+void GameWin::copyToClipboard(const std::string &text)
+{
+    s_clipboardString = text;
+
+    std::cout << "copy to clipboard\n";
+    // check if the thread is still running
+    if (clipboardSender.valid())
+    {
+        std::future_status status = clipboardSender.wait_for(std::chrono::microseconds(0));
+        if (status != std::future_status::ready)
+        {
+            return;
+        }
+    }
+
+    std::cout << "finishing copying\n";
+    // either first time or clipthread is not running
+    Window root = RootWindow(clipboardDisplay, DefaultScreen(clipboardDisplay));
+
+    // We need a window to receive messages from other clients.
+    clipboardWindow = XCreateSimpleWindow(clipboardDisplay, root, -10, -10, 1, 1, 0, 0, 0);
+    XSelectInput(clipboardDisplay, clipboardWindow, SelectionClear | SelectionRequest);
+    // Claim ownership of the clipboard.
+    XSetSelectionOwner(clipboardDisplay, s_selection, clipboardWindow, CurrentTime);
+    // Create a thread to send the clipboard while we are the owners of it
+    clipboardSender = std::async(std::launch::async, GameWin::sendClipboardLoop, clipboardWindow);
+
+}
+
+//-----------------------------------------------------------------------------
+// Name : PasteClipboard ()
+//-----------------------------------------------------------------------------
+std::string GameWin::PasteClipboard()
+{
+    Display * pasteDisplay = XOpenDisplay(NULL);
+    Timer timer;
+
+    if (!pasteDisplay)
+    {
+        std::cout << "Failed to open X display\n";
+        return "";
+    }
+
+    Window root = RootWindow(pasteDisplay, DefaultScreen(pasteDisplay));
+
+    Window owner = XGetSelectionOwner(pasteDisplay, s_selection);
+    if (owner == None)
+    {
+        std::cout <<"'CLIPBOARD' has no owner\n";
+        XCloseDisplay(pasteDisplay);
+        return "";
+    }
+
+    // we are the owner of the clipboard return the saved string
+    if (owner == clipboardWindow)
+    {
+        XCloseDisplay(pasteDisplay);
+        return s_clipboardString;
+    }
+
+    // The selection owner will store the data in a property on this window:
+    Window target_window = XCreateSimpleWindow(pasteDisplay, root, -10, -10, 1, 1, 0, 0, 0);
+    XSelectInput(pasteDisplay, target_window, SelectionNotify);
+
+    // That's the property used by the owner. Note that it's completely arbitrary.
+    Atom target_property = XInternAtom(pasteDisplay, "ChessClipboard", False);
+
+    // Request conversion to UTF-8. Not all owners will be able to fulfill that request.
+    XConvertSelection(pasteDisplay, s_selection, s_utf8, target_property, target_window, CurrentTime);
+
+    double startTime = timer.getCurrentTime();
+
+    while (1)
+    {
+        XEvent ev;
+        XSelectionEvent *sev;
+
+        //too much time has passed and still no answer abort
+        if (timer.getCurrentTime() - startTime > 0.1)
+        {
+            XDestroyWindow( pasteDisplay, target_window );
+            XCloseDisplay(pasteDisplay);
+            return "";
+        }
+
+        // make sure there is a message in queue to not block
+        if (XPending(pasteDisplay) <= 0)
+            continue;
+
+        XNextEvent(pasteDisplay, &ev);
+        switch (ev.type)
+        {
+            case SelectionNotify:
+                sev = (XSelectionEvent*)&ev.xselection;
+                if (sev->property == None)
+                {
+                    std::cout <<"Conversion could not be performed.\n";
+                    return "";
+                }
+                else
+                {
+                    Atom da, incr, type;
+                    int di;
+                    unsigned long size, dul;
+                    unsigned char *prop_ret = nullptr;
+
+                    // Dummy call to get type and size.
+                    XGetWindowProperty(pasteDisplay, target_window, target_property, 0, 0, False, AnyPropertyType,
+                                       &type, &di, &dul, &size, &prop_ret);
+                    XFree(prop_ret);
+
+                    incr = XInternAtom(pasteDisplay, "INCR", False);
+                    if (type == incr)
+                    {
+                        std::cout << "Data too large and INCR mechanism not implemented\n";
+                        return "";
+                    }
+
+                    // Read the data in one go.
+                    XGetWindowProperty(pasteDisplay, target_window, target_property, 0, size, False, AnyPropertyType,
+                                       &da, &di, &dul, &dul, &prop_ret);
+                    // Save the returned string
+                    std::string ret  = reinterpret_cast<char*>(prop_ret);
+
+                    // Free resourses
+                    XFree(prop_ret);
+                    // Signal the selection owner that we have successfully read the data.
+                    XDeleteProperty(pasteDisplay, target_window, target_property);
+                    // close our temp window
+                    XDestroyWindow( pasteDisplay, target_window );
+
+                    XCloseDisplay(pasteDisplay);
+
+                    return ret;
+                }
+                break;
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -680,8 +935,10 @@ int GameWin::BeginGame()
                 char buf[128];
                 KeySym key;
 
+                if (event.xkey.keycode - 8 >= 0)
+                    keysStatus[event.xkey.keycode - 8] = true;
+
                 std::cout << "key pressed\n";
-                event.xkey.keycode;
                 std::cout << event.xkey.keycode << "\n";
                 XLookupString(&event.xkey, buf, 128, &key, nullptr);
                 std::cout << "KeySym: " << key << " " << "char: " <<  buf << "\n";
@@ -693,21 +950,27 @@ int GameWin::BeginGame()
                         int temp = key - 0xff00;
                         GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
                         std::cout << "Virtual key was " << (int)vKey << "\n";
-                        m_dialog.handleVirtualKeyEvent(vKey, true);
+
+                        ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
+                                               keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
+                                               keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+                        m_dialog.handleVirtualKeyEvent(vKey, true, modifierKeys);
                     }
                 }
                 else
                 {
                     m_dialog.handleKeyEvent(buf[0], true);
                 }
-
-                keysStatus[event.xkey.keycode] = true;
             }break;
 
             case KeyRelease:
             {
                 char buf[128];
                 KeySym key;
+
+                if (event.xkey.keycode - 8 >= 0)
+                    keysStatus[event.xkey.keycode - 8] = false;
+
                 std::cout << "key released\n";
                 std::cout << event.xkey.keycode << "\n";
 
@@ -717,18 +980,16 @@ int GameWin::BeginGame()
                     if (key > 0xff && key <= 0xffff)
                     {
                         GK_VirtualKey vKey = linuxVirtualKeysTable[key - 0xff00];
-                        m_dialog.handleVirtualKeyEvent(vKey, false);
+                        ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
+                                               keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
+                                               keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+                        m_dialog.handleVirtualKeyEvent(vKey, false, modifierKeys);
                     }
                 }
                 else
                 {
                     m_dialog.handleKeyEvent(buf[0], false);
                 }
-
-                if (event.xkey.keycode < 256)
-                    keysStatus[event.xkey.keycode] = false;
-                else
-                    std::cout << "Invalid keycode\n";
             }break;
 
             case MotionNotify:
@@ -834,6 +1095,16 @@ int GameWin::BeginGame()
 //-----------------------------------------------------------------------------
 bool GameWin::Shutdown()
 {
+    // send event to the clipboard window to make the clipboard thread to shutdown
+    if (clipboardWindow != 0)
+    {
+        XSelectionClearEvent event;
+        event.type = SelectionClear;
+        event.display = clipboardDisplay;
+        event.time = CurrentTime;
+        // fake that something took ownership of the clipboard
+        XSendEvent(m_display, clipboardWindow, False, NoEventMask, (XEvent *)&event);
+    }
     // Properly de-allocate all resources once they've outlived their purpose
     //delete meshShader;
     delete textShader;
@@ -845,6 +1116,7 @@ bool GameWin::Shutdown()
     XDestroyWindow( m_display, m_win );
     XFreeColormap( m_display, cmap );
     XCloseDisplay( m_display );
+    XCloseDisplay( clipboardDisplay );
     
     return true;
 }

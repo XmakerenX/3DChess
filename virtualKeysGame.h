@@ -7,7 +7,7 @@ enum class GK_VirtualKey{GK_UNKNOWN = 0,
 		      GK_Pause,
 		      GK_Space,
 		      GK_BackSpace,
-		      GK_Delete,
+              GK_Delete, // actully passed as ascii
 		      GK_Tab,
 		      GK_Linefeed,
 		      GK_Return,

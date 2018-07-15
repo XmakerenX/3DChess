@@ -119,12 +119,12 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     // sets the Static default font
     // this font is also used for all other controls ... for now..
     // create the controls font
-    mkFont* controlsFont = assetManger.getFont("Times New Roman", 16);
+    mkFont* controlsFont = assetManger.getFont("Times New Roman", 12);
     if (!controlsFont)
         return false;
 
 //    ELEMENT_FONT elementFont2(fontIndex,nFontHeight, assetManger.getFontItem(fontIndex).width);
-    ELEMENT_FONT elementFont2(FontInfo("Times New Roman",16), controlsFont);
+    ELEMENT_FONT elementFont2(FontInfo("Times New Roman",12), controlsFont);
 
     elementFontVec.push_back(elementFont2);
     elementGFXvec.clear();
@@ -138,7 +138,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     // Init Button elements
     //-------------------------------------
     // loads the button default texture
-    const std::vector<Rect> buttonTexturesRects = {Rect(0, 0, 256, 128), Rect(0, 128, 256, 256)};
+    const std::vector<Rect> buttonTexturesRects = {Rect(1, 2, 134, 51) ,Rect(138, 3, 248, 50)};
     if (!initControlGFX(assetManger, ControlUI::BUTTON, "tex.png", buttonTexturesRects, elementFontVec))
         return false;
 
@@ -201,15 +201,15 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     //-------------------------------------
     // Init EditBox elements
     //-------------------------------------
-    const std::vector<Rect> editboxTexturesRects = {Rect( 14, 90, 241, 113),       // text area texture rect
-                                                   Rect( 8, 82, 14, 90 ),         // top left border texture rect
-                                                   Rect( 14, 82, 241, 90 ),       // top border
-                                                   Rect( 241, 82, 246, 90 ),      // top right border
-                                                   Rect( 8, 90, 14, 113 ),        // left border
-                                                   Rect( 241, 90, 246, 113 ),     // right border
-                                                   Rect( 8, 113, 14, 121 ),       // lower left border
-                                                   Rect( 14, 113, 241, 121 ),     // lower border
-                                                   Rect( 241, 113, 246, 121 )};   // lower right border
+    const std::vector<Rect> editboxTexturesRects = {Rect( 14, 90, 241, 113),       // text area texture rect 0
+                                                   Rect( 8, 82, 14, 90 ),         // top left border texture rect 1
+                                                   Rect( 14, 82, 241, 90 ),       // top border 2
+                                                   Rect( 241, 82, 246, 90 ),      // top right border 3
+                                                   Rect( 8, 90, 14, 113 ),        // left border 4
+                                                   Rect( 241, 90, 246, 113 ),     // right border 5
+                                                   Rect( 8, 113, 14, 121 ),       // lower left border 6
+                                                   Rect( 14, 113, 241, 121 ),     // lower border 7
+                                                   Rect( 241, 113, 246, 121 )};   // lower right border 8
 
     if (!initControlGFX(assetManger, ControlUI::EDITBOX, "tex.png", editboxTexturesRects, elementFontVec))
         return false;
@@ -412,14 +412,14 @@ bool DialogUI::handleKeyEvent(unsigned char key, bool down)
 //-----------------------------------------------------------------------------
 // Name : handleVirtualKeyEvent ()
 //-----------------------------------------------------------------------------
-bool DialogUI::handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down)
+bool DialogUI::handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
 {
     // If a control is in focus, it belongs to this dialog, and it's enabled, then give
     // it the first chance at handling the message.
     if( m_pControlFocus && m_pControlFocus->getEnabled() )
     {
         // If the control handles it, then we don't.
-        if (m_pControlFocus->handleVirtualKey(virtualKey, down))
+        if (m_pControlFocus->handleVirtualKey(virtualKey, down, modifierStates))
             return true;
     }
 
@@ -997,23 +997,23 @@ bool DialogUI::addSlider( int ID, int x, int y, int width, int height, int min, 
 // Name : addEditbox()
 // Desc : add a control of type EditBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addEditbox( int ID, LPCTSTR strText, int x, int y, int width, int height, Timer* timer, EditBoxUI** ppEditBoxCreated/* = NULL*/, std::string strID /*= ""*/)
-//{
-//    EditBoxUI* pEditBox = new EditBoxUI(this, ID, strText, x, y, width, height, timer);
+bool DialogUI::addEditbox( int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated/* = NULL*/, std::string strID /*= ""*/)
+{
+    EditBoxUI* pEditBox = new EditBoxUI(this, ID, strText, x, y, width, height);
 
-//    initControl(pEditBox);
-//    // !!! EditBox needs to update it's Rects on init
-//    pEditBox->UpdateRects();
+    initControl(pEditBox);
+    // !!! EditBox needs to update it's Rects on init
+    pEditBox->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pEditBox);
-//    m_defInfo.push_back( DEF_INFO(strID, ID) );
+    //add it to the controls vector
+    m_Controls.push_back(pEditBox);
+    m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//    if (ppEditBoxCreated != NULL)
-//        *ppEditBoxCreated = pEditBox;
+    if (ppEditBoxCreated != NULL)
+        *ppEditBoxCreated = pEditBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : addStaticFromFile
@@ -1161,22 +1161,22 @@ bool DialogUI::addSliderFromFile(std::istream& InputFIle, SliderUI** ppSliderCre
 // Name : addEditBoxFromFile()
 // Desc : loads from file a control of type EditBox to the dialog
 //-----------------------------------------------------------------------------
-//bool DialogUI::addEditBoxFromFile(std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated /* = NULL */)
-//{
-//    EditBoxUI* pEditBox = new EditBoxUI(InputFIle,timer);
+bool DialogUI::addEditBoxFromFile(std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated /* = NULL */)
+{
+    EditBoxUI* pEditBox = new EditBoxUI(InputFIle);
 
-//    initControl(pEditBox);
-//    // !!! EditBox needs to update it's Rects on init
-//    pEditBox->UpdateRects();
+    initControl(pEditBox);
+    // !!! EditBox needs to update it's Rects on init
+    pEditBox->UpdateRects();
 
-//    //add it to the controls vector
-//    m_Controls.push_back(pEditBox);
+    //add it to the controls vector
+    m_Controls.push_back(pEditBox);
 
-//    if (ppEditBoxCreated != NULL)
-//        *ppEditBoxCreated = pEditBox;
+    if (ppEditBoxCreated != NULL)
+        *ppEditBoxCreated = pEditBox;
 
-//    return true;
-//}
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : RemoveControl()
@@ -1652,10 +1652,10 @@ SliderUI * DialogUI::getSlider( int ID )
 //-----------------------------------------------------------------------------
 // Name : GetEditBox
 //-----------------------------------------------------------------------------
-//EditBoxUI * DialogUI::getEditBox( int ID )
-//{
-//    return static_cast< CEditBoxUI* > (getControl(ID, ControlUI::EDITBOX));
-//}
+EditBoxUI * DialogUI::getEditBox( int ID )
+{
+    return static_cast<EditBoxUI*> (getControl(ID, ControlUI::EDITBOX));
+}
 
 //-----------------------------------------------------------------------------
 // Name : GetListBox

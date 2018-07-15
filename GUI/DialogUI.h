@@ -17,7 +17,7 @@
 #include "ComboBoxUI.h"
 #include "ListBoxUI.h"
 #include "SliderUI.h"
-//#include "EditBoxUI.h"
+#include "EditBoxUI.h"
 
 // the callback function that used to send back GUI events to the main program
 //typedef void ( CALLBACK*PCALLBACKGUIEVENT )(HWND hWnd, GLuint nEvent, int nControlID, void* pUserContext );
@@ -74,7 +74,7 @@ public:
     void	OnMouseMove(Point pt);
 
     bool handleKeyEvent(unsigned char key, bool down);
-    bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down);
+    bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates &modifierStates);
     bool handleMouseEvent(MouseEvent event);
 
 
@@ -99,7 +99,7 @@ public:
     bool			 addComboBox			( int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
     bool		     addListBox				(int ID, int x, int y, int width, int height, GLuint style = 0, ListBoxUI** ppListBoxCreated = NULL, std::string strID = "");
     bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
-//    bool			 addEditbox				( int ID, std::string&& strText, int x, int y, int width, int height, CTimer* timer, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
+    bool			 addEditbox				( int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
 
     bool			 addStaticFromFile		( std::istream& InputFIle, StaticUI** ppStaticCreated = NULL);
     bool			 addButtonFromFile		( std::istream& InputFIle, ButtonUI** ppButtonCreated = NULL);
@@ -108,7 +108,7 @@ public:
     bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
     bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI** ppListBoxCreated = NULL);
     bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
-//    bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, CEditBoxUI** ppEditBoxCreated = NULL);
+    bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated = NULL);
 
     void			 RemoveControl			( int ID);
     void			 RemoveAllControls		( );
@@ -122,7 +122,7 @@ public:
     ComboBoxUI	   * getComboBox			( int ID );
     ListBoxUI	   * getListBox			    ( int ID );
     SliderUI	   * getSlider				( int ID );
-//    EditBoxUI	   * getEditBox				( int ID );
+    EditBoxUI	   * getEditBox				( int ID );
     int				 getControlsNum			();
     const char	   * getControlIDText		( int ID);
     bool			 getVisible				();
