@@ -68,7 +68,9 @@ struct Rect
 
     void inflate(int x , int y)
     {
+        left -= x;
         right += x;
+        top -= y;
         bottom += y;
     }
 
@@ -88,6 +90,11 @@ struct Rect
     bool isPointInRect(Point pt)
     {
         return isPointInRect(pt.x, pt.y);
+    }
+
+    static Rect intersectRect(const Rect& a, const Rect& b)
+    {
+        return Rect(std::max(a.left, b.left), std::max(a.top, b.top), std::min(a.right, b.right), std::min(a.bottom, b.bottom) );
     }
 
     GLuint getWidth()
