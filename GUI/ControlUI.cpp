@@ -100,7 +100,7 @@ bool ControlUI::handleKeyEvent(unsigned char key, bool down)
 // Note : returns false by default for the basic control class which means
 //        the control does nothing with the Virtual keys input
 //-----------------------------------------------------------------------------
-bool ControlUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down)
+bool ControlUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
 {
     return false;
 }
@@ -262,7 +262,7 @@ GLuint ControlUI::getType()
 // Desc : render a Rect using the given texture and texture Rect
 // Note : the function also scale the texture to fit the Rect being rendered
 //-----------------------------------------------------------------------------
-void ControlUI::renderRect(Sprite& sprite, Rect& rcWindow, GLuint textureName, Rect& rcTexture ,glm::vec4 color, Point offset)
+void ControlUI::renderRect(Sprite& sprite, const Rect& rcWindow, GLuint textureName, const Rect& rcTexture ,glm::vec4 color, Point offset)
 {
     Rect offsetedWindowRect(rcWindow);
     offsetedWindowRect.offset(offset);

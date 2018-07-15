@@ -17,7 +17,7 @@ public:
 
     virtual void	Render				(Sprite &sprite, Sprite& textSprite , double timeStamp);
 
-    virtual bool handleKeyEvent(unsigned char key, bool down);
+    virtual bool handleKeyEvent(unsigned char key, bool down, const ModifierKeysStates& modifierStates);
     //virtual bool handleVirtualKey(GK_VirtualKey virtualKey, bool down);
     virtual bool handleMouseEvent(MouseEvent event);
     //virtual bool    HandleMouse			(GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );

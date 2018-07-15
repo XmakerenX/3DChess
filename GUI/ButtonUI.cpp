@@ -115,7 +115,7 @@ bool ButtonUI::handleMouseEvent(MouseEvent event)
 // Name : handleKeyEvent ()
 // Desc : handles key events for this button
 //-----------------------------------------------------------------------------
-bool ButtonUI::handleKeyEvent(unsigned char key, bool down)
+bool ButtonUI::handleKeyEvent(unsigned char key, bool down, const ModifierKeysStates &modifierStates)
 {
     if (key == ' ')
     {

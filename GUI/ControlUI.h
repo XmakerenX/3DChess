@@ -11,6 +11,7 @@
 #include "../Sprite.h"
 #include "../Font.h"
 #include "../mouseEventsGame.h"
+#include "../gameInput.h"
 
 //-----------------------GLuint------------------------------------------------------
 // Typedefs, Structures and Enumerators
@@ -129,7 +130,7 @@ public:
     // functions that handle user input
     //-------------------------------------------------------------------------
     virtual bool    handleKeyEvent		(unsigned char key , bool down);
-    virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down);
+    virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
     virtual bool    handleMouseEvent    (MouseEvent event);
     //virtual bool	HandleMouse			( HWND hWnd, GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
 
@@ -146,7 +147,7 @@ public:
      //TODO: need to decide how time between frames will be given to the render function
     virtual void    Render	(Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
 
-    void	renderRect		(Sprite& sprite, Rect &rcWindow, GLuint textureName, Rect &rcTexture, glm::vec4 color, Point offset);
+    void	renderRect		(Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
     void    renderText      (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos, mkFont::TextFormat format = mkFont::TextFormat::Center);
     //void	RenderText		(const char strText[], Rect rcDest, LPD3DXFONT pFont, DWORD format, LPD3DXSPRITE pSprite, D3DCOLOR textColor, POINT offset);
 
