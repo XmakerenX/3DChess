@@ -30,64 +30,60 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-    EditBoxUI(DialogUI *pParentDialog, int ID, std::string strText, int x, int y, int width, int height);
-    EditBoxUI(std::istream& inputFile);
+             EditBoxUI(DialogUI *pParentDialog, int ID, std::string strText, int x, int y, int width, int height);
+             EditBoxUI(std::istream& inputFile);
     virtual ~EditBoxUI(void);
 
 	//-------------------------------------------------------------------------
 	// Functions that handle user input logic
 	//-------------------------------------------------------------------------
-    virtual bool    handleKeyEvent		(unsigned char key , bool down);
-    virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
-    virtual bool    handleMouseEvent    (MouseEvent event);
+    virtual bool        handleKeyEvent		(unsigned char key , bool down);
+    virtual bool        handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
+    virtual bool        handleMouseEvent    (MouseEvent event);
 
-    virtual bool	Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
-    virtual bool    Released			( Point pt);
-    virtual bool    Dragged				(Point pt);
+    virtual bool        Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
+    virtual bool        Released			(Point pt);
+    virtual bool        Dragged				(Point pt);
 
-	void		    connectToEditboxChg	( const signal_editbox::slot_type& subscriber);
-
-    virtual bool    MsgProc				();
-
+    void                connectToEditboxChg	(const signal_editbox::slot_type& subscriber);
 	//-------------------------------------------------------------------------
 	// Functions that handle Rendering Logic
 	//-------------------------------------------------------------------------
-	virtual bool    CanHaveFocus();
-	virtual void    OnFocusIn();
-	virtual void    OnFocusOut();
+    virtual bool        CanHaveFocus    ();
+    virtual void        OnFocusIn       ();
+    virtual void        OnFocusOut      ();
 
-	virtual bool	SaveToFile(std::ostream& SaveFile);
+    virtual bool        SaveToFile      (std::ostream& SaveFile);
 
-	virtual void    UpdateRects();
-    virtual void    Render(Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void        UpdateRects     ();
+    virtual void        Render          (Sprite& sprite, Sprite& textSprite, double timeStamp);
+    void                renderSelection (Sprite& sprite, Sprite& textSprite, Point dialogPos);
+    void                renderCaret     (Sprite& sprite, double timeStamp, std::string &textTorender, Point dialogPos);
 
-	void            SetText(std::string strText, bool bSelected = false );
-    std::string     GetText();
-	int             GetTextLength();
-    bool            GetTextCopy(std::string strDest, GLuint bufferCount );
-	void            ClearText();
+    void                setText         (std::string strText, bool bSelected = false);
+    const std::string&  getText         ();
+    int                 getTextLength   ();
+    std::string         getTextCopy     ();
+    void                clearText       ();
 
-	virtual void    SetTextColor(glm::vec4 Color );
-	void            SetSelectedTextColor(glm::vec4 Color );
-	void            SetSelectedBackColor(glm::vec4 Color );
+    virtual void        SetTextColor        (glm::vec4 Color);
+    void                setSelectedTextColor(glm::vec4 Color);
+    void                setSelectedBackColor(glm::vec4 Color);
 
-	void            SetCaretColor(glm::vec4 Color );
-	void            SetBorderWidth( int nBorder );
-	void            SetSpacing( int nSpacing );
+    void                setCaretColor       (glm::vec4 Color);
+    void                setBorderWidth      (int nBorder);
+    void                setSpacing          (int nSpacing);
 
-	//void            ParseFloatArray( float* pNumbers, int nCount );
-	void            SetTextFloatArray( const float* pNumbers, int nCount );
-
-	int				CalcFirstVisibleCharUp();
-	int				CalcFirstVisibleCharDown();
+    int                 calcFirstVisibleCharUp  (bool insertMode);
+    int                 calcFirstVisibleCharDown();
 
 protected:
-	int				CalcCaretPosByPoint(Point pt );
-	void            PlaceCaret( int nCP );
-	void            DeleteSelectionText();
-	void            ResetCaretBlink();
-	void            CopyToClipboard();
-	void            PasteFromClipboard();
+    int                 calcCaretPosByPoint(Point pt);
+    void                placeCaret         (int nCP);
+    void                deleteSelectionText();
+    void                resetCaretBlink    ();
+    void                copyToClipboard    ();
+    void                pasteFromClipboard ();
 
     std::string	 m_buffer;        // Buffer to hold text
 	int			 m_nBorder;       // Border of the window
@@ -109,8 +105,6 @@ protected:
     glm::vec4	 m_CaretColor;    // Caret color
 
     boost::signals2::signal<void (EditBoxUI*)> m_editboxChangedSig;
-
-    //CAssetManager* m_assetManger;
 
 	// Mouse-specific
 	bool m_bMouseDrag;       // True to indicate drag in progress

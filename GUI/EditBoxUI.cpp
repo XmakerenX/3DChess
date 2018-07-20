@@ -7,8 +7,6 @@ bool EditBoxUI::s_bHideCaret;
 int EditBoxUI::s_caretBlinkTime = 100;
 
 //TODO: make scrolling and choosing a char work accurate
-//TDOO: make m_nFirstVisible more accurate
-//TODO: find a better and faster way to tell the text width
 
 //-----------------------------------------------------------------------------
 // Name : CEditBoxUI(constructor) 
@@ -39,8 +37,6 @@ EditBoxUI::EditBoxUI(DialogUI* pParentDialog, int ID, std::string strText, int x
 	m_bInsertMode = true;
 
 	m_bMouseDrag = false;
-
-    //m_assetManger = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -64,12 +60,12 @@ EditBoxUI::EditBoxUI(std::istream& inputFile)
 	std::string bufferText;
 	std::getline(inputFile, bufferText);
 	bufferText = bufferText.substr(0, bufferText.find('|') );
-	SetText(bufferText.c_str() );
+    setText(bufferText.c_str() );
     m_nVisibleChars = m_buffer.size();
 	inputFile >> m_nBorder;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 	inputFile >> m_nSpacing;
-	SetSpacing(m_nSpacing);
+    setSpacing(m_nSpacing);
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 	inputFile >> m_bCaretOn;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
@@ -103,28 +99,27 @@ bool EditBoxUI::handleKeyEvent(unsigned char key , bool down)
 
     case 8: // backsapce
     {
-        // If there's a selection, treat this
-        // like a delete key.
+        // If there's a selection, treat this like a delete key.
         if( m_nCaret != m_nSelStart )
         {
-            DeleteSelectionText();
+            deleteSelectionText();
             m_editboxChangedSig(this);
         }
         else if( m_nCaret > 0 )
         {
             // Move the caret, then delete the char.
-            PlaceCaret( m_nCaret - 1 );
+            placeCaret( m_nCaret - 1 );
             m_nSelStart = m_nCaret;
             m_buffer.erase(m_nCaret,1);
 
             if (m_nFirstVisible > 0)
-                CalcFirstVisibleCharDown();
+                calcFirstVisibleCharDown();
 
             m_nVisibleChars = m_buffer.size() - m_nFirstVisible;
 
             m_editboxChangedSig(this);
         }
-        ResetCaretBlink();
+        resetCaretBlink();
         return true;
     }break;
 
@@ -133,40 +128,56 @@ bool EditBoxUI::handleKeyEvent(unsigned char key , bool down)
         // Check if there is a text selection.
         if( m_nCaret != m_nSelStart )
         {
-            DeleteSelectionText();
+            deleteSelectionText();
+            calcFirstVisibleCharDown();
             m_editboxChangedSig(this);
         }
         else
         {
             // Deleting one character
             m_buffer.erase(m_nCaret,1);
+            calcFirstVisibleCharDown();
             m_editboxChangedSig(this);
         }
-        ResetCaretBlink();
+        resetCaretBlink();
         return true;
     }break;
 
     case 24: // Ctrl-X Cut
     case 3:  // Ctrl-C Copy
     {
-        CopyToClipboard();
+        copyToClipboard();
 
         // If the key is Ctrl-X, delete the selection too.
         if( key == 24 )
         {
-            DeleteSelectionText();
+            deleteSelectionText();
             m_editboxChangedSig(this);
-        }
-        break;
+        }break;
     }
 
     // Ctrl-V Paste
     case 22:
     {
-        PasteFromClipboard();
+        pasteFromClipboard();
         m_editboxChangedSig(this);
+    }break;
+
+    // Ctrl-A Select All
+    case 1:
+    {
+        if( m_nSelStart == m_nCaret )
+        {
+            m_nSelStart = 0;
+            placeCaret( m_buffer.size() );
+        }
+    }break;
+
+    // Return (enter)
+    case 13:
+        // Invoke signal when the user presses Enter
+        //m_pDialog->SendEvent( EVENT_EDITBOX_STRING, true, this );
         break;
-    }
 
     // Junk characters we don't want in the string
     case 26:  // Ctrl Z
@@ -191,7 +202,8 @@ bool EditBoxUI::handleKeyEvent(unsigned char key , bool down)
     case 16:  // Ctrl P
     case 27:  // Ctrl [
     case 29:  // Ctrl ]
-    case 28:  // Ctrl \
+    case 28:  // Ctrl '\'
+    case 31:  // Ctrl '/'
         break;
 
     default:
@@ -200,191 +212,40 @@ bool EditBoxUI::handleKeyEvent(unsigned char key , bool down)
         // starts to type, the selection should
         // be deleted.
         if( m_nCaret != m_nSelStart )
-            DeleteSelectionText();
+            deleteSelectionText();
 
         // If we are in overwrite mode and there is already
         // a char at the caret's position, simply replace it.
         // Otherwise, we insert the char as normal.
-        if( !m_bInsertMode && m_nCaret < m_buffer.size() )
+        if( !m_bInsertMode && m_nCaret < m_buffer.size())
         {
             m_buffer[m_nCaret] = key;
-            PlaceCaret( m_nCaret + 1 );
+            placeCaret( m_nCaret + 1 );
             m_nSelStart = m_nCaret;
 
-            CalcFirstVisibleCharUp();
+            if ( (m_nCaret  - ( m_nFirstVisible - m_nBackwardChars ) ) > m_buffer.size() - m_nFirstVisible )
+            {
+                if (m_nBackwardChars > 0)
+                    m_nBackwardChars--;
+            }
         }
         else
         {
             // Insert the char
             m_buffer.insert(m_nCaret, 1, key);
 
-            PlaceCaret( m_nCaret + 1 );
+            placeCaret( m_nCaret + 1 );
             m_nSelStart = m_nCaret;
-
-            CalcFirstVisibleCharUp();
+            calcFirstVisibleCharUp(false);
         }
 
-        ResetCaretBlink();
+        resetCaretBlink();
         m_editboxChangedSig(this);
         return true;
     }
 
-
     }
 
-//    switch( uMsg )
-//    {
-//    // Make sure that while editing, the keyup and keydown messages associated with
-//    // WM_CHAR messages don't go to any non-focused controls or cameras
-//    // TODO: Fix the problem that this case flashes the delete button messages..
-//    // possible solution is to just put the delete thingy here instead in Handlekeyboard
-//    case WM_KEYUP:
-//    case WM_KEYDOWN:
-//        return false;
-
-//    case WM_CHAR:
-//    {
-//        switch( ( char )wParam )
-//        {
-//        // Backspace
-//        case VK_BACK:
-//        {
-//            // If there's a selection, treat this
-//            // like a delete key.
-//            if( m_nCaret != m_nSelStart )
-//            {
-//                DeleteSelectionText();
-//                m_editboxChangedSig(this);
-//                //m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//            }
-//            else if( m_nCaret > 0 )
-//            {
-//                // Move the caret, then delete the char.
-//                PlaceCaret( m_nCaret - 1 );
-//                m_nSelStart = m_nCaret;
-//                m_Buffer.erase(m_nCaret,1);
-
-//                if (m_nFirstVisible > 0)
-//                    CalcFirstVisibleCharDown();
-
-//                m_nVisibleChars = m_Buffer.size() - m_nFirstVisible;
-
-//                m_editboxChangedSig(this);
-//                //m_Buffer.RemoveChar( m_nCaret );
-//                //m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//            }
-//            ResetCaretBlink();
-//            break;
-//        }
-
-//        case 24:        // Ctrl-X Cut
-//        case VK_CANCEL: // Ctrl-C Copy
-//        {
-//            CopyToClipboard();
-
-//            // If the key is Ctrl-X, delete the selection too.
-//            if( ( char )wParam == 24 )
-//            {
-//                DeleteSelectionText();
-//                m_editboxChangedSig(this);
-//                //m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//            }
-
-//            break;
-//        }
-
-//            // Ctrl-V Paste
-//        case 22:
-//        {
-//            PasteFromClipboard();
-//            m_editboxChangedSig(this);
-//            //m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//            break;
-//        }
-
-//            // Ctrl-A Select All
-//        case 1:
-//            if( m_nSelStart == m_nCaret )
-//            {
-//                m_nSelStart = 0;
-//                PlaceCaret( m_Buffer.size() );
-//            }
-//            break;
-
-//        case VK_RETURN:
-//            // Invoke the callback when the user presses Enter.
-//            //m_pDialog->SendEvent( EVENT_EDITBOX_STRING, true, this );
-//            break;
-
-//            // Junk characters we don't want in the string
-//        case 26:  // Ctrl Z
-//        case 2:   // Ctrl B
-//        case 14:  // Ctrl N
-//        case 19:  // Ctrl S
-//        case 4:   // Ctrl D
-//        case 6:   // Ctrl F
-//        case 7:   // Ctrl G
-//        case 10:  // Ctrl J
-//        case 11:  // Ctrl K
-//        case 12:  // Ctrl L
-//        case 17:  // Ctrl Q
-//        case 23:  // Ctrl W
-//        case 5:   // Ctrl E
-//        case 18:  // Ctrl R
-//        case 20:  // Ctrl T
-//        case 25:  // Ctrl Y
-//        case 21:  // Ctrl U
-//        case 9:   // Ctrl I
-//        case 15:  // Ctrl O
-//        case 16:  // Ctrl P
-//        case 27:  // Ctrl [
-//        case 29:  // Ctrl ]
-//        case 28:  // Ctrl \
-//            break;
-
-//        default:
-//        {
-//            // If there's a selection and the user
-//            // starts to type, the selection should
-//            // be deleted.
-//            if( m_nCaret != m_nSelStart )
-//                DeleteSelectionText();
-
-//            // If we are in overwrite mode and there is already
-//            // a char at the caret's position, simply replace it.
-//            // Otherwise, we insert the char as normal.
-//            if( !m_bInsertMode && m_nCaret < m_Buffer.size() )
-//            {
-//                m_Buffer[m_nCaret] = ( char )wParam;
-//                PlaceCaret( m_nCaret + 1 );
-//                m_nSelStart = m_nCaret;
-
-//                LPD3DXFONT pFont = m_assetManger->getFontPtr(2);
-//                RECT rt = {0,0,0,0};
-
-//                CalcFirstVisibleCharUp();
-//            }
-//            else
-//            {
-//                // Insert the char
-//                m_Buffer.insert(m_nCaret, 1, (char)wParam);
-
-//                PlaceCaret( m_nCaret + 1 );
-//                m_nSelStart = m_nCaret;
-
-//                LPD3DXFONT pFont = m_assetManger->getFontPtr(2);
-//                RECT rt = {0,0,0,0};
-
-//                CalcFirstVisibleCharUp();
-//            }
-
-//            ResetCaretBlink();
-//            m_editboxChangedSig(this);
-//        }
-//        }
-//        return true;
-//    }
-//    }
     return false;
 }
 
@@ -401,142 +262,80 @@ bool EditBoxUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down, const Modi
 
     case GK_VirtualKey::GK_Home:
     {
-        PlaceCaret( 0 );
+        placeCaret(0);
+        m_nBackwardChars = m_nFirstVisible;
         if( !modifierStates.bShift )
         {
-            // Shift is not down. Update selection
-            // start along with the caret.
+            // Shift is not pressed(down), Cancel selection
             m_nSelStart = m_nCaret;
         }
-        ResetCaretBlink();
+        resetCaretBlink();
         return true;
     }break;
 
     case GK_VirtualKey::GK_End:
     {
-        PlaceCaret( m_buffer.size() );
+        placeCaret( m_buffer.size() );
+        m_nBackwardChars = 0;
         if( !modifierStates.bShift )
         {
-            // Shift is not down. Update selection
-            // start along with the caret.
+            // Shift is not pressed(down), Cancel selection
             m_nSelStart = m_nCaret;
         }
-        ResetCaretBlink();
+        resetCaretBlink();
         return true;
     }break;
 
     case GK_VirtualKey::GK_Insert:
     {
-        if( modifierStates.bCtrl )
-        {
-            // Control Insert. Copy to clipboard
-            //CopyToClipboard();
-        }
-        else if( modifierStates.bShift )
-        {
-            // Shift Insert. Paste from clipboard
-            //PasteFromClipboard();
-        }
-        else
-        {
-            // Toggle caret insert mode
-            m_bInsertMode = !m_bInsertMode;
-        }
-        return true;
-    }break;
-
-    case GK_VirtualKey::GK_Delete:
-    {
-        // Check if there is a text selection.
-        if( m_nCaret != m_nSelStart )
-        {
-            DeleteSelectionText();
-            m_editboxChangedSig(this);
-        }
-        else
-        {
-            // Deleting one character
-            m_buffer.erase(m_nCaret,1);
-            m_editboxChangedSig(this);
-        }
-        ResetCaretBlink();
+        // Toggle caret insert mode
+        m_bInsertMode = !m_bInsertMode;
         return true;
     }break;
 
     case GK_VirtualKey::GK_Left:
     {
-        if( !modifierStates.bCtrl )
+        if (m_nCaret > 0)
         {
-            // Control is down. Move the caret to a new item
-            // instead of a character.
-            if (m_nCaret > 0)
-            {
-                m_nCaret--;
-                if ( m_nCaret < m_nFirstVisible)
-                {
-                    if (m_nFirstVisible > 0 && m_nBackwardChars < m_nFirstVisible)
-                        m_nBackwardChars++;
-                }
-                PlaceCaret( m_nCaret );
-            }
-        }
-        else if( m_nCaret > 0 )
-        {
-            if ( m_nCaret - 1 < m_nFirstVisible)
+            m_nCaret--;
+            if ( m_nCaret < m_nFirstVisible - m_nBackwardChars)
             {
                 if (m_nFirstVisible > 0 && m_nBackwardChars < m_nFirstVisible)
                     m_nBackwardChars++;
             }
-            PlaceCaret( m_nCaret - 1 );
+            placeCaret( m_nCaret );
         }
+
         if( !modifierStates.bShift )
         {
-            // Shift is not down. Update selection
-            // start along with the caret.
+            // Shift is not pressed(down), Cancel selection
             m_nSelStart = m_nCaret;
         }
 
-        ResetCaretBlink();
+        resetCaretBlink();
         return true;
     }break;
 
     case GK_VirtualKey::GK_Right:
     {
-        if( !modifierStates.bCtrl )
+        if( m_nCaret < m_buffer.size() )
         {
-            // Control is down. Move the caret to a new item
-            // instead of a character.
-            if( m_nCaret < m_buffer.size())
-            {
-                m_nCaret++;
-
-                if ( (m_nCaret - (m_nFirstVisible - m_nBackwardChars) ) < m_nVisibleChars )
-                {
-                    if (m_nBackwardChars > 0)
-                        m_nBackwardChars--;
-                }
-                PlaceCaret( m_nCaret );
-            }
-        }
-        else if( m_nCaret < m_buffer.size() )
-        {
-            if ( (m_nCaret + 1 - ( m_nFirstVisible - m_nBackwardChars ) ) > m_nVisibleChars )
+            if ( (m_nCaret + 1 - ( m_nFirstVisible - m_nBackwardChars ) ) > m_buffer.size() - m_nFirstVisible )
             {
                 if (m_nBackwardChars > 0)
                     m_nBackwardChars--;
-                PlaceCaret(m_nCaret + 1);
             }
-            else
-                PlaceCaret( m_nCaret + 1 );
+
+            placeCaret( m_nCaret + 1 );
         }
+
         if( !modifierStates.bShift )
         {
-            // Shift is not down. Update selection
-            // start along with the caret.
+            // Shift is not pressed(down), Cancel selection
             m_nSelStart = m_nCaret;
         }
 
-        ResetCaretBlink();
+        resetCaretBlink();
         return true;
     }break;
 
@@ -546,171 +345,6 @@ bool EditBoxUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down, const Modi
     }
 
 }
-
-//-----------------------------------------------------------------------------
-// Name : HandleKeyboard() 
-//-----------------------------------------------------------------------------
-//bool CEditBoxUI::HandleKeyboard( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-//{
-//	if( !m_bEnabled || !m_bVisible )
-//		return false;
-
-//	bool bHandled = false;
-
-//	switch( uMsg )
-//	{
-//	case WM_KEYDOWN:
-//		{
-//			switch( wParam )
-//			{
-//			case VK_TAB:
-//				// We don't process Tab in case keyboard input is enabled and the user
-//				// wishes to Tab to other controls.
-//				break;
-
-//			case VK_HOME:
-//				PlaceCaret( 0 );
-//				if( GetKeyState( VK_SHIFT ) >= 0 )
-//					// Shift is not down. Update selection
-//					// start along with the caret.
-//					m_nSelStart = m_nCaret;
-//				ResetCaretBlink();
-//				bHandled = true;
-//				break;
-
-//			case VK_END:
-//				PlaceCaret( m_Buffer.size() );
-//				if( GetKeyState( VK_SHIFT ) >= 0 )
-//					// Shift is not down. Update selection
-//					// start along with the caret.
-//					m_nSelStart = m_nCaret;
-//				ResetCaretBlink();
-//				bHandled = true;
-//				break;
-
-//			case VK_INSERT:
-//				if( GetKeyState( VK_CONTROL ) < 0 )
-//				{
-//					// Control Insert. Copy to clipboard
-//					CopyToClipboard();
-//				}
-//				else if( GetKeyState( VK_SHIFT ) < 0 )
-//				{
-//					// Shift Insert. Paste from clipboard
-//					PasteFromClipboard();
-//				}
-//				else
-//				{
-//					// Toggle caret insert mode
-//					m_bInsertMode = !m_bInsertMode;
-//				}
-//				break;
-
-//			case VK_DELETE:
-//				// Check if there is a text selection.
-//				if( m_nCaret != m_nSelStart )
-//				{
-//					DeleteSelectionText();
-//					m_editboxChangedSig(this);
-//					//m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//				}
-//				else
-//				{
-//					// Deleting one character
-//					m_Buffer.erase(m_nCaret,1);
-//					m_editboxChangedSig(this);
-//					//if( m_Buffer.RemoveChar( m_nCaret ) )
-//					//	m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//				}
-//				ResetCaretBlink();
-//				bHandled = true;
-//				break;
-
-//			case VK_LEFT:
-//				{
-//					if( GetKeyState( VK_CONTROL ) < 0 )
-//					{
-//						// Control is down. Move the caret to a new item
-//						// instead of a character.
-//						m_nCaret--;
-//						//m_Buffer.GetPriorItemPos( m_nCaret, &m_nCaret );
-//						if ( m_nCaret < m_nFirstVisible)
-//						{
-//							if (m_nFirstVisible > 0 && m_nBackwardChars < m_nFirstVisible)
-//								m_nBackwardChars++;
-//							//m_nFirstVisible = m_nCaret;
-//						}
-//						PlaceCaret( m_nCaret );
-//					}
-//					else if( m_nCaret > 0 )
-//					{
-//						if ( m_nCaret - 1 < m_nFirstVisible)
-//						{
-//							if (m_nFirstVisible > 0 && m_nBackwardChars < m_nFirstVisible)
-//								m_nBackwardChars++;
-//							//m_nFirstVisible = m_nCaret - 1;
-//						}
-//						PlaceCaret( m_nCaret - 1 );
-//					}
-//					if( GetKeyState( VK_SHIFT ) >= 0 )
-//						// Shift is not down. Update selection
-//						// start along with the caret.
-//						m_nSelStart = m_nCaret;
-//					ResetCaretBlink();
-//					bHandled = true;
-//				}
-//				break;
-
-//			case VK_RIGHT:
-//				if( GetKeyState( VK_CONTROL ) < 0 )
-//				{
-//					// Control is down. Move the caret to a new item
-//					// instead of a character.
-//					m_nCaret++;
-
-//					if ( (m_nCaret - (m_nFirstVisible - m_nBackwardChars) ) < m_nVisibleChars )
-//					{
-//						if (m_nBackwardChars > 0)
-//							m_nBackwardChars--;
-//						//m_nCaret = m_nVisibleChars + m_nFirstVisible;
-//					}
-//					//m_Buffer.GetNextItemPos( m_nCaret, &m_nCaret );
-//					PlaceCaret( m_nCaret );
-//				}
-//				else if( m_nCaret < m_Buffer.size() )
-//				{
-//					if ( (m_nCaret + 1 - ( m_nFirstVisible - m_nBackwardChars ) ) > m_nVisibleChars )
-//					{
-//						if (m_nBackwardChars > 0)
-//							m_nBackwardChars--;
-//						//m_nCaret = m_nVisibleChars + m_nFirstVisible;
-//						PlaceCaret(m_nCaret + 1);
-//					}
-//					else
-//						PlaceCaret( m_nCaret + 1 );
-//				}
-//				if( GetKeyState( VK_SHIFT ) >= 0 )
-//					// Shift is not down. Update selection
-//					// start along with the caret.
-//					m_nSelStart = m_nCaret;
-//				ResetCaretBlink();
-//				bHandled = true;
-//				break;
-
-//			case VK_UP:
-//			case VK_DOWN:
-//				// Trap up and down arrows so that the dialog
-//				// does not switch focus to another control.
-//				bHandled = true;
-//				break;
-
-//			default:
-//				bHandled = wParam != VK_ESCAPE;  // Let the application handle Esc.
-//			}
-//		}
-//	}
-//	return bHandled;
-//}
 
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent()
@@ -755,18 +389,18 @@ bool EditBoxUI::Pressed(Point pt, INPUT_STATE inputState, double timeStamp)
 	// Determine the character corresponding to the coordinates.
  	int nCP;//, nTrail, nX1st;
 
-	nCP = CalcCaretPosByPoint(pt);
+    nCP = calcCaretPosByPoint(pt);
 
     if (nCP > m_buffer.size())
         nCP = m_buffer.size();
 
 	// Cap at the NULL character.
     if(nCP >= 0 && nCP < (m_buffer.size() + 1) )
-		PlaceCaret( nCP );
+        placeCaret( nCP );
 	else
-		PlaceCaret( 0 );
+        placeCaret( 0 );
 	m_nSelStart = m_nCaret;
-	ResetCaretBlink();
+    resetCaretBlink();
 
 	return true;
 }
@@ -790,7 +424,7 @@ bool EditBoxUI::Dragged( Point pt)
 	{
 		// Determine the character corresponding to the coordinates.
 		int nCP;//, nTrail, nX1st;
-		nCP = CalcCaretPosByPoint(pt);
+        nCP = calcCaretPosByPoint(pt);
 
 		// Cap at the NULL character.
         if(nCP >= 0 && nCP < m_buffer.size() )
@@ -814,13 +448,13 @@ bool EditBoxUI::Dragged( Point pt)
 						m_nBackwardChars = 0;
 				}
 			
-			PlaceCaret( nCP );
+            placeCaret( nCP );
 
 			if ( nCP > m_nCaret)
-				CalcFirstVisibleCharUp();
+                calcFirstVisibleCharUp(true);
 			
 			if ( nCP < m_nCaret)
-				CalcFirstVisibleCharDown();
+                calcFirstVisibleCharDown();
 		}
 		else
 		{
@@ -835,13 +469,13 @@ bool EditBoxUI::Dragged( Point pt)
 				m_nBackwardChars = 0;
 			}
 
-			PlaceCaret( nCP );
+            placeCaret( nCP );
 
 			if ( nCP > m_nCaret)
-				CalcFirstVisibleCharUp();
+                calcFirstVisibleCharUp(true);
 
 			if ( nCP < m_nCaret)
-				CalcFirstVisibleCharDown();
+                calcFirstVisibleCharDown();
 		}
 		return true;
 
@@ -856,170 +490,6 @@ bool EditBoxUI::Dragged( Point pt)
 void EditBoxUI::connectToEditboxChg(const signal_editbox::slot_type& subscriber)
 {
 	m_editboxChangedSig.connect(subscriber);
-}
-
-//-----------------------------------------------------------------------------
-// Name : MsgProc() 
-//-----------------------------------------------------------------------------
-bool EditBoxUI::MsgProc()
-{
-//	if( !m_bEnabled || !m_bVisible )
-//		return false;
-
-//	switch( uMsg )
-//	{
-//		// Make sure that while editing, the keyup and keydown messages associated with
-//		// WM_CHAR messages don't go to any non-focused controls or cameras
-//		// TODO: Fix the problem that this case flashes the delete button messages..
-//		// possible solution is to just put the delete thingy here instead in Handlekeyboard
-//	case WM_KEYUP:
-//	case WM_KEYDOWN:
-//		return false;
-
-//	case WM_CHAR:
-//		{
-//			switch( ( char )wParam )
-//			{
-//				// Backspace
-//			case VK_BACK:
-//				{
-//					// If there's a selection, treat this
-//					// like a delete key.
-//					if( m_nCaret != m_nSelStart )
-//					{
-//						DeleteSelectionText();
-//						m_editboxChangedSig(this);
-//						//m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//					}
-//					else if( m_nCaret > 0 )
-//					{
-//						// Move the caret, then delete the char.
-//						PlaceCaret( m_nCaret - 1 );
-//						m_nSelStart = m_nCaret;
-//						m_Buffer.erase(m_nCaret,1);
-
-//						if (m_nFirstVisible > 0)
-//							CalcFirstVisibleCharDown();
-
-//						m_nVisibleChars = m_Buffer.size() - m_nFirstVisible;
-
-//						m_editboxChangedSig(this);
-//						//m_Buffer.RemoveChar( m_nCaret );
-//						//m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//					}
-//					ResetCaretBlink();
-//					break;
-//				}
-
-//			case 24:        // Ctrl-X Cut
-//			case VK_CANCEL: // Ctrl-C Copy
-//				{
-//					CopyToClipboard();
-
-//					// If the key is Ctrl-X, delete the selection too.
-//					if( ( char )wParam == 24 )
-//					{
-//						DeleteSelectionText();
-//						m_editboxChangedSig(this);
-//						//m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//					}
-
-//					break;
-//				}
-
-//				// Ctrl-V Paste
-//			case 22:
-//				{
-//					PasteFromClipboard();
-//					m_editboxChangedSig(this);
-//					//m_pDialog->SendEvent( EVENT_EDITBOX_CHANGE, true, this );
-//					break;
-//				}
-
-//				// Ctrl-A Select All
-//			case 1:
-//				if( m_nSelStart == m_nCaret )
-//				{
-//					m_nSelStart = 0;
-//					PlaceCaret( m_Buffer.size() );
-//				}
-//				break;
-
-//			case VK_RETURN:
-//				// Invoke the callback when the user presses Enter.
-//				//m_pDialog->SendEvent( EVENT_EDITBOX_STRING, true, this );
-//				break;
-
-//				// Junk characters we don't want in the string
-//			case 26:  // Ctrl Z
-//			case 2:   // Ctrl B
-//			case 14:  // Ctrl N
-//			case 19:  // Ctrl S
-//			case 4:   // Ctrl D
-//			case 6:   // Ctrl F
-//			case 7:   // Ctrl G
-//			case 10:  // Ctrl J
-//			case 11:  // Ctrl K
-//			case 12:  // Ctrl L
-//			case 17:  // Ctrl Q
-//			case 23:  // Ctrl W
-//			case 5:   // Ctrl E
-//			case 18:  // Ctrl R
-//			case 20:  // Ctrl T
-//			case 25:  // Ctrl Y
-//			case 21:  // Ctrl U
-//			case 9:   // Ctrl I
-//			case 15:  // Ctrl O
-//			case 16:  // Ctrl P
-//			case 27:  // Ctrl [
-//			case 29:  // Ctrl ]
-//			case 28:  // Ctrl \
-//				break;
-
-//			default:
-//				{
-//					// If there's a selection and the user
-//					// starts to type, the selection should
-//					// be deleted.
-//					if( m_nCaret != m_nSelStart )
-//						DeleteSelectionText();
-
-//					// If we are in overwrite mode and there is already
-//					// a char at the caret's position, simply replace it.
-//					// Otherwise, we insert the char as normal.
-//					if( !m_bInsertMode && m_nCaret < m_Buffer.size() )
-//					{
-//						m_Buffer[m_nCaret] = ( char )wParam;
-//						PlaceCaret( m_nCaret + 1 );
-//						m_nSelStart = m_nCaret;
-
-//						LPD3DXFONT pFont = m_assetManger->getFontPtr(2);
-//						RECT rt = {0,0,0,0};
-						
-//						CalcFirstVisibleCharUp();
-//					}
-//					else
-//					{
-//						// Insert the char
-//						m_Buffer.insert(m_nCaret, 1, (char)wParam);
-
-//                        PlaceCaret( m_nCaret + 1 );
-//                        m_nSelStart = m_nCaret;
-
-//                        LPD3DXFONT pFont = m_assetManger->getFontPtr(2);
-//                        RECT rt = {0,0,0,0};
-
-//                        CalcFirstVisibleCharUp();
-//					}
-
-//					ResetCaretBlink();
-//					m_editboxChangedSig(this);
-//				}
-//			}
-//			return true;
-//		}
-//	}
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1072,58 +542,75 @@ void EditBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 	//
 	// Compute the X coordinates of the first visible character.
 	//
-    int nXFirst = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize;;
+    int nXFirst = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize;
 	// compute the x coordinates of the caret
     nCaretX = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize; +
-              m_nCaret * m_elementsFonts[0].fontInfo.fontSize;;
+              m_nCaret * m_elementsFonts[0].fontInfo.fontSize;
 
 	if (nCaretX > m_rcText.right)
 		      ;//m_nFirstVisible = (nCaretX - m_rcText.right) / fontItem.avgWidth;
 
-    nCaretX = m_rcText.right - m_elementsFonts[0].fontInfo.fontSize;;
+    nCaretX = m_rcText.right - m_elementsFonts[0].fontInfo.fontSize;
 
-	//
-	// Compute the X coordinates of the selection rectangle
-	//
+	// Render the text
+    Rect rt = {0, 0, 0, 0};
+    Rect rtFullText = {0, 0, 0, 0};
 
-	if (m_nCaret != m_nSelStart)
-        nSelStartX = nXFirst + m_nSelStart * m_elementsFonts[0].fontInfo.fontSize;
+    std::string fullText = m_buffer.substr(0, m_buffer.size() - m_nBackwardChars);
+    std::string textToRender;
+
+	if (m_nBackwardChars == 0)
+        textToRender = m_buffer.substr(m_nFirstVisible, m_buffer.size() - m_nFirstVisible );
 	else
-		nSelStartX = nCaretX;
+        //textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - m_nBackwardChars );
+        textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - m_nFirstVisible );
 
-	//
-	// Render the selection rectangle
-	//
-    Rect rcSelection;  // Make this available for rendering selected text
-	if( m_nCaret != m_nSelStart )
-	{
-		int nSelLeftX = nCaretX, nSelRightX = nSelStartX;
-		// Swap if left is bigger than right
-		if( nSelLeftX > nSelRightX )
-		{
-			int nTemp = nSelLeftX;
-			nSelLeftX = nSelRightX;
-			nSelRightX = nTemp;
-		}
-		
+	if (m_nFirstVisible - m_nBackwardChars == 0)
+        renderText(textSprite, m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
+	else
+        renderText(textSprite, m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
+
+    renderSelection(sprite, textSprite, dialogPos);
+
+	// Render the caret if this control has the focus
+    renderCaret(sprite, timeStamp, textToRender,dialogPos);
+}
+
+//-----------------------------------------------------------------------------
+// Name : renderSelection()
+//-----------------------------------------------------------------------------
+void EditBoxUI::renderSelection(Sprite& sprite, Sprite& textSprite, Point dialogPos)
+{
+    // Make this available for rendering selected text
+    Rect rcSelection;
+
+    if( m_nCaret != m_nSelStart )
+    {
+        int nXFirst = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize;
+        int nCaretX = m_rcText.right - m_elementsFonts[0].fontInfo.fontSize;
+        int nSelStartX = nXFirst + m_nSelStart * m_elementsFonts[0].fontInfo.fontSize;
+
+        int nSelLeftX = nCaretX, nSelRightX = nSelStartX;
+        // Swap if left is bigger than right
+        if( nSelLeftX > nSelRightX )
+        {
+            int nTemp = nSelLeftX;
+            nSelLeftX = nSelRightX;
+            nSelRightX = nTemp;
+        }
+
         int nFirstToRender = std::max( m_nFirstVisible - m_nBackwardChars, std::min( m_nSelStart, m_nCaret ) );
-        int nNumChatToRender = std::max( m_nSelStart, m_nCaret ) - nFirstToRender;
+        int nLastToRender = m_buffer.size() - m_nBackwardChars;
+        int nNumChatToRender = std::min(std::max( m_nSelStart, m_nCaret ), nLastToRender) - nFirstToRender;
 
         std::string temp = m_buffer.substr( nFirstToRender, nNumChatToRender);
-		if (temp.size() > 0 && temp[0] == ' ')
-			temp[0] = ';';
-		if (temp.size() > 0 && temp[temp.size() -1] == ' ')
-			temp [temp.size() - 1] = ';';
-		
+
         Rect rcSelectionBound = {0, 0, 0, 0};
         Rect rcSelectX = {0, 0, 0, 0};
+
         Point textSize = m_elementsFonts[0].font->calcTextRect(temp);
 
-        temp = m_buffer.substr(0, nFirstToRender);
-		if (temp.size() > 0 && temp[0] == ' ')
-			temp[0] = ';';
-		if (temp.size() > 0 && temp[temp.size() -1] == ' ')
-			temp [temp.size() - 1] = ';';
+        temp = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, nFirstToRender - (m_nFirstVisible - m_nBackwardChars));
 
         Point textSelectSize = m_elementsFonts[0].font->calcTextRect(temp);
 
@@ -1134,12 +621,6 @@ void EditBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 
         Rect rtFullText = {0, 0, 0, 0};
         Point fullTextSize = m_elementsFonts[0].font->calcTextRect(m_buffer);
- 
- 		if (m_nFirstVisible - m_nBackwardChars != 0 )
- 		{
-            int rtExtra = fullTextSize.x - rcSelectX.right;
- 			rcSelectX.right = (m_rcText.right - m_rcText.left) - rtExtra;
- 		}
 
         nSelLeftX = m_rcText.left + textSelectSize.x + 0;
         nSelRightX = m_rcText.left + textSelectSize.x + textSize.x;
@@ -1149,101 +630,70 @@ void EditBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
         int nSelBottom = m_rcText.top + m_rcText.getHeight()/2 + fontSize;
         rcSelection = Rect(nSelLeftX, std::max(m_rcText.top, nSelTop), nSelRightX, std::min(m_rcText.bottom, nSelBottom));
 
-        Rect rc;
-        renderRect(sprite, rcSelection, 0, rc, m_SelBkColor, dialogPos);
-	}
+        renderRect(sprite, rcSelection, 0, Rect(), m_SelBkColor, dialogPos);
 
-	//
-	// Render the text
-	//
-	// Element 0 for text
-    Rect rt = {0, 0, 0, 0};
-    Rect rtFullText = {0, 0, 0, 0};
+        //temp = m_buffer.substr( nFirstToRender, nNumChatToRender - (m_nFirstVisible - m_nBackwardChars));
+        temp = m_buffer.substr( nFirstToRender, nNumChatToRender);
+        renderText(textSprite, m_elementsFonts[0].font, temp, m_SelTextColor, rcSelection, dialogPos, mkFont::TextFormat::VerticalCenter);
+    }
+}
 
-    std::string temp = m_buffer.substr(0, m_nCaret);
-    std::string fullText = m_buffer.substr(0, m_buffer.size() - m_nBackwardChars);
-
-
-	std::string textToRender;
-
-	if (m_nBackwardChars == 0)
-        textToRender = m_buffer.substr(m_nFirstVisible, m_buffer.size() - m_nFirstVisible );
-	else
-        textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - (m_nFirstVisible /*- m_nBackwardChars * 2*/) );
-
-	if (m_nFirstVisible - m_nBackwardChars == 0)
-        renderText(textSprite, m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
-	else
-        renderText(textSprite, m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::RightVerticalCenter);
-
-	if (temp.size() > 0 && temp[temp.size() - 1] == ' ')
-		temp[temp.size() - 1] = ';';
+//-----------------------------------------------------------------------------
+// Name : renderCaret()
+//-----------------------------------------------------------------------------
+void EditBoxUI::renderCaret(Sprite& sprite, double timeStamp, std::string& textTorender, Point dialogPos)
+{
+    int nXFirst = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize;
+    std::string temp = m_buffer.substr(m_nFirstVisible -  m_nBackwardChars, m_nCaret - (m_nFirstVisible -  m_nBackwardChars));
 
     Point rtSize =  m_elementsFonts[0].font->calcTextRect(temp);
-    Point fullTextSize = m_elementsFonts[0].font->calcTextRect(fullText);
+    Point fullTextSize = m_elementsFonts[0].font->calcTextRect(textTorender);
 
-	if (m_nFirstVisible - m_nBackwardChars != 0)
-	{
-        int rtExtra = fullTextSize.x - rtSize.x;
-        rtSize.x = (m_rcText.right - m_rcText.left) - rtExtra;
-	}
-
-	// Render the selected text
-	if( m_nCaret != m_nSelStart )
-	{
-        int nFirstToRender = std::min(m_nSelStart, m_nCaret);
-        int nNumChatToRender = std::max( m_nSelStart, m_nCaret ) - nFirstToRender;
-
-        temp = m_buffer.substr( nFirstToRender, nNumChatToRender  + m_nBackwardChars);
-        renderText(textSprite, m_elementsFonts[0].font, temp, m_SelTextColor, rcSelection, dialogPos, mkFont::TextFormat::VerticalCenter);
-	}
-
-	// Blink the caret
+    // Blink the caret
     if( timeStamp - m_dfLastBlink >= m_dfBlink )
-	{
-		m_bCaretOn = !m_bCaretOn;
+    {
+        m_bCaretOn = !m_bCaretOn;
         m_dfLastBlink = timeStamp;
-	}
+    }
 
-	// Render the caret if this control has the focus
-	if( m_bHasFocus && m_bCaretOn && !s_bHideCaret )
-	{
-		// Start the rectangle with insert mode caret
+    if( m_bHasFocus && m_bCaretOn && !s_bHideCaret )
+    {
+        // Start the rectangle with insert mode caret
         int fontSize = m_elementsFonts[0].font->getFontSize();
         int caretTop = m_rcText.top + m_rcText.getHeight()/2 - fontSize;
         int caretBottom = m_rcText.top + m_rcText.getHeight()/2 + fontSize;
         Rect rcCaret = Rect(m_rcText.left + rtSize.x - 1, std::max(m_rcText.top, caretTop),
                             m_rcText.left + rtSize.x + 1, std::min(m_rcText.bottom, caretBottom));
 
-		// If we are in overwrite mode, adjust the caret rectangle
-		// to fill the entire character.
-		if( !m_bInsertMode )
-		{
-			// Obtain the right edge X coord of the current character
-			int nRightEdgeX;
+        // If we are in overwrite mode, adjust the caret rectangle
+        // to fill the entire character.
+        if( !m_bInsertMode )
+        {
+            // Obtain the right edge X coord of the current character
+            int nRightEdgeX;
             nRightEdgeX = nXFirst + m_elementsFonts[0].font->getFontSize() * ( m_nCaret + 1 );
-			rcCaret.right = m_rcText.left - nXFirst + nRightEdgeX;
+            rcCaret.right = m_rcText.left - nXFirst + nRightEdgeX;
             std::string latterAfterCaret;
             latterAfterCaret.push_back(m_buffer[m_nCaret]);
             Point letterSize = m_elementsFonts[0].font->calcTextRect(latterAfterCaret);
             rcCaret.right = rcCaret.left + letterSize.x;
-		}
+        }
 
         renderRect(sprite, rcCaret, NO_TEXTURE, Rect(), m_CaretColor, dialogPos);
-	}
+    }
 }
 
 //-----------------------------------------------------------------------------
 // Name : SetText() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::SetText( std::string strText, bool bSelected /* = false */ )
+void EditBoxUI::setText( std::string strText, bool bSelected /* = false */ )
 {
     m_buffer = strText;
 	m_nFirstVisible = 0;
 	m_nBackwardChars = 0;
     m_nVisibleChars = m_buffer.size();
 	// Move the caret to the end of the text
-    PlaceCaret( m_buffer.size() );
+    placeCaret( m_buffer.size() );
 
 	if (bSelected)
 		m_nSelStart = 0;
@@ -1254,7 +704,7 @@ void EditBoxUI::SetText( std::string strText, bool bSelected /* = false */ )
 //-----------------------------------------------------------------------------
 // Name : GetText() 
 //-----------------------------------------------------------------------------
-std::string EditBoxUI::GetText()
+const std::string& EditBoxUI::getText()
 {
     return m_buffer;
 }
@@ -1262,7 +712,7 @@ std::string EditBoxUI::GetText()
 //-----------------------------------------------------------------------------
 // Name : GetTextLength() 
 //-----------------------------------------------------------------------------
-int EditBoxUI::GetTextLength()
+int EditBoxUI::getTextLength()
 {
     return m_buffer.size();
 }
@@ -1270,26 +720,21 @@ int EditBoxUI::GetTextLength()
 //-----------------------------------------------------------------------------
 // Name : GetTextCopy() 
 //-----------------------------------------------------------------------------
-bool EditBoxUI::GetTextCopy(std::string strDest, GLuint bufferCount)
+std::string EditBoxUI::getTextCopy()
 {
-    return false;
-//	assert( strDest );
-
-//	strcpy_s( strDest, bufferCount, m_Buffer.c_str() );
-
-//	return S_OK;
+    return m_buffer;
 }
 
 //-----------------------------------------------------------------------------
 // Name : ClearText() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::ClearText()
+void EditBoxUI::clearText()
 {
     m_buffer.clear();
 	m_nFirstVisible = 0;
 	m_nBackwardChars = 0;
     m_nVisibleChars = m_buffer.size();
-	PlaceCaret( 0 );
+    placeCaret( 0 );
 	m_nSelStart = 0;
 }
 
@@ -1304,7 +749,7 @@ void EditBoxUI::SetTextColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 // Name : SetSelectedTextColor() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::SetSelectedTextColor(glm::vec4 Color)
+void EditBoxUI::setSelectedTextColor(glm::vec4 Color)
 {
 	m_SelTextColor = Color;
 }
@@ -1312,7 +757,7 @@ void EditBoxUI::SetSelectedTextColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 // Name : SetSelectedBackColor() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::SetSelectedBackColor(glm::vec4 Color)
+void EditBoxUI::setSelectedBackColor(glm::vec4 Color)
 {
 	m_SelBkColor = Color;
 }
@@ -1320,7 +765,7 @@ void EditBoxUI::SetSelectedBackColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 // Name : SetCaretColor() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::SetCaretColor(glm::vec4 Color)
+void EditBoxUI::setCaretColor(glm::vec4 Color)
 {
 	m_CaretColor = Color;
 }
@@ -1328,7 +773,7 @@ void EditBoxUI::SetCaretColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 // Name : SetBorderWidth() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::SetBorderWidth(int nBorder)
+void EditBoxUI::setBorderWidth(int nBorder)
 {
 	m_nBorder = nBorder;
 }
@@ -1336,75 +781,16 @@ void EditBoxUI::SetBorderWidth(int nBorder)
 //-----------------------------------------------------------------------------
 // Name : SetSpacing() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::SetSpacing(int nSpacing)
+void EditBoxUI::setSpacing(int nSpacing)
 {
 	m_nSpacing = nSpacing;
 	UpdateRects();
 }
 
 //-----------------------------------------------------------------------------
-// Name : ParseFloatArray() 
-//-----------------------------------------------------------------------------
-// void CEditBoxUI::ParseFloatArray( float* pNumbers, int nCount )
-// {
-// 	int nWritten = 0;  // Number of floats written
-// 	const char* pToken, *pEnd;
-// 	char strToken[60];
-// 
-// 	pToken = m_Buffer.GetBuffer();
-// 	while( nWritten < nCount && *pToken != L'\0' )
-// 	{
-// 		// Skip leading spaces
-// 		while( *pToken == L' ' )
-// 			++pToken;
-// 
-// 		if( *pToken == L'\0' )
-// 			break;
-// 
-// 		// Locate the end of number
-// 		pEnd = pToken;
-// 		//TODO: replace this crap with something that is logical and elegant 
-// 		while( IN_FLOAT_CHARSET( *pEnd ) )
-// 			++pEnd;
-// 
-// 		// Copy the token to our buffer
-// 		int nTokenLen = __min( sizeof( wszToken ) / sizeof( wszToken[0] ) - 1, int( pEnd - pToken ) );
-// 		strcpy_s( wszToken, nTokenLen, pToken );
-// 		*pNumbers = ( float )strtod( wszToken, NULL );
-// 		++nWritten;
-// 		++pNumbers;
-// 		pToken = pEnd;
-// 	}
-//}
-
-//-----------------------------------------------------------------------------
-// Name : SetTextFloatArray() 
-//-----------------------------------------------------------------------------
-void EditBoxUI::SetTextFloatArray( const float* pNumbers, int nCount )
-{
-//	char strBuffer[512] = {0};
-//	char strTmp[64];
-
-//	if( pNumbers == NULL )
-//		return;
-
-//	for( int i = 0; i < nCount; ++i )
-//	{
-//		sprintf_s( strTmp, 64, "%.4f ", pNumbers[i] );
-//		strcat_s( strBuffer, 512, strTmp );
-//	}
-
-//	// Don't want the last space
-//	if( nCount > 0 && strlen( strBuffer ) > 0 )
-//		strBuffer[strlen( strBuffer ) - 1] = 0;
-
-//	SetText( strBuffer );
-}
-
-//-----------------------------------------------------------------------------
 // Name : CalcCaretPosByPoint() 
 //-----------------------------------------------------------------------------
-int EditBoxUI::CalcCaretPosByPoint( Point pt )
+int EditBoxUI::calcCaretPosByPoint( Point pt )
 {
 	// Determine the character corresponding to the coordinates.
 	int nCP;
@@ -1439,7 +825,7 @@ int EditBoxUI::CalcCaretPosByPoint( Point pt )
 //-----------------------------------------------------------------------------
 // Name : PlaceCaret() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::PlaceCaret( int nCP )
+void EditBoxUI::placeCaret( int nCP )
 {
     assert( nCP >= 0 && nCP <= m_buffer.size() );
     m_nCaret = nCP;
@@ -1448,24 +834,26 @@ void EditBoxUI::PlaceCaret( int nCP )
 //-----------------------------------------------------------------------------
 // Name : DeleteSelectionText() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::DeleteSelectionText()
+void EditBoxUI::deleteSelectionText()
 {
     int nFirst = std::min( m_nCaret, m_nSelStart );
     int nLast = std::max( m_nCaret, m_nSelStart );
-	// Update caret and selection
-	PlaceCaret( nFirst );
-	m_nSelStart = m_nCaret;
-	CalcFirstVisibleCharDown();
-    m_nVisibleChars = m_buffer.size() - m_nFirstVisible;
 
-	// Remove the characters
+    // Remove the characters
     m_buffer.erase(nFirst, nLast - nFirst);
+
+	// Update caret and selection
+    placeCaret( nFirst );
+	m_nSelStart = m_nCaret;
+    m_nFirstVisible = 0;
+    calcFirstVisibleCharDown();
+    m_nVisibleChars = m_buffer.size() - m_nFirstVisible;
 }
 
 //-----------------------------------------------------------------------------
 // Name : ResetCaretBlink() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::ResetCaretBlink()
+void EditBoxUI::resetCaretBlink()
 {
 	//TODO: try to use the timer here instead of this ugly thing
 //	__int64 currTime;
@@ -1485,7 +873,7 @@ void EditBoxUI::ResetCaretBlink()
 //-----------------------------------------------------------------------------
 // Name : CopyToClipboard() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::CopyToClipboard()
+void EditBoxUI::copyToClipboard()
 {
     if (m_nCaret != m_nSelStart)
     {
@@ -1496,14 +884,14 @@ void EditBoxUI::CopyToClipboard()
 //-----------------------------------------------------------------------------
 // Name : PasteFromClipboard() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::PasteFromClipboard()
+void EditBoxUI::pasteFromClipboard()
 {
-    DeleteSelectionText();
+    deleteSelectionText();
     std::string pasteString = GameWin::PasteClipboard();
     if (pasteString != "")
     {
         m_buffer.insert(m_nCaret, pasteString);
-        PlaceCaret(m_nCaret + pasteString.size());
+        placeCaret(m_nCaret + pasteString.size());
         m_nSelStart = m_nCaret;
     }
 }
@@ -1522,7 +910,7 @@ bool EditBoxUI::CanHaveFocus()
 void EditBoxUI::OnFocusIn()
 {
     ControlUI::OnFocusIn();
-	ResetCaretBlink();
+    resetCaretBlink();
 }
 
 //-----------------------------------------------------------------------------
@@ -1557,56 +945,52 @@ bool EditBoxUI::SaveToFile(std::ostream& SaveFile)
 //-----------------------------------------------------------------------------
 // Name : CalcFirstVisibleCharUp 
 //-----------------------------------------------------------------------------
-int EditBoxUI::CalcFirstVisibleCharUp()
+int EditBoxUI::calcFirstVisibleCharUp(bool insertMode)
 {
-    std::string visibleText = m_buffer.substr(m_nFirstVisible, m_buffer.size() - m_nFirstVisible);
-	m_nVisibleChars = visibleText.size();
+    std::string visibleText = m_buffer.substr(m_nFirstVisible, m_buffer.size() - (m_nFirstVisible - m_nBackwardChars));
+    m_nVisibleChars = visibleText.size();
 
     Point rtSize = m_elementsFonts[0].font->calcTextRect(visibleText);
 
     int textEdge =  m_rcText.left + rtSize.x;
 
-	if (textEdge > m_rcText.right )
-	{
-		m_nFirstVisible++;
-		CalcFirstVisibleCharUp();
-	}
-	else
-		return m_nFirstVisible;
-	
-	return 0;
+    bool changed = false;
+    while (textEdge > m_rcText.right)
+    {
+        if (m_nCaret != m_buffer.size() - m_nBackwardChars)
+            m_nBackwardChars++;
+        m_nFirstVisible++;
+        changed = true;
+
+        visibleText = m_buffer.substr(m_nFirstVisible, m_buffer.size() - (m_nFirstVisible - m_nBackwardChars));
+        m_nVisibleChars = visibleText.size();
+        rtSize = m_elementsFonts[0].font->calcTextRect(visibleText);
+        textEdge =  m_rcText.left + rtSize.x;
+    }
+
+    if (!changed && m_nFirstVisible > 0 && !insertMode)
+    {
+        if (m_nCaret != m_buffer.size() - m_nBackwardChars)
+            m_nBackwardChars++;
+        m_nFirstVisible++;
+    }
+
+    return m_nFirstVisible;
 }
 
 //-----------------------------------------------------------------------------
 // Name : CalcFirstVisibleCharDown 
 //-----------------------------------------------------------------------------
-int EditBoxUI::CalcFirstVisibleCharDown()
+int EditBoxUI::calcFirstVisibleCharDown()
 {
     if (m_elementsFonts.size() == 0)
         return 0;
 
-    Rect rt = Rect(0,0,0,0);
+    if (m_nFirstVisible > 0)
+        m_nFirstVisible--;
 
-    std::string visibleText = m_buffer.substr(m_nFirstVisible, m_buffer.size() - m_nFirstVisible);
-	m_nVisibleChars = visibleText.size();
-
-    m_elementsFonts[0].font->calcTextRect(visibleText);
-
-	int textEdge =  m_rcText.left + rt.right;
-
-	if (textEdge < m_rcText.right  && m_nFirstVisible > 0)
-	{
-		m_nFirstVisible--;
-		//return m_nFirstVisible;
-		CalcFirstVisibleCharDown();
-	}
-	else
-	{
-		if (m_nBackwardChars > m_nFirstVisible)
-			m_nBackwardChars = m_nFirstVisible;
-
-		return m_nFirstVisible;
-	}
+    if (m_nBackwardChars > m_nFirstVisible)
+        m_nBackwardChars = m_nFirstVisible;
 
 	return 0;
 } 
