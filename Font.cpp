@@ -8,6 +8,7 @@
 // Name : mkFont (constructor)
 //-----------------------------------------------------------------------------
 mkFont::mkFont()
+    : m_cachedTextSize(0,0)
 {
     VAO = 0;
     VBO = 0;
@@ -20,15 +21,15 @@ mkFont::mkFont()
 
     m_textureAtlas = 0;
 
-    textWidth = 0;
-    maxTextHeight = 0;
-    textCached = "";
+    m_cachedMaxBearing = 0;
+    m_cachedText = "";
 }
 
 //-----------------------------------------------------------------------------
 // Name : mkFont (constructor)
 //-----------------------------------------------------------------------------
 mkFont::mkFont(std::string fontName, bool isPath/* = false*/)
+    : m_cachedTextSize(0,0)
 {
     VAO = 0;
     VBO = 0;
@@ -43,7 +44,8 @@ mkFont::mkFont(std::string fontName, bool isPath/* = false*/)
     m_maxOffset = 0;
 
     m_textureAtlas = 0;
-    textCached = "";
+    m_cachedMaxBearing = 0;
+    m_cachedText = "";
 }
 
 //-----------------------------------------------------------------------------
@@ -53,7 +55,7 @@ mkFont::mkFont(const mkFont& toCopy)
 {
     fontPath = toCopy.fontPath;
     init(toCopy.m_fontSize, toCopy.m_height, 96, 96);
-    textCached = "";
+    m_cachedText = "";
 }
 
 //-----------------------------------------------------------------------------
@@ -95,7 +97,7 @@ mkFont::mkFont(mkFont&& toMove)
     toMove.m_maxRows = 0;
     toMove.m_avgWidth = 0;
     toMove.m_textureAtlas = 0;
-    textCached = "";
+    m_cachedText = "";
 }
 
 //-----------------------------------------------------------------------------
@@ -270,29 +272,16 @@ void mkFont::renderTextAtlas(Sprite& sprite, std::string text, GLfloat x, GLfloa
     if (text.empty())
         return;
 
-    std::string::const_iterator c = text.begin();
-    CharGlyph ch = charGlyphs[*c];
-    float maxCharHeight = ch.Size.y;
-
-    for (c = text.begin() + 1; c != text.end(); c++)
-    {
-        CharGlyph& ch = charGlyphs[*c];
-
-        if (ch.Size.y > maxCharHeight)
-            maxCharHeight = ch.Size.y;
-    }
-
     // Iterate through all characters
     for (auto c = text.begin(); c != text.end(); c++)
     {
         CharGlyphAtlas charGlyph = charGlyphsAtlas[*c];
         GLfloat xpos = x + charGlyph.Bearing.x * scale;
-        GLfloat ypos = y + (charGlyph.Size.y - charGlyph.Bearing.y) * scale + (maxCharHeight - charGlyph.Size.y)*scale;
+        GLfloat ypos = y - charGlyph.Bearing.y  * scale;
 
         GLfloat w = charGlyph.Size.x * scale;
         GLfloat h = charGlyph.Size.y * scale;
 
-        //sprite.AddTexturedQuad(Rect(xpos, ypos, xpos + w, ypos + h), textureAtlas, charGlyph.textureRect);
         sprite.AddTintedTexturedQuad(Rect(xpos, ypos, xpos + w, ypos + h), color, m_textureAtlas, charGlyph.textureRect);
 
         // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
@@ -306,36 +295,71 @@ void mkFont::renderTextAtlas(Sprite& sprite, std::string text, GLfloat x, GLfloa
 //-----------------------------------------------------------------------------
 Point mkFont::calcTextRect(std::string text)
 {
-    textCached = text;
-    textWidth = 0;
-    int maxCharHeight = 0;
-    std::string::iterator c;
+    m_cachedText = text;
 
-    // calcuate textWidth that fits the Rect and max Char height
     int offset = 0;
-    for (c = text.begin(); c != text.end(); c++)
+    int textWidth = 0;
+    GLuint maxTextHeight;
+    m_cachedMaxBearing = -100;
+    int maxUnderLineHeight = -100;
+    // calcuate textWidth that fits the Rect
+    // calculate text height by finding the max bearing value(above text line height)
+    // and max height value below the text line
+    for (std::string::iterator c = text.begin(); c != text.end(); c++)
     {
         CharGlyph& ch = charGlyphs[*c];
 
         textWidth += (ch.Advance >> 6);
         offset = (ch.Advance >> 6) - (ch.Bearing.x + ch.Size.x);
 
-        maxCharHeight = std::max(ch.Size.y, maxCharHeight);
+        m_cachedMaxBearing = std::max(ch.Bearing.y, m_cachedMaxBearing);
+        if (ch.Bearing.y != 0)
+            maxUnderLineHeight = std::max(maxUnderLineHeight, ch.Size.y - ch.Bearing.y);
     }
 
-    // slight hack to still give a size when the string is only a single space
-    if (text == " ")
-        return Point(offset, 0);
+    // remove the last charachter advance value
+    // unless it is space so space will count in the text Width
+    if (text.back() != ' ')
+        textWidth = textWidth - offset;
 
-    textWidth = textWidth - offset;
-    maxTextHeight = 0;
+    maxTextHeight = m_cachedMaxBearing + maxUnderLineHeight;
 
-    // check if text Height fits the Rect
-    for (auto c2 = text.begin(); c2 != c; c2++)
+    m_cachedTextSize = Point(textWidth, maxTextHeight);
+    return m_cachedTextSize;
+}
+
+//-----------------------------------------------------------------------------
+// Name : clipTextToRect
+// Desc : clips the given string to the given rect
+// Note : textInRect is updated to the clipped string
+//        returns the new text size after clipping
+//-----------------------------------------------------------------------------
+Point mkFont::clipTextToRect(const Rect& rc, std::string& textInRect, int maxTextHeight)
+{
+    int textWidth = 0;
+    int lastAdvance = 0;
+    std::string::iterator c;
+    for (c = textInRect.begin(); c != textInRect.end(); c++)
     {
-        CharGlyph& ch = charGlyphs[*c2];
-        GLuint textHeight = maxCharHeight + ch.Size.y - ch.Bearing.y;
-        maxTextHeight = std::max(maxTextHeight, textHeight);
+        CharGlyph& ch = charGlyphs[*c];
+
+        textWidth += (ch.Advance >> 6);
+        lastAdvance = ch.Advance >> 6;
+        int offset = (ch.Advance >> 6) - (ch.Bearing.x + ch.Size.x);
+
+        if ( (textWidth - offset) > rc.getWidth())
+        {
+            // clip the string so it fits the Rect
+            textInRect = std::string(textInRect.begin(), c);
+            break;
+        }
+    }
+    textWidth -= lastAdvance;
+
+    if (maxTextHeight > rc.getHeight())
+    {
+        textInRect = "";
+        return Point(0,0);
     }
 
     return Point(textWidth, maxTextHeight);
@@ -346,40 +370,18 @@ Point mkFont::calcTextRect(std::string text)
 //-----------------------------------------------------------------------------
 void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 color, TextFormat format/* = TextFormat::Left*/, bool clipText/* = true*/)
 {
-    std::string textInRect;
+    Point textSize;
     // check if this text rect was already cached
     // by checking if textInRect appeares in the start of text
-    if (textCached.empty() || text.compare(0, textCached.size(), textCached) != 0)
-        calcTextRect(text);
+    if (m_cachedText.empty() || text.compare(0, m_cachedText.size(), m_cachedText) != 0)
+        textSize = calcTextRect(text);
+    else
+        textSize = m_cachedTextSize;
 
+    std::string textInRect = text;
     if (clipText)
     {
-        std::string::iterator c;
-        textWidth = 0;
-        int lastAdvance = 0;
-        for (c = text.begin(); c != text.end(); c++)
-        {
-            CharGlyph& ch = charGlyphs[*c];
-
-            textWidth += (ch.Advance >> 6);
-            lastAdvance = ch.Advance >> 6;
-            int offset = (ch.Advance >> 6) - (ch.Bearing.x + ch.Size.x);
-            if ( (textWidth - offset) > rc.getWidth())
-            {
-                // clip the string so it fits the Rect
-                textInRect = std::string(text.begin(), c);
-                break;
-            }
-        }
-
-        textWidth -= lastAdvance;
-
-        if (maxTextHeight > rc.getHeight())
-            return;
-
-        // if c got to the end of the string the enitre string fits the Rect
-        if ( c == text.end())
-            textInRect = text;
+        textSize = clipTextToRect(rc, textInRect, textSize.y);
     }
     else
         textInRect = text;
@@ -390,36 +392,43 @@ void mkFont::renderToRect(Sprite& sprite, std::string text, Rect rc, glm::vec4 c
     // shift the x posistion based on the given format
     switch(format)
     {
+    case TextFormat::Left:
+    {
+        y = rc.top + m_cachedMaxBearing;
+    }break;
+
     case TextFormat::Center:
     {
-        x = rc.left + (rc.getWidth() - textWidth) / 2;
-        y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
+        //x = rc.left + (rc.getWidth() - textWidth) / 2;
+        x = rc.left + (rc.getWidth() - textSize.x) / 2;
+        y = rc.top + rc.getHeight() / 2 + charGlyphsAtlas['c'].Bearing.y / 2;
     }break;
 
     case TextFormat::HorizCenter:
     {
-        x = rc.left + (rc.getWidth() - textWidth) / 2;
+        x = rc.left + (rc.getWidth() - textSize.x) / 2;
     }break;
 
     case TextFormat::VerticalCenter:
     {
-        y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
+        y = rc.top + rc.getHeight() / 2 + charGlyphsAtlas['c'].Bearing.y / 2;
     }break;
 
     case TextFormat::Right:
     {
-        x = rc.right - textWidth;
+        x = rc.right - textSize.x;
+        y = rc.top + m_cachedMaxBearing;
     }break;
 
     case TextFormat::RightVerticalCenter:
     {
-        x = rc.right - textWidth;
-        y = rc.top + (rc.getHeight() - maxTextHeight) / 2;
+        x = rc.right - textSize.x;
+        y = rc.top + rc.getHeight() / 2 + charGlyphsAtlas['c'].Bearing.y / 2;
     }break;
 
     }
 
-    renderTextAtlas(sprite,textInRect, x, y, 1.0f, color );
+    renderTextAtlas(sprite,textInRect, x, y, 1.0f, color);
 }
 
 //-----------------------------------------------------------------------------
