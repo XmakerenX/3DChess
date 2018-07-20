@@ -79,7 +79,7 @@ struct Rect
         inflate(pt.x, pt.y);
     }
 
-    bool isPointInRect(int x, int y)
+    bool isPointInRect(int x, int y) const
     {
         if (x >= left && x <= right && y >= top && y <= bottom)
             return true;
@@ -87,7 +87,7 @@ struct Rect
             return false;
     }
 
-    bool isPointInRect(Point pt)
+    bool isPointInRect(Point pt) const
     {
         return isPointInRect(pt.x, pt.y);
     }
@@ -97,12 +97,12 @@ struct Rect
         return Rect(std::max(a.left, b.left), std::max(a.top, b.top), std::min(a.right, b.right), std::min(a.bottom, b.bottom) );
     }
 
-    GLuint getWidth()
+    GLuint getWidth() const
     {
         return right - left;
     }
 
-    GLuint getHeight()
+    GLuint getHeight() const
     {
         return bottom - top;
     }
