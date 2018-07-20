@@ -582,7 +582,7 @@ mkFont* AssetManager::getFont(std::string fontName, int fontSize, bool isPath/* 
     else
     {
         mkFont newFont(fontPath, true);
-        if (newFont.init(fontSize, 0, 96, 96) == 0)
+        if (newFont.init(fontSize, 96, 96) == 0)
         {
             m_fontCache.insert(std::pair<std::string, mkFont>(fontNameStream.str(), std::move(newFont)));
             return &m_fontCache[fontNameStream.str()];
