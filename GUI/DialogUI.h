@@ -70,12 +70,11 @@ public:
     bool initDefControlElements(AssetManager& assetManger);
     bool initWoodControlElements(AssetManager& assetManager);
 
-    virtual bool    MsgProc	 (GLuint uMsg, Timer *timer, bool windowed );
     void	OnMouseMove(Point pt);
 
     bool handleKeyEvent(unsigned char key, bool down);
     bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates &modifierStates);
-    bool handleMouseEvent(MouseEvent event);
+    bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
 
     //void    SendEvent(GLuint nEvent, bool bTriggeredByUser, int nControlID, HWND hWnd = NULL );
@@ -97,7 +96,7 @@ public:
     bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = NULL, std::string strID = "");
     bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = NULL, std::string strID = "");
     bool			 addComboBox			( int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
-    bool		     addListBox				(int ID, int x, int y, int width, int height, GLuint style = 0, ListBoxUI** ppListBoxCreated = NULL, std::string strID = "");
+    bool		     addListBox				(int ID, int x, int y, int width, int height, bool multiSelection = false, ListBoxUI<int>** ppListBoxCreated = NULL, std::string strID = "");
     bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
     bool			 addEditbox				( int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
 
@@ -106,7 +105,7 @@ public:
     bool			 addCheckBoxFromFile    ( std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = NULL);
     bool			 addRadioButtonFromFile ( std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = NULL);
     bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
-    bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI** ppListBoxCreated = NULL);
+    bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI<int>** ppListBoxCreated = NULL);
     bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
     bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated = NULL);
 
@@ -120,7 +119,7 @@ public:
     CheckboxUI    * getCheckBox             ( int ID );
     RadioButtonUI * getRadioButton			( int ID );
     ComboBoxUI	   * getComboBox			( int ID );
-    ListBoxUI	   * getListBox			    ( int ID );
+    ListBoxUI<int>	   * getListBox			    ( int ID );
     SliderUI	   * getSlider				( int ID );
     EditBoxUI	   * getEditBox				( int ID );
     int				 getControlsNum			();

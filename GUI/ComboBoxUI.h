@@ -3,26 +3,8 @@
 
 #include "ButtonUI.h"
 #include "ScrollBarUI.h"
+#include "ListBoxUI.h"
 #include <string>
-
-//-------------------------------------------------------------------------
-//structs for This Class.
-//-------------------------------------------------------------------------
-struct ComboBoxItem
-{
-    ComboBoxItem(std::string text) : strText(text)
-    {
-        pData = nullptr;
-        bVisible = false;
-    }
-
-    std::string strText;
-    //char strText[256];
-    void* pData;
-
-    Rect rcActive;
-    bool bVisible;
-};
 
 class ComboBoxUI : public ButtonUI
 {
@@ -41,13 +23,12 @@ public:
     //-------------------------------------------------------------------------
     //functions that handle user Input to this control
     //-------------------------------------------------------------------------
-    virtual bool    handleMouseEvent    (MouseEvent event);
+    virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual void    OnHotkey();
 
-    virtual bool	Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
+    virtual bool	Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Released			( Point pt);
     virtual bool    Scrolled			( int nScrollAmount);
-    bool			Highlight			( Point mousePoint);
 
     void			ConnectToSelectChg  ( const signal_comboBox::slot_type& subscriber);
 
@@ -61,60 +42,54 @@ public:
     virtual void    OnFocusOut			();
 
     virtual bool	SaveToFile			(std::ostream& SaveFile);
-    void			CopyItemsFrom		(ComboBoxUI* sourceComboBox);
+    void			CopyItemsFrom		(ComboBoxUI *sourceComboBox);
+
+
+    virtual bool ContainsPoint(Point pt);
+
+    virtual void onMouseEnter();
+    virtual void onMouseLeave();
 
     //-------------------------------------------------------------------------
     //functions that handle checkBox specific properties
     //-------------------------------------------------------------------------
-    bool            AddItem(std::string strText, void* pData );
-    void            RemoveItem(GLuint index );
-    void            RemoveAllItems();
-    int             FindItem(std::string strText, GLuint iStart = 0 );
-    bool            ContainsItem(std::string strText, GLuint iStart = 0 );
-    void    *   	GetItemData(std::string strText );
-    void    *		GetItemData( int nIndex );
+    bool            AddItem             (std::string strText, int pData);
+    void            RemoveItem          (GLuint index);
+    void            RemoveAllItems      ();
+    int             FindItem            (std::string strText, GLuint iStart = 0);
+    bool            ContainsItem        (std::string strText, GLuint iStart = 0);
+    void    *   	GetItemData         (std::string strText);
+    void    *		GetItemData         (int nIndex);
 
-    void            SetDropHeight(GLuint nHeight );
+    void            SetDropHeight       (GLuint nHeight);
 
-    int             GetScrollBarWidth() const;
-    void            SetScrollBarWidth( int nWidth );
+    int             GetScrollBarWidth   () const;
+    void            SetScrollBarWidth   (int nWidth);
 
-    int             GetSelectedIndex() const;
+    int             GetSelectedIndex    () const;
 
-    void*			GetSelectedData();
-    ComboBoxItem*	GetSelectedItem();
+    void*			GetSelectedData     ();
+    Item<int> *GetSelectedItem();
 
-    GLuint GetNumItems();
-    ComboBoxItem*	GetItem(GLuint index );
+    GLuint          GetNumItems         ();
+    Item<int> *GetItem(GLuint index);
 
-    bool SetSelectedByIndex(GLuint index );
-    bool SetSelectedByText(std::string strText );
-    bool SetSelectedByData( void* pData );
+    bool            SetSelectedByIndex  (GLuint index);
+    bool            SetSelectedByText   (std::string strText);
+    bool            SetSelectedByData   (void* pData);
 
 protected:
-
-    int m_iSelected;
     int m_iFocused;
-    int m_nDropHeight;
-    ScrollBarUI m_ScrollBar;
-    int m_ScrollBarWidth;
-
-    GLuint m_nFontHeight;
-
     bool m_bOpened;
+    ListBoxUI<int> m_dropDown;
 
     Rect m_rcText;
     Rect m_rcButton;
-    Rect m_rcDropdown;
-    Rect m_rcDropdownText;
-
-
-    std::vector<ComboBoxItem*> m_Items;
 
 private:
     // the elements used to render the Combobox
     // used to access m_elementsGFX vector and no other use
-    enum ELEMENTS {MAIN, BUTTON, DROPDOWN, SELECTION };
+    enum ELEMENTS {MAIN, BUTTON};
 
     boost::signals2::signal<void (ComboBoxUI*)> m_selectionChangedSig;
 };

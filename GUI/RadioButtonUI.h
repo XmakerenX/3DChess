@@ -10,9 +10,9 @@ public:
     RadioButtonUI		(std::istream& inputFile);
     virtual ~RadioButtonUI(void);
 
-    virtual bool    handleMouseEvent    (MouseEvent event);
+    virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool    Pressed             (Point pt, INPUT_STATE inputState, double timeStamp);
+    virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Released            (Point pt);
 
     virtual bool	SaveToFile          (std::ostream& SaveFile);

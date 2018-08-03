@@ -35,59 +35,37 @@ CheckboxUI::~CheckboxUI(void)
 //-----------------------------------------------------------------------------
 void CheckboxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 {
-    if (m_bVisible)
-    {
-        //no texture was given abort rendering
-        if (m_elementsGFX.size() < 2 || m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1)
-            return;
+    //no texture was given abort rendering
+    if (m_elementsGFX.size() < 2 || m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 || !m_bVisible)
+        return;
 
-        Point dialogPos = m_pParentDialog->getLocation();
-        long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
-        dialogPos.y += dialogCaptionHeihgt;
+    Point dialogPos = calcPositionOffset();
 
-        //calculate the the button rendering rect
-        Rect rcWindow(m_x, m_y, m_x +  m_width, m_y + m_height);
+    //calculate the the button rendering rect
+    Rect rcWindow(m_x, m_y, m_x +  m_width, m_y + m_height);
 
-        if (!m_bMouseOver)
-        {
-            if (m_bEnabled)
-            {
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
-                if (m_bChecked)
-                    renderRect(sprite,rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
-            }
-            else
-            {
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f,1.0f), dialogPos);
-                if (m_bChecked)
-                    renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
-            }
-        }
+    glm::vec4 tintColor;
+
+    if (!m_bEnabled)
+        tintColor = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
+    else
+        if (m_bPressed)
+            tintColor = glm::vec4(0.6f, 0.6f,0.6f,1.0f);
         else
-        {
-            // if the button is pressed and the cursor is on it darken it to showed it is pressed
-            if (m_bMouseOver && m_bPressed)
-            {
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.6f, 0.6f,0.6f,1.0f), dialogPos);
-                if (m_bChecked)
-                    renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4(0.6f, 0.6f, 0.6f,1.0f), dialogPos);
-            }
+            if (m_bMouseOver)
+                tintColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
             else
-                // if the button has the cursor on it high light
-                if (m_bMouseOver)
-                {
-                    renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), dialogPos);
-                    if (m_bChecked)
-                        renderRect(sprite, rcWindow ,m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4(1.0f, 1.0f, 1.0f,1.0f), dialogPos);
-                }
-        }
-    }
+                tintColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+
+    renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    if (m_bChecked)
+        renderRect(sprite,rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, tintColor, dialogPos);
 }
 
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent ()
 //-----------------------------------------------------------------------------
-bool CheckboxUI::handleMouseEvent(MouseEvent event)
+bool CheckboxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     if (!m_bEnabled || !m_bVisible)
         return false;
@@ -98,7 +76,7 @@ bool CheckboxUI::handleMouseEvent(MouseEvent event)
     {
         if (event.down)
         {
-            if ( Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp) )
+            if ( Pressed(event.cursorPos, modifierStates, event.timeStamp) )
                 return true;
         }
         else
@@ -115,7 +93,7 @@ bool CheckboxUI::handleMouseEvent(MouseEvent event)
 //-----------------------------------------------------------------------------
 // Name : Pressed ()
 //-----------------------------------------------------------------------------
-bool CheckboxUI::Pressed(Point pt, INPUT_STATE inputState, double timeStamp)
+bool CheckboxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     if ( ContainsPoint( pt ) )
     {

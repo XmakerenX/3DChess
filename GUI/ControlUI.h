@@ -13,49 +13,9 @@
 #include "../mouseEventsGame.h"
 #include "../gameInput.h"
 
-//-----------------------GLuint------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Typedefs, Structures and Enumerators
 //-----------------------------------------------------------------------------
-
-#define EVENT_BUTTON_CLICKED                0x0101
-#define EVENT_COMBOBOX_SELECTION_CHANGED    0x0201
-#define EVENT_RADIOBUTTON_CHANGED           0x0301
-#define EVENT_CHECKBOX_CHANGED              0x0401
-#define EVENT_SLIDER_VALUE_CHANGED          0x0501
-#define EVENT_EDITBOX_STRING                0x0601
-// EVENT_EDITBOX_CHANGE is sent when the listbox content changes
-// due to user input.
-#define EVENT_EDITBOX_CHANGE                0x0602
-#define EVENT_LISTBOX_ITEM_DBLCLK           0x0701
-// EVENT_LISTBOX_SELECTION is fired off when the selection changes in
-// a single selection list box.
-#define EVENT_LISTBOX_SELECTION             0x0702
-#define EVENT_LISTBOX_SELECTION_END         0x0703
-
-struct INPUT_STATE
-{
-    INPUT_STATE()
-    {
-        bDoubleClick = false;
-        bShift = false;
-        bCtrl = false;
-        nScrollAmount = -1;
-    }
-
-    INPUT_STATE(bool newDoubleClick, bool newShift, bool newCtrl, int newScrollAmount)
-    {
-        bDoubleClick = newDoubleClick;
-        bShift = newShift;
-        bCtrl = newCtrl;
-        nScrollAmount = newScrollAmount;
-    }
-
-    bool bDoubleClick;
-    bool bShift;
-    bool bCtrl;
-    int  nScrollAmount;
-};
-
 struct ELEMENT_FONT
 {
     ELEMENT_FONT()
@@ -131,27 +91,22 @@ public:
     //-------------------------------------------------------------------------
     virtual bool    handleKeyEvent		(unsigned char key , bool down);
     virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
-    virtual bool    handleMouseEvent    (MouseEvent event);
-    //virtual bool	HandleMouse			( HWND hWnd, GLuint uMsg, Point mousePoint, INPUT_STATE inputstate, Timer* timer );
+    virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool	Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
-    virtual bool    Released			( Point pt);
-    virtual bool    Scrolled			( int nScrollAmount);
-    virtual bool    Dragged				( Point pt);
+    virtual bool	Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Released			(Point pt);
+    virtual bool    Scrolled			(int nScrollAmount);
+    virtual bool    Dragged				(Point pt);
 
-    //-------------------------------------------------------------------------
-    // Windows message handler
-    //-------------------------------------------------------------------------
-    //virtual bool    MsgProc				(GLuint uMsg, WPARAM wParam, LPARAM lParam );
-
-     //TODO: need to decide how time between frames will be given to the render function
     virtual void    Render	(Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
 
     void	renderRect		(Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
-    void    renderText      (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos, mkFont::TextFormat format = mkFont::TextFormat::Center);
-    //void	RenderText		(const char strText[], Rect rcDest, LPD3DXFONT pFont, DWORD format, LPD3DXSPRITE pSprite, D3DCOLOR textColor, POINT offset);
+    void    renderText      (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos,
+                             mkFont::TextFormat format = mkFont::TextFormat::Center);
 
-    bool ContainsPoint(Point pt);
+    Point calcPositionOffset();
+
+    virtual bool ContainsPoint(Point pt);
 
     virtual void onMouseEnter();
     virtual void onMouseLeave();
@@ -169,15 +124,15 @@ public:
     void	setEnabled			(bool bEnabled);
     void    setVisible			(bool bVisible);
 
-    int		getID				();
-    GLuint  getType				();
-    bool	getEnabled			();
-    bool    getVisible			();
-    int		getX				();
-    int		getY				();
-    int		getWidth			();
-    int		getHeight			();
-    DialogUI* getParentDialog();
+    int		getID				() const;
+    GLuint  getType				() const;
+    bool	getEnabled			() const;
+    bool    getVisible			() const;
+    int		getX				() const;
+    int		getY				() const;
+    int		getWidth			() const;
+    int		getHeight			() const;
+    DialogUI* getParentDialog() const;
 
     virtual bool	SaveToFile  (std::ostream& SaveFile);
 
@@ -201,7 +156,6 @@ protected:
     bool m_bMouseOver;              // Mouse pointer is above control
     bool m_bHasFocus;               // Control has input focus;
 
-    //CONTROL_GFX m_controlGfx;
     std::vector<ELEMENT_GFX>  m_elementsGFX;
     std::vector<ELEMENT_FONT> m_elementsFonts;
 };

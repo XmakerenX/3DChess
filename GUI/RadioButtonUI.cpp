@@ -32,7 +32,7 @@ RadioButtonUI::~RadioButtonUI(void)
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent ()
 //-----------------------------------------------------------------------------
-bool RadioButtonUI::handleMouseEvent(MouseEvent event)
+bool RadioButtonUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     if (!m_bEnabled || !m_bVisible)
         return false;
@@ -43,7 +43,7 @@ bool RadioButtonUI::handleMouseEvent(MouseEvent event)
     {
         if (event.down)
         {
-            if ( Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp))
+            if ( Pressed(event.cursorPos, modifierStates, event.timeStamp))
                 return true;
         }
         else
@@ -60,7 +60,7 @@ bool RadioButtonUI::handleMouseEvent(MouseEvent event)
 //-----------------------------------------------------------------------------
 // Name : Pressed ()
 //-----------------------------------------------------------------------------
-bool RadioButtonUI::Pressed(Point pt, INPUT_STATE inputState, double timeStamp)
+bool RadioButtonUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     if ( ContainsPoint( pt ) )
     {

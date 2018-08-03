@@ -69,19 +69,13 @@ void StaticUI::Render(Sprite& sprite, Sprite &textSprite, double timeStamp)
         if (m_strText[0] == '\0')
             return;
 
-        //calculate the the button rendering rect
+        //calculate the the static rendering rect
         Rect rcWindow(m_x, m_y, m_x + m_width, m_y + m_height);
 
-        Point dialogPos = m_pParentDialog->getLocation();
-        long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
-        dialogPos.y += dialogCaptionHeihgt;
+        Point dialogPos = calcPositionOffset();
 
         if (m_elementsFonts.size() > 0)
-        {
-            Rect rcTextRect(rcWindow);
-            rcTextRect.offset(dialogPos.x, dialogPos.y);
-            m_elementsFonts[0].font->renderToRect(textSprite, m_strText, rcTextRect, m_textColor, mkFont::TextFormat::Center);
-        }
+            renderText(textSprite, m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
     }
 }
 

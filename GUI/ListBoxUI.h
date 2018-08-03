@@ -1,104 +1,106 @@
-#ifndef  _LISTBOXUI_H
-#define  _LISTBOXUI_H
+#ifndef  _ITEMBOXUI_H
+#define  _ITEMBOXUI_H
 
 #include "ControlUI.h"
 #include "ScrollBarUI.h"
 
 //-------------------------------------------------------------------------
-// Enumerators and Structures
+//structs for This Class.
 //-------------------------------------------------------------------------
-struct ListBoxItemUI
+template<class T>
+struct Item
 {
+    Item(std::string text, T& newData) : strText(text), data(newData)
+    {
+        bVisible = false;
+        bSelected = false;
+    }
+
+    Item(std::string text, T&& newData) : strText(text), data(newData)
+    {
+        bVisible = false;
+        bSelected = false;
+    }
+
     std::string strText;
-	void* pData;
+    T data;
 
     Rect rcActive;
-	bool bSelected;
+    bool bVisible;
+    bool bSelected;
 };
 
+template<class T>
 class ListBoxUI : public ControlUI
 {
 public:
+    //-------------------------------------------------------------------------
+    // Constructors & Destructors for This Class.
+    //-------------------------------------------------------------------------
+    ListBoxUI(DialogUI *pParentDialog, int ID, int x, int y, int width, int height, bool multiSelection);
+    ListBoxUI(std::istream& inputFile);
+    virtual ~ListBoxUI();
 
-    typedef boost::signals2::signal<void (ListBoxUI*)>  signal_listbox;
-	//-------------------------------------------------------------------------
-	// Constructors & Destructors for This Class.
-	//-------------------------------------------------------------------------
-    ListBoxUI					(DialogUI* pParentDialog, int ID, int x, int y, int width, int height, GLuint dwStyle);
-    ListBoxUI					(std::istream& inputFile);
+    virtual bool onInit();
+    //-------------------------------------------------------------------------
+    //functions that handle user Input to this control
+    //-------------------------------------------------------------------------
+    virtual bool    handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual ~ListBoxUI			(void);
+    virtual bool    Pressed	    (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Scrolled	(int nScrollAmount);
+            bool    Highlight   (Point mousePoint);
 
-	virtual bool onInit();
+    //-------------------------------------------------------------------------
+    //functions that handle control Rendering
+    //-------------------------------------------------------------------------
+    virtual void    Render           (Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void    UpdateRects	     ();
 
-	//-------------------------------------------------------------------------
-	// functions that handle user Input
-	//-------------------------------------------------------------------------
-    virtual bool    handleMouseEvent    (MouseEvent event);
+    virtual bool    CanHaveFocus     ();
 
-    virtual bool	Pressed				( Point pt, INPUT_STATE inputState, double timeStamp);
-    virtual bool    Released			( Point pt);
-    virtual bool    Scrolled			( int nScrollAmount);
-    virtual bool    Dragged				( Point pt);
+    virtual bool    SaveToFile	     (std::ostream& SaveFile);
+    void            CopyItemsFrom    (ListBoxUI& sourceItems);
 
+    //-------------------------------------------------------------------------
+    //functions that handle the items in the itembox
+    //-------------------------------------------------------------------------
+    bool            AddItem             (std::string strText, T& data);
+    bool            AddItem             (std::string strText, T&& data);
+    bool            InsertItem      	(int nIndex, std::string &strText, T& data );
+    bool            InsertItem      	(int nIndex, std::string &strText, T&& data );
+    void            RemoveItem          (GLuint index);
+    void            RemoveItemByData	(T& data );
+    void            RemoveAllItems      ();
+    int             FindItem            (std::string strText, GLuint iStart = 0);
+    bool            ContainsItem        (std::string strText, GLuint iStart = 0);
+    Item<T>*	    GetItem             (GLuint nIndex);
+    T*              GetItemData         (std::string strText);
+    T*              GetItemData         (int nIndex);
+    const std::vector<int>& GetSelectedIndices() const;
 
-	void		    ConnectToItemDBLCK	( const signal_listbox::slot_type& subscriber);
-	void            ConnectToListboxSel ( const signal_listbox::slot_type& subscriber);
+    bool SelectItem(GLuint index, bool select);
+    bool SelectItem(std::string strText, bool select);
 
-    virtual void    Render              (Sprite& sprite, Sprite& textSprite, double timeStamp);
-	virtual void    UpdateRects			();
+    GLuint          GetNumItems         ();
+    void            ShowItem            (int nIndex);
 
-	virtual bool    CanHaveFocus		();
+    int             GetScrollBarWidth   () const;
+    void            SetScrollBarWidth   (int nWidth);
 
-	virtual bool	SaveToFile			(std::ostream& SaveFile);
-    void			CopyItemsFrom		(ListBoxUI* sourceListBox);
+private:
+    enum ELEMENTS {MAIN, SELECTION};
 
-    GLuint          GetStyle			() const;
-    void            SetStyle			(GLuint dwStyle );
-	int             GetSize				() const;
+    bool m_isMultiSelection;
+    std::vector<Item<T>> m_Items;
+    int m_nSelected;    // the index from which shift drag will start
+    std::vector<int> m_selectedItems;
 
-	int             GetScrollBarWidth	() const;
-	void            SetScrollBarWidth	( int nWidth );
-	void            SetBorder			( int nBorder, int nMargin );
-
-	//-------------------------------------------------------------------------
-	// functions that ListBox actions
-	//-------------------------------------------------------------------------
-    bool            AddItem				(std::string strText, void* pData );
-    bool            InsertItem			(int nIndex, std::string &strText, void* pData );
-	void            RemoveItem			( int nIndex );
-	void            RemoveItemByData	( void* pData );
-	void            RemoveAllItems		();
-
-	ListBoxItemUI*  GetItem				( int nIndex );
-	int             GetSelectedIndex	( int nPreviousSelected = -1 );
-	ListBoxItemUI*  GetSelectedItem		( int nPreviousSelected = -1 );
-	void            SelectItem			( int nNewIndex );
-
-	enum STYLE
-	{
-		MULTISELECTION = 1
-	};
-
-protected:
-    Rect m_rcText;      // Text rendering bound
-    Rect m_rcSelection; // Selection box bound
+    Rect m_rcItembox;
+    Rect m_rcItemboxText;
 
     ScrollBarUI m_ScrollBar;
-	int m_nSBWidth; //Scrollbar width
 
-	int m_nBorder;
-	int m_nMargin;
-	int m_nTextHeight;  // Height of a single line of text
-    GLuint m_dwStyle;    // List box style
-	int m_nSelected;    // Index of the selected item for single selection list box
-	int m_nSelStart;    // Index of the item where selection starts (for handling multi-selection)
-	bool m_bDrag;       // Whether the user is dragging the mouse to select
-
-	std::vector<ListBoxItemUI*> m_Items;
-
-    boost::signals2::signal<void (ListBoxUI*)> m_itemDBLCLKSig;
-    boost::signals2::signal<void (ListBoxUI*)> m_listboxSelSig;
 };
 
-#endif  //_LISTBOXUI_H
+#endif  //_ITEMBOXUI_H

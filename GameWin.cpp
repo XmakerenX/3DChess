@@ -401,27 +401,31 @@ bool GameWin::initOpenGL(int width, int height)
     ComboBoxUI* pCombo;
     //m_dialog.addComboBox(6, "Box", 20, 200, 200, 40, 0, &pCombo);
     m_dialog.addComboBox(6, "Box", 20, 200, 300, 60, 0, &pCombo);
-    pCombo->AddItem("Sunday", (void*)1);
-    pCombo->AddItem("Monday", (void*)2);
-    pCombo->AddItem("Tuesday", (void*)3);
-    pCombo->AddItem("Wednesday", (void*)4);
-    pCombo->AddItem("Thursday", (void*)5);
-    pCombo->AddItem("Friday", (void*)6);
-    pCombo->AddItem("Saturday", (void*)7);
+    pCombo->AddItem("Sunday", 1);
+    pCombo->AddItem("Monday", 2);
+    pCombo->AddItem("Tuesday", 3);
+    pCombo->AddItem("Wednesday", 4);
+    pCombo->AddItem("Thursday", 5);
+    pCombo->AddItem("Friday", 6);
+    pCombo->AddItem("Saturday", 7);
 
-    ListBoxUI* pListbox;
-    m_dialog.addListBox(7, 350,200, 200,100, 0, &pListbox);
-    pListbox->AddItem("Sunday", (void*)1);
-    pListbox->AddItem("Monday", (void*)2);
-    pListbox->AddItem("Tuesday", (void*)3);
-    pListbox->AddItem("Wednesday", (void*)4);
-    pListbox->AddItem("Thursday", (void*)5);
-    pListbox->AddItem("Friday", (void*)6);
-    pListbox->AddItem("Saturday", (void*)7);
+    ListBoxUI<int>* pListbox;
+    m_dialog.addListBox(7, 350,200, 200,100, true, &pListbox);
+    pListbox->AddItem("Sunday", 1);
+    pListbox->AddItem("Monday", 2);
+    pListbox->AddItem("Tuesday", 3);
+    pListbox->AddItem("Wednesday", 4);
+    pListbox->AddItem("Thursday", 5);
+    pListbox->AddItem("Friday", 6);
+    pListbox->AddItem("Saturday", 7);
 
     m_dialog.addSlider(8, 0, 0, 200, 40, 0, 100, 50);
 
     m_dialog.addEditbox(9, "Test TgTy",180, 100, 100, 35, nullptr );
+
+    //m_dialog.addButton(10, "Center me", 20, 300, 400, 141, 0);
+
+    m_dialog.addEditbox(11, "Test TgTy",420, 300, 400, 100, nullptr );
 
     err = glGetError();
     if (err != GL_NO_ERROR)
@@ -820,6 +824,9 @@ void GameWin::drawing()
     Rect rc(50,300, 900, 553);
     //font_->renderToRect(m_textSprite, "stuff to  rint to screey", rc, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), mkFont::TextFormat::Center);
     //font_->renderToRect(m_textSprite, "stuffgjpqi to  rint to screey", rc, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), mkFont::TextFormat::Center);
+    Point textSize = font_->calcTextRect("[]a");
+    font_->renderToRect(m_textSprite, "[]a", Rect(0,50, 0 + textSize.x, 50 + textSize.y), WHITE_COLOR);
+    m_sprite.AddTintedQuad(Rect(0,50,0 + textSize.x, 50 + textSize.y), glm::vec4(1.0f, 0.0, 0.0, 1.0f));
     //m_sprite.AddTintedQuad(rc, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
     m_sprite.Render(spriteShader);
@@ -854,9 +861,6 @@ void GameWin::reshape(int width, int height)
         m_winHeight = height;
 
         height_ = height;
-
-        font_->setScreenHeight(height);
-
         m_scene.reshape(m_winWidth,m_winHeight);
 
         textShader->Use();
@@ -919,9 +923,12 @@ int GameWin::BeginGame()
         {
             XNextEvent(m_display, &event);
 
+            ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
+                                   keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
+                                   keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+
             switch(event.type)
             {
-
             case Expose:
             {
                 XWindowAttributes gwa;
@@ -951,9 +958,6 @@ int GameWin::BeginGame()
                         GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
                         std::cout << "Virtual key was " << (int)vKey << "\n";
 
-                        ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
-                                               keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
-                                               keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
                         m_dialog.handleVirtualKeyEvent(vKey, true, modifierKeys);
                     }
                 }
@@ -979,10 +983,10 @@ int GameWin::BeginGame()
                 {
                     if (key > 0xff && key <= 0xffff)
                     {
-                        GK_VirtualKey vKey = linuxVirtualKeysTable[key - 0xff00];
-                        ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
-                                               keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
-                                               keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+                        int temp = key - 0xff00;
+                        GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
+                        std::cout << "Virtual key was " << (int)vKey << "\n";
+
                         m_dialog.handleVirtualKeyEvent(vKey, false, modifierKeys);
                     }
                 }
@@ -994,7 +998,7 @@ int GameWin::BeginGame()
 
             case MotionNotify:
             {
-                m_dialog.handleMouseEvent( MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0));
+                m_dialog.handleMouseEvent( MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 //std::cout << "mouse moved\n";
                 //std::cout << "x: " << event.xmotion.x << " y:" << event.xmotion.y << "\n";
             }break;
@@ -1010,7 +1014,13 @@ int GameWin::BeginGame()
                     //mouseDrag = true;
                     //int ret = XDefineCursor(m_display, m_win, emptyCursorPixmap);
                     //ret++;
-                    m_dialog.handleMouseEvent( MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0));
+
+//                    ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
+//                                           keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
+//                                           keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                    //m_dialog.handleMouseEvent( MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), ModifierKeysStates);
 
 //                    std::cout <<"loop:\n";
 //                    std::cout << "x = " << event.xbutton.x << " y = " << event.xbutton.y << "\n";
@@ -1031,19 +1041,19 @@ int GameWin::BeginGame()
                     else
                         hit = 0;
 
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0));
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button4)
                 {
                     std::cout << "mouse scroll up\n";
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1));
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button5)
                 {
                     std::cout << "mouse scroll down\n";
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1));
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1), modifierKeys);
                 }
 
             }break;
@@ -1055,12 +1065,12 @@ int GameWin::BeginGame()
                     std::cout << "left button released\n";
                     mouseDrag = false;
                     //XUndefineCursor(m_display, m_win);
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0));
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button3)
                 {
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0));
+                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
             }break;

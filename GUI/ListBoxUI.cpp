@@ -1,117 +1,94 @@
 #include "ListBoxUI.h"
 #include "DialogUI.h"
 #include <algorithm>
+
 //-----------------------------------------------------------------------------
 // Name : ListBoxUI (constructor)
 //-----------------------------------------------------------------------------
-ListBoxUI::ListBoxUI(DialogUI *pParentDialog, int ID, int x, int y, int width, int height, GLuint dwStyle)
+template<class T>
+ListBoxUI<T>::ListBoxUI(DialogUI *pParentDialog, int ID, int x, int y, int width, int height, bool multiSelection)
     :ControlUI(pParentDialog, ID, x, y, width, height)
 {
     m_type = ControlUI::LISTBOX;
+    m_isMultiSelection = multiSelection;
+    m_nSelected = -1;
 
-	m_dwStyle = dwStyle;
-	m_nSBWidth = 16;
-	m_nSelected = -1;
-	m_nSelStart = 0;
-	m_bDrag = false;
-	m_nBorder = 6;
-	m_nMargin = 5;
-	m_nTextHeight = 0;
+    m_ScrollBar.setSize(16, m_height);
 }
 
 //-----------------------------------------------------------------------------
 // Name : ListBoxUI (constructor from InputFile)
 //-----------------------------------------------------------------------------
-ListBoxUI::ListBoxUI(std::istream& inputFile)
-    :ControlUI(inputFile)
+template<class T>
+ListBoxUI<T>::ListBoxUI(std::istream& inputFile)
+    :ControlUI(inputFile), m_ScrollBar(inputFile)
 {
-    GLuint itemsSize = 0;
     m_type = ControlUI::LISTBOX;
+    m_nSelected = -1;
 
-	m_nSelected = -1;
-	m_nSelStart = 0;
-	m_bDrag = false;
+    inputFile >> m_isMultiSelection;
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    int itemToLoadNum;
+    inputFile >> itemToLoadNum;
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
-	inputFile >> m_nSBWidth;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	inputFile >> m_nBorder;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	inputFile >> m_nMargin;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	inputFile >> m_nTextHeight;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	inputFile >> m_dwStyle;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-
-	inputFile >> itemsSize;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-
-    for (GLuint i = 0; i < itemsSize; i++)
-	{
-		std::string strText;
-
-		std::getline(inputFile, strText);
-		strText = strText.substr(0, strText.find('|') );
-        AddItem(strText, nullptr);
-
-		inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	}
-
+    for (int i = 0; i < itemToLoadNum; i++)
+    {
+        std::string itemText;
+        T data;
+        std::getline(inputFile, itemText, '|');
+        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+        inputFile >> data;
+        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+        AddItem(itemText, data);
+    }
 }
 
 //-----------------------------------------------------------------------------
 // Name : ListBoxUI (destructor)
 //-----------------------------------------------------------------------------
-ListBoxUI::~ListBoxUI(void)
+template<class T>
+ListBoxUI<T>::~ListBoxUI(void)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : onInit()
 //-----------------------------------------------------------------------------
-bool ListBoxUI::onInit()
+template<class T>
+bool ListBoxUI<T>::onInit()
 {
 	return m_pParentDialog->initControl( &m_ScrollBar );
 }
 
 //-----------------------------------------------------------------------------
-// Name : handleMouseEvent
+// Name : handleMouseEvent()
 //-----------------------------------------------------------------------------
-bool ListBoxUI::handleMouseEvent(MouseEvent event)
+template<class T>
+bool ListBoxUI<T>::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
-    if( !m_bEnabled || !m_bVisible )
+    if (!m_bEnabled || !m_bVisible)
         return false;
 
     // Let the scroll bar handle it first.
-    if( m_ScrollBar.handleMouseEvent(event))
+    if( m_ScrollBar.handleMouseEvent(event, modifierStates))
         return true;
 
     switch(event.type)
     {
     case MouseEventType::LeftButton:
+    case MouseEventType::DoubleLeftButton:
     {
         if (event.down)
         {
-            if ( Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp))
+            if ( Pressed(event.cursorPos, modifierStates, event.timeStamp) )
                 return true;
         }
-        else
-        {
-            if ( Released(event.cursorPos))
-                return true;
-        }
-    }break;
-
-    case MouseEventType::MouseMoved:
-    {
-        if (Dragged(event.cursorPos))
-            return true;
     }break;
 
     case MouseEventType::ScrollVert:
     {
-        if ( Scrolled( event.nLinesToScroll ))
-            return true;
+        return Scrolled(event.nLinesToScroll);
     }break;
     }
 
@@ -119,398 +96,261 @@ bool ListBoxUI::handleMouseEvent(MouseEvent event)
 }
 
 //-----------------------------------------------------------------------------
-// Name : Pressed
+// Name : Pressed()
 //-----------------------------------------------------------------------------
-bool ListBoxUI::Pressed( Point pt, INPUT_STATE inputState, double timeStamp)
+template<class T>
+bool ListBoxUI<T>::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
-    if (!m_bHasFocus &&  ContainsPoint(pt))
-            m_pParentDialog->RequestFocus( this );
+    if( !m_rcItembox.isPointInRect(pt) )
+        return false;
 
-	// Check for clicks in the text area
-    if( m_Items.size() > 0 && m_rcSelection.isPointInRect(pt))
-	{
-		// Compute the index of the clicked item
+    // Determine which item has been selected
+    for(int i = m_ScrollBar.GetTrackPos(); i < m_Items.size(); i++ )
+    {
+        Item<T>& item = m_Items[i];
 
-		int nClicked = -1;
+        if( item.bVisible && item.rcActive.isPointInRect(pt) )
+        {
+            if (m_isMultiSelection && modifierStates.bShift)
+            {
+                    if (m_nSelected != -1)
+                    {
+                        for (int j = 0; j < m_selectedItems.size(); j++)
+                            m_Items[m_selectedItems[j]].bSelected = false;
+                        m_selectedItems.clear();
 
-		if( m_nTextHeight )
-		{
-			nClicked = m_ScrollBar.GetTrackPos() + ( pt.y - m_rcText.top ) / m_nTextHeight;
-		}
-		else
-			nClicked = -1;
+                        int begin = std::min(m_nSelected, i);
+                        int end = std::max(m_nSelected, i);
 
-		// Only proceed if the click falls on top of an item.
-		if( nClicked >= m_ScrollBar.GetTrackPos() &&
-			nClicked < ( int )m_Items.size() &&
-			nClicked < m_ScrollBar.GetTrackPos() + m_ScrollBar.GetPageSize() )
-		{
-			m_bDrag = true;
+                        for (int k = begin; k <= end; k++)
+                        {
+                            m_Items[k].bSelected = true;
+                            m_selectedItems.push_back(k);
+                        }
+                        break;
+                    }
+            }
+            else
+            {
+                if (!modifierStates.bCtrl)
+                {
+                    for (int j = 0; j < m_selectedItems.size(); j++)
+                        m_Items[m_selectedItems[j]].bSelected = false;
+                    m_selectedItems.clear();
+                }
+            }
 
-            // If this is a double click, fire off an event and exit since
-            // the first click would have taken care of the selection  updating
-			//if( uMsg == WM_LBUTTONDBLCLK )
-//			if ( inputState.bDoubleClick )
-//			{
-//				return true;
-//			}
+            m_nSelected = i;
+            m_Items[i].bSelected = !m_Items[i].bSelected;
+            if (m_Items[i].bSelected)
+                m_selectedItems.push_back(i);
+            else
+            {
+                auto selPos = std::find(m_selectedItems.begin(), m_selectedItems.end(), i);
+                if (selPos != m_selectedItems.end())
+                    m_selectedItems.erase(selPos);
+            }
 
-			m_nSelected = nClicked;
-			if( !( inputState.bShift ) )
-				m_nSelStart = m_nSelected;
+            return true;
+        }
+    }
 
-			// If this is a multi-selection listbox, update per-item
-			// selection data.
-            if( m_dwStyle == MULTISELECTION )
-			{
-				// Determine behavior based on the state of Shift and Ctrl
-				ListBoxItemUI* pSelItem = m_Items[m_nSelected];
-				if( inputState.bCtrl && !inputState.bShift )
-				{
-					// Control click. Reverse the selection of this item.
-					pSelItem->bSelected = !pSelItem->bSelected;
-				}
-				else if( !inputState.bCtrl && inputState.bShift)
-				{
-					// Shift click. Set the selection for all items
-					// from last selected item to the current item.
-					// Clear everything else.
-
-                    int nBegin = std::min( m_nSelStart, m_nSelected );
-                    int nEnd   = std::max( m_nSelStart, m_nSelected );
-
-					for( int i = 0; i < nBegin; ++i )
-					{
-						ListBoxItemUI* pItem = m_Items[i];
-						pItem->bSelected = false;
-					}
-
-					for( int i = nEnd + 1; i < ( int )m_Items.size(); ++i )
-					{
-						ListBoxItemUI* pItem = m_Items[i];
-						pItem->bSelected = false;
-					}
-
-					for( int i = nBegin; i <= nEnd; ++i )
-					{
-						ListBoxItemUI* pItem = m_Items[i];
-						pItem->bSelected = true;
-					}
-				}
-				else if( inputState.bCtrl && inputState.bShift )
-				{
-					// Control-Shift-click.
-					// The behavior is:
-					//   Set all items from m_nSelStart to m_nSelected to
-					//     the same state as m_nSelStart, not including m_nSelected.
-					//   Set m_nSelected to selected.
-
-                    int nBegin = std::min( m_nSelStart, m_nSelected );
-                    int nEnd   = std::max( m_nSelStart, m_nSelected );
-
-					// The two ends do not need to be set here.
-
-					bool bLastSelected = m_Items[m_nSelStart]->bSelected;
-					for( int i = nBegin + 1; i < nEnd; ++i )
-					{
-						ListBoxItemUI* pItem = m_Items[ i ];
-						pItem->bSelected = bLastSelected;
-					}
-
-					pSelItem->bSelected = true;
-
-					// Restore m_nSelected to the previous value
-					// This matches the Windows behavior
-					m_nSelected = m_nSelStart;
-				}
-				else
-				{
-					// Simple click.  Clear all items and select the clicked
-					// item.
-					for( int i = 0; i < ( int )m_Items.size(); ++i )
-					{
-						ListBoxItemUI* pItem = m_Items[i];
-						pItem->bSelected = false;
-					}
-
-					pSelItem->bSelected = true;
-				}
-			}  // End of multi-selection case
-
-		}
-
-		return true;
-	}
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Name : Released
-//-----------------------------------------------------------------------------
-bool ListBoxUI::Released(Point pt)
-{
-	m_bDrag = false;
-
-	if( m_nSelected != -1 )
-	{
-		// Set all items between m_nSelStart and m_nSelected to
-		// the same state as m_nSelStart
-        int nEnd = std::max( m_nSelStart, m_nSelected );
-
-        for( int n = std::min( m_nSelStart, m_nSelected ) + 1; n < nEnd; ++n )
-			m_Items[n]->bSelected = m_Items[m_nSelStart]->bSelected;
-		m_Items[m_nSelected]->bSelected = m_Items[m_nSelStart]->bSelected;
-
-		// If m_nSelStart and m_nSelected are not the same,
-		// the user has dragged the mouse to make a selection.
-		// Notify the application of this.
-		//if( m_nSelStart != m_nSelected );
-		//m_pDialog->SendEvent( EVENT_LISTBOX_SELECTION, true, this );
-
-		//m_pDialog->SendEvent( EVENT_LISTBOX_SELECTION_END, true, this );
-	}
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Name : Dragged
-//-----------------------------------------------------------------------------
-bool ListBoxUI::Dragged(Point pt)
-{
-	if( m_bDrag )
-	{
-		// Compute the index of the item below cursor
-
-		int nItem;
-		if( m_nTextHeight )
-			nItem = m_ScrollBar.GetTrackPos() + ( pt.y - m_rcText.top ) / m_nTextHeight;
-		else
-			nItem = -1;
-
-		// Only proceed if the cursor is on top of an item.
-
-		if( nItem >= ( int )m_ScrollBar.GetTrackPos() &&
-			nItem < ( int )m_Items.size() &&
-			nItem < m_ScrollBar.GetTrackPos() + m_ScrollBar.GetPageSize() )
-		{
-			m_nSelected = nItem;
-			//m_pDialog->SendEvent( EVENT_LISTBOX_SELECTION, true, this );
-		}
-		else if( nItem < ( int )m_ScrollBar.GetTrackPos() )
-		{
-			// User drags the mouse above window top
-			m_ScrollBar.Scroll( -1 );
-			m_nSelected = m_ScrollBar.GetTrackPos();
-			//m_pDialog->SendEvent( EVENT_LISTBOX_SELECTION, true, this );
-		}
-		else if( nItem >= m_ScrollBar.GetTrackPos() + m_ScrollBar.GetPageSize() )
-		{
-			// User drags the mouse below window bottom
-			m_ScrollBar.Scroll( 1 );
-            m_nSelected = std::min( ( int )m_Items.size(), m_ScrollBar.GetTrackPos() +
-				m_ScrollBar.GetPageSize() ) - 1;
-			//m_pDialog->SendEvent( EVENT_LISTBOX_SELECTION, true, this );
-		}
-	}
-	return false;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Scrolled
 //-----------------------------------------------------------------------------
-bool ListBoxUI::Scrolled( int nScrollAmount)
+template<class T>
+bool ListBoxUI<T>::Scrolled( int nScrollAmount)
 {
-	if (m_bMouseOver)
-	{	
-		m_ScrollBar.Scroll( -nScrollAmount );
-		return true;
-	}
+    if (m_bMouseOver)
+    {
+        m_ScrollBar.Scroll( -nScrollAmount );
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
-// Name : ConnectToItemDBLCK
+// Name : Highlight()
 //-----------------------------------------------------------------------------
-void ListBoxUI::ConnectToItemDBLCK(const signal_listbox::slot_type& subscriber)
+template<class T>
+bool ListBoxUI<T>::Highlight(Point mousePoint)
 {
-	m_itemDBLCLKSig.connect(subscriber);
+    if( m_rcItembox.isPointInRect(mousePoint))
+    {
+        // Determine which item has been selected
+        for(GLuint i = 0; i < m_Items.size(); i++)
+        {
+            Item<T>& item = m_Items[i];
+            if( item.bVisible && item.rcActive.isPointInRect(mousePoint) )
+            {
+                if (m_selectedItems.size() > 0)
+                    m_Items[m_selectedItems.back()].bSelected = false;
+                m_selectedItems.pop_back();
+                item.bSelected = true;
+                m_selectedItems.push_back(i);
+            }
+        }
+        return true;
+    }
+    return false;
 }
-
-//-----------------------------------------------------------------------------
-// Name : ConnectToListboxSel
-//-----------------------------------------------------------------------------
-void ListBoxUI::ConnectToListboxSel(const signal_listbox::slot_type& subscriber)
-{
-	m_listboxSelSig.connect(subscriber);
-}
-
 
 //-----------------------------------------------------------------------------
 // Name : Render
 //-----------------------------------------------------------------------------
-void ListBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+template<class T>
+void ListBoxUI<T>::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 {
-	if( m_bVisible == false )
-		return;
-	
-    Point dialogPos = m_pParentDialog->getLocation();
-    long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
-	dialogPos.y += dialogCaptionHeihgt;
+    // check that there is actual fonts
+    if (!m_bVisible ||  m_elementsFonts.size() == 0)
+        return;
 
-    renderRect(sprite, m_rcBoundingBox, m_elementsGFX[0].iTexture, m_elementsGFX[0].rcTexture, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), dialogPos);
+    Point dialogPos = calcPositionOffset();
 
-	// Render the text
-	if( m_Items.size() > 0 )
-	{
-		// Find out the height of a single line of text
-        Rect rc = m_rcText;
-        Rect rcSel = m_rcSelection;
-        rc.bottom = rc.top + m_elementsFonts[0].font->getFontSize();
-
-		// Update the line height formation
-		m_nTextHeight = rc.bottom - rc.top;
-
-		rc.right = m_rcText.right;
-		for( int i = m_ScrollBar.GetTrackPos(); i < ( int )m_Items.size(); ++i )
-		{
-			if( rc.bottom > m_rcText.bottom )
-				break;
-
-			ListBoxItemUI* pItem = m_Items[i];
-            Point strDim = m_elementsFonts[0].font->calcTextRect(pItem->strText);
-            rc.bottom = rc.top + strDim.y;
-
-			// Determine if we need to render this item with the
-			// selected element.
-			bool bSelectedStyle = false;
-
-            if( !( m_dwStyle == MULTISELECTION ) && i == m_nSelected )
-				bSelectedStyle = true;
-            else if( m_dwStyle == MULTISELECTION )
-			{
-				if( m_bDrag &&
-					( ( i >= m_nSelected && i < m_nSelStart ) ||
-					( i <= m_nSelected && i > m_nSelStart ) ) )
-					bSelectedStyle = m_Items[m_nSelStart]->bSelected;
-				else if( pItem->bSelected )
-					bSelectedStyle = true;
-			}
-
-			if( bSelectedStyle )
-			{
-				rcSel.top = rc.top; rcSel.bottom = rc.bottom;
-                renderRect(sprite, rcSel, m_elementsGFX[1].iTexture, m_elementsGFX[1].rcTexture, glm::vec4(1.0f, 1.0f, 1.0f,1.0f), dialogPos);
-                if (m_elementsFonts.size() > 0)
-                    renderText(textSprite, m_elementsFonts[0].font, pItem->strText, WHITE_COLOR, rc, dialogPos);
-			}
-			else
-                if (m_elementsFonts.size() > 0)
-                    renderText(textSprite, m_elementsFonts[0].font, pItem->strText, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), rc, dialogPos);
-
-            rc.offset(0, m_nTextHeight);
-		}
-	}
-
-	// Render the scroll bar
     m_ScrollBar.Render(sprite, textSprite, timeStamp);
+
+    renderRect(sprite, m_rcItembox, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, WHITE_COLOR, dialogPos);
+
+    int curY = m_rcItemboxText.top;
+    int nRemainingHeight =  m_rcItemboxText.getHeight();
+
+    // render all item within the dropdown box;
+    for (int i = m_ScrollBar.GetTrackPos(); i < m_Items.size(); i++)
+    {
+        Item<T>& item = m_Items[i];
+
+        Point strDim = m_elementsFonts[0].font->calcTextRect(item.strText);
+        strDim.y += 4;
+        // Make sure there's room left in the dropdown
+        nRemainingHeight -= strDim.y;
+        if( nRemainingHeight < 0 )
+        {
+            item.bVisible = false;
+            continue;
+        }
+
+        item.rcActive = Rect(m_rcItemboxText.left, curY, m_rcItemboxText.right, curY + strDim.y);
+        curY += strDim.y;
+        item.bVisible = true;
+
+        if(item.bSelected)
+        {
+            renderRect(sprite, item.rcActive, m_elementsGFX[SELECTION].iTexture, m_elementsGFX[SELECTION].rcTexture, WHITE_COLOR, dialogPos);
+            renderText(textSprite, m_elementsFonts[0].font, item.strText, WHITE_COLOR, item.rcActive, dialogPos, mkFont::TextFormat::Center);
+        }
+        else
+        {
+            renderText(textSprite, m_elementsFonts[0].font, item.strText, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), item.rcActive, dialogPos, mkFont::TextFormat::Center);
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------
 // Name : UpdateRects
 //-----------------------------------------------------------------------------
-void ListBoxUI::UpdateRects()
+template<class T>
+void ListBoxUI<T>::UpdateRects()
 {
     ControlUI::UpdateRects();
 
-	m_rcSelection = m_rcBoundingBox;
-	m_rcSelection.right -= m_nSBWidth;
-    m_rcSelection.inflate(-m_nBorder, m_nBorder);
-	m_rcText = m_rcSelection;
-    m_rcText.inflate(-m_nMargin, 0);
+    m_rcItembox = m_rcBoundingBox;
+    m_rcItembox.right -= m_ScrollBar.getWidth();
 
-	// Update the scrollbar's rects
-	m_ScrollBar.setLocation( m_rcBoundingBox.right - m_nSBWidth, m_rcBoundingBox.top );
-	m_ScrollBar.setSize( m_nSBWidth, m_height );
+    m_rcItemboxText = m_rcItembox;
+    m_rcItemboxText.offset(0, (int)(0.05 * m_rcItembox.getHeight()));
 
-	if(m_elementsFonts.size() > 0 )
-	{
-        m_ScrollBar.SetPageSize( ( m_rcText.bottom - m_rcText.top ) /  m_elementsFonts[0].font->getFontSize() );
+    m_ScrollBar.setLocation( m_rcItembox.right, m_rcItembox.top + 2 );
+    m_ScrollBar.setSize( m_ScrollBar.getWidth(), m_rcItembox.getHeight() - 2 );
+    m_ScrollBar.SetPageSize( (m_rcItemboxText.getHeight())  /
+                             (m_elementsFonts[0].font->getFontSize() + 0.1875*m_elementsFonts[0].font->getFontSize() + 4));
 
-		// The selected item may have been scrolled off the page.
-		// Ensure that it is in page again.
-		m_ScrollBar.ShowItem( m_nSelected );
-	}
+    if (m_selectedItems.size() > 0)
+        m_ScrollBar.ShowItem(m_selectedItems.back());
 }
 
 //-----------------------------------------------------------------------------
-// Name : GetStyle
+// Name : CanHaveFocus
 //-----------------------------------------------------------------------------
-GLuint ListBoxUI::GetStyle() const
+template<class T>
+bool ListBoxUI<T>::CanHaveFocus()
 {
-	return m_dwStyle;
+    return ( m_bVisible && m_bEnabled );
 }
 
 //-----------------------------------------------------------------------------
-// Name : SetStyle
+// Name : SaveToFile
 //-----------------------------------------------------------------------------
-void ListBoxUI::SetStyle( GLuint dwStyle )
+template<class T>
+bool ListBoxUI<T>::SaveToFile(std::ostream& SaveFile)
 {
-	m_dwStyle = dwStyle;
+    ControlUI::SaveToFile(SaveFile);
+    m_ScrollBar.SaveToFile(SaveFile);
+
+    SaveFile << m_isMultiSelection << "| Listbox isMultiSelection\n";
+    SaveFile << m_Items.size() << "| Listbox Items Amount\n";
+
+    for (GLuint i = 0; i < m_Items.size(); i++)
+    {
+        SaveFile << m_Items[i].strText << "| Listbox Item "<< i <<" Text\n";
+        SaveFile << m_Items[i].data << "| Listbox Item "<< i <<" data\n";
+    }
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
-// Name : GetSize
+// Name : CopyItemsFrom
 //-----------------------------------------------------------------------------
-int ListBoxUI::GetSize() const
+template<class T>
+void ListBoxUI<T>::CopyItemsFrom(ListBoxUI& sourceItems)
 {
-	return m_Items.size();
-}
+    // clears the items vector
+    RemoveAllItems();
 
-//-----------------------------------------------------------------------------
-// Name : GetScrollBarWidth
-//-----------------------------------------------------------------------------
-int ListBoxUI::GetScrollBarWidth() const
-{
-	return m_nSBWidth;
-}
-
-//-----------------------------------------------------------------------------
-// Name : SetScrollBarWidth
-//-----------------------------------------------------------------------------
-void ListBoxUI::SetScrollBarWidth( int nWidth )
-{
-	m_nSBWidth = nWidth;
-	UpdateRects();
-}
-
-//-----------------------------------------------------------------------------
-// Name : SetBorder
-//-----------------------------------------------------------------------------
-void ListBoxUI::SetBorder( int nBorder, int nMargin )
-{
-	m_nBorder = nBorder;
-	m_nMargin = nMargin;
+    for (GLuint i = 0; i < sourceItems.GetNumItems(); i++)
+    {
+        AddItem(sourceItems.GetItem(i)->strText, sourceItems.GetItem(i)->pData );
+    }
 }
 
 //-----------------------------------------------------------------------------
 // Name : AddItem
 //-----------------------------------------------------------------------------
-bool ListBoxUI::AddItem(std::string strText, void* pData)
+template<class T>
+bool ListBoxUI<T>::AddItem(std::string strText, T& data)
 {
-	ListBoxItemUI* pNewItem = new ListBoxItemUI();
-	if (!pNewItem)
+    // Validate parameters
+    if( strText == "" )
         return false;
 
-    pNewItem->strText = strText;
-	pNewItem->pData = pData;
-    pNewItem->rcActive = Rect(0,0,0,0);
-	pNewItem->bSelected = false;
+    //TODO: add something that will catch the exception thrown by push_back in case of lack of memory
+    m_Items.emplace_back(strText, data);
 
-    //TODO: add a check that will catch the exception in a case push_back fails!
-	m_Items.push_back(pNewItem);
+    // Update the scroll bar with new range
+    m_ScrollBar.SetTrackRange( 0, m_Items.size() );
 
-	m_ScrollBar.SetTrackRange( 0, m_Items.size());
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+// Name : AddItem(move)
+//-----------------------------------------------------------------------------
+template<class T>
+bool ListBoxUI<T>::AddItem(std::string strText, T&& data)
+{
+    // Validate parameters
+    if( strText == "" )
+        return false;
+
+    //TODO: add something that will catch the exception thrown by push_back in case of lack of memory
+    m_Items.emplace_back(strText, std::move(data));
+
+    // Update the scroll bar with new range
+    m_ScrollBar.SetTrackRange( 0, m_Items.size() );
 
     return true;
 }
@@ -518,21 +358,27 @@ bool ListBoxUI::AddItem(std::string strText, void* pData)
 //-----------------------------------------------------------------------------
 // Name : InsertItem
 //-----------------------------------------------------------------------------
-bool ListBoxUI::InsertItem( int nIndex, std::string& strText, void* pData )
+template<class T>
+bool ListBoxUI<T>::InsertItem(int nIndex, std::string &strText, T& data)
 {
-	ListBoxItemUI* pNewItem = new ListBoxItemUI();
-	if (!pNewItem)
-        return false;
+    //TODO: add something that will catch the exception
+    m_Items.emplace(m_Items.begin() + nIndex, strText, data);
 
-    pNewItem->strText = strText;
-	pNewItem->pData = pData;
-    pNewItem->rcActive = Rect(0,0,0,0);
-	pNewItem->bSelected = false;
+    m_ScrollBar.SetTrackRange( 0, m_Items.size() );
 
-	//TODO: add something that will catch the exception
-	m_Items.insert(m_Items.begin() + nIndex, pNewItem );
+    return true;
+}
 
-	m_ScrollBar.SetTrackRange( 0, m_Items.size() );
+//-----------------------------------------------------------------------------
+// Name : InsertItem(move)
+//-----------------------------------------------------------------------------
+template<class T>
+bool ListBoxUI<T>::InsertItem(int nIndex, std::string &strText, T&& data)
+{
+    //TODO: add something that will catch the exception
+    m_Items.emplace(m_Items.begin() + nIndex, strText, std::move(data));
+
+    m_ScrollBar.SetTrackRange( 0, m_Items.size() );
 
     return true;
 }
@@ -540,168 +386,207 @@ bool ListBoxUI::InsertItem( int nIndex, std::string& strText, void* pData )
 //-----------------------------------------------------------------------------
 // Name : RemoveItem
 //-----------------------------------------------------------------------------
-void ListBoxUI::RemoveItem( int nIndex )
+template<class T>
+void ListBoxUI<T>::RemoveItem(GLuint index)
 {
-	if( nIndex < 0 || nIndex >= ( int )m_Items.size() )
-		return;
+    m_Items.erase(m_Items.begin() + index);
+    auto selPos = std::find(m_selectedItems.begin(), m_selectedItems.end(), index);
+    if (selPos != m_selectedItems.end())
+        m_selectedItems.erase(selPos);
 
-	m_Items.erase(m_Items.begin() + nIndex);
-
-	m_ScrollBar.SetTrackRange( 0, m_Items.size() );
-	if( m_nSelected >= ( int )m_Items.size() )
-		m_nSelected = m_Items.size() - 1;
-
-    //m_pParentDialog->SendEvent(5, false, m_ID, NULL);
+    m_ScrollBar.SetTrackRange( 0, m_Items.size() );
 }
 
-//TODO: decide if I really need this function as I don't really use data here....
 //-----------------------------------------------------------------------------
 // Name : RemoveItemByData
 //-----------------------------------------------------------------------------
-void ListBoxUI::RemoveItemByData( void* pData )
+template<class T>
+void ListBoxUI<T>::RemoveItemByData(T& data)
 {
+    for (GLuint i = 0; i < m_Items.size(); i++)
+    {
+        if (m_Items[i].data == data)
+            m_Items.erase(i);
+    }
 }
 
 //-----------------------------------------------------------------------------
 // Name : RemoveAllItems
 //-----------------------------------------------------------------------------
-void ListBoxUI::RemoveAllItems()
+template<class T>
+void ListBoxUI<T>::RemoveAllItems()
 {
-	m_Items.clear();
-	m_ScrollBar.SetTrackRange( 0, 1 );
+    m_Items.clear();
+    m_ScrollBar.SetTrackRange( 0, 1 );
+    m_selectedItems.clear();
+}
+
+//-----------------------------------------------------------------------------
+// Name : FindItem
+// Desc : finds an item that match the given text and returns the item index
+// Note : iStart can be given if there is need to start the check from a certain
+//        index
+//-----------------------------------------------------------------------------
+template<class T>
+int ListBoxUI<T>::FindItem(std::string strText, GLuint iStart/* = 0*/)
+{
+    if (strText == "")
+        return -1;
+
+    for (GLuint i = iStart; i < m_Items.size(); i++)
+    {
+        if (m_Items[i].strText == strText)
+            return i;
+    }
+
+    return -1;
+}
+
+//-----------------------------------------------------------------------------
+// Name : ContainsItem()
+// Desc : check is there is a Item that match the given text
+// Note : iStart can be given if there is need to start the check from a certain
+//        index
+//-----------------------------------------------------------------------------
+template<class T>
+bool ListBoxUI<T>::ContainsItem(std::string strText, GLuint iStart/* = 0*/)
+{
+    return ( FindItem( strText, iStart ) != -1 );
 }
 
 //-----------------------------------------------------------------------------
 // Name : GetItem
 //-----------------------------------------------------------------------------
-ListBoxItemUI* ListBoxUI::GetItem( int nIndex )
+template<class T>
+Item<T>* ListBoxUI<T>::GetItem(GLuint nIndex)
 {
-	if( nIndex < 0 || nIndex >= ( int )m_Items.size() )
-		return NULL;
+    if( nIndex < 0 || nIndex >= m_Items.size() )
+        return nullptr;
 
-	return m_Items[nIndex];
+    return &m_Items[nIndex];
 }
 
 //-----------------------------------------------------------------------------
-// Name : GetSelectedIndex
-// Desc : For single-selection listbox, returns the index of the selected item.
-// For multi-selection, returns the first selected item after the nPreviousSelected position.
-// To search for the first selected item, the app passes -1 for nPreviousSelected.  For
-// subsequent searches, the app passes the returned index back to GetSelectedIndex as.
-// nPreviousSelected.
-// Returns -1 on error or if no item is selected.
+// Name : GetItemData()
+// Desc : returns the item data
+// Note : the search for the item is being done based on the item text
 //-----------------------------------------------------------------------------
-int ListBoxUI::GetSelectedIndex( int nPreviousSelected/*  = -1 */)
+template<class T>
+T* ListBoxUI<T>::GetItemData(std::string strText)
 {
-	if( nPreviousSelected < -1 )
-		return -1;
+    int index = FindItem(strText);
+    if( index == -1 )
+    {
+        return nullptr;
+    }
 
-    if( m_dwStyle == MULTISELECTION )
-	{
-		// Multiple selection enabled. Search for the next item with the selected flag.
-		for( int i = nPreviousSelected + 1; i < ( int )m_Items.size(); ++i )
-		{
-			ListBoxItemUI* pItem = m_Items[i];
-
-			if( pItem->bSelected )
-				return i;
-		}
-
-		return -1;
-	}
-	else
-	{
-		// Single selection
-		return m_nSelected;
-	}
+    return &m_Items[index].data;
 }
 
 //-----------------------------------------------------------------------------
-// Name : GetSelectedItem
+// Name : GetItemData()
+// Desc : returns the item data
+// Note : the search for the item is being done based on the item index
 //-----------------------------------------------------------------------------
-ListBoxItemUI* ListBoxUI::GetSelectedItem( int nPreviousSelected/* = -1 */)
+template<class T>
+T* ListBoxUI<T>::GetItemData(int nIndex)
 {
-	return GetItem( GetSelectedIndex( nPreviousSelected ) );
+    if( nIndex < 0 || nIndex >= m_Items.size() )
+
+        return nullptr;
+
+    return &m_Items[nIndex].data;
 }
 
 //-----------------------------------------------------------------------------
-// Name : SelectItem
+// Name : GetSelectedIndices()
 //-----------------------------------------------------------------------------
-void ListBoxUI::SelectItem( int nNewIndex )
+template<class T>
+const std::vector<int>& ListBoxUI<T>::GetSelectedIndices() const
 {
-	// If no item exists, do nothing.
-	if( m_Items.size() == 0 )
-		return;
-
-	int nOldSelected = m_nSelected;
-
-	// Adjust m_nSelected
-	m_nSelected = nNewIndex;
-
-	// Perform capping
-	if( m_nSelected < 0 )
-		m_nSelected = 0;
-	if( m_nSelected >= ( int )m_Items.size() )
-		m_nSelected = m_Items.size() - 1;
-
-	if( nOldSelected != m_nSelected )
-	{
-        if( m_dwStyle == MULTISELECTION )
-		{
-			m_Items[m_nSelected]->bSelected = true;
-		}
-
-		// Update selection start
-		m_nSelStart = m_nSelected;
-
-		// Adjust scroll bar
-		m_ScrollBar.ShowItem( m_nSelected );
-	}
-
-//	m_pParentDialog->SendEvent(5, false, m_ID, false);
+    return m_selectedItems;
 }
 
 //-----------------------------------------------------------------------------
-// Name : CanHaveFocus
+// Name : SelectItem()
 //-----------------------------------------------------------------------------
-bool ListBoxUI::CanHaveFocus()
+template<class T>
+bool ListBoxUI<T>::SelectItem(GLuint index, bool select)
 {
-	return ( m_bVisible && m_bEnabled );
+    if (index > m_Items.size())
+        return false;
+
+    m_Items[index].bSelected = select;
+    if (select)
+        m_selectedItems.push_back(index);
+    else
+    {
+        auto selPos = std::find(m_selectedItems.begin(), m_selectedItems.end(), index);
+        if (selPos != m_selectedItems.end())
+            m_selectedItems.erase(selPos);
+    }
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
-// Name : SaveToFile
+// Name : SelectItem()
 //-----------------------------------------------------------------------------
-bool ListBoxUI::SaveToFile(std::ostream& SaveFile)
+template<class T>
+bool ListBoxUI<T>::SelectItem(std::string strText, bool select)
 {
-    ControlUI::SaveToFile(SaveFile);
-
-	SaveFile << m_nSBWidth << "| ListBox SBWidth" << "\n";
-	SaveFile << m_nBorder << "| ListBox Border" << "\n";
-	SaveFile << m_nMargin << "| ListBox Margin" << "\n";
-	SaveFile << m_nTextHeight << "| ListBox Text Height" << "\n";
-	SaveFile << m_dwStyle << "| ListBox Style" << "\n";
-
-	SaveFile << m_Items.size() << "| ListBox Item size" << "\n";
-
     for (GLuint i = 0; i < m_Items.size(); i++)
-	{
-		SaveFile << m_Items[i]->strText << "| ListBox Item " << i << " Text" << "\n";
-	}
+    {
+        if (m_Items[i].strText == strText)
+        {
+            m_Items[i].bSelected = select;
+            if (select)
+                m_selectedItems.push_back(i);
+            else
+            {
+                auto selPos = std::find(m_selectedItems.begin(), m_selectedItems.end(), i);
+                if (selPos != m_selectedItems.end())
+                    m_selectedItems.erase(selPos);
+            }
+            return true;
+        }
+    }
 
-	return true;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
-// Name : CopyItemsFrom
+// Name : GetNumItems()
 //-----------------------------------------------------------------------------
-void ListBoxUI::CopyItemsFrom(ListBoxUI *sourceListBox)
+template<class T>
+GLuint ListBoxUI<T>::GetNumItems()
 {
-	// clears the items vector
-	RemoveAllItems();
+    return m_Items.size();
+}
 
-	for (int i = 0; i < sourceListBox->GetSize(); i++)
-	{
-		AddItem( sourceListBox->GetItem(i)->strText, sourceListBox->GetItem(i)->pData );
-	}
-} 
+//-----------------------------------------------------------------------------
+// Name : ShowItem()
+//-----------------------------------------------------------------------------
+template<class T>
+void ListBoxUI<T>::ShowItem(int nIndex)
+{
+    m_ScrollBar.ShowItem(nIndex);
+}
+
+//-----------------------------------------------------------------------------
+// Name : GetScrollBarWidth()
+//-----------------------------------------------------------------------------
+template<class T>
+int ListBoxUI<T>::GetScrollBarWidth() const
+{
+    return m_ScrollBar.getWidth();
+}
+
+//-----------------------------------------------------------------------------
+// Name : SetScrollBarWidth()
+//-----------------------------------------------------------------------------
+template<class T>
+void ListBoxUI<T>::SetScrollBarWidth(int nWidth)
+{
+    m_ScrollBar.setSize(nWidth, m_ScrollBar.getHeight());
+}

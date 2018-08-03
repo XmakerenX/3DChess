@@ -108,26 +108,15 @@ bool ControlUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down, const Modi
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent()
 //-----------------------------------------------------------------------------
-bool ControlUI::handleMouseEvent(MouseEvent event)
+bool ControlUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     return false;
 }
 
 //-----------------------------------------------------------------------------
-// Name : HandleMouse()
-// Desc : handles mouse input
-// Note : returns false by default for the basic control class which means
-//        the control does nothing with the mouse input
-//-----------------------------------------------------------------------------
-//bool CControlUI::HandleMouse( HWND hWnd, UINT uMsg, POINT mousePoint, INPUT_STATE inputstate, CTimer* timer )
-//{
-//	return false;
-//}
-
-//-----------------------------------------------------------------------------
 // Name : Pressed()
 //-----------------------------------------------------------------------------
-bool ControlUI::Pressed(Point pt, INPUT_STATE inputState, double timeStamp)
+bool ControlUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     return false;
 }
@@ -155,17 +144,6 @@ bool ControlUI::Scrolled( int nScrollAmount)
 {
     return false;
 }
-
-//-----------------------------------------------------------------------------
-// Name : MsgProc()
-// Desc : handles windows messages while control is focused
-// Note : returns false by default for the basic control class which means
-//        the control does nothing with the windows messages
-//-----------------------------------------------------------------------------
-//bool CControlUI::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam )
-//{
-//	return false;
-//}
 
 //-----------------------------------------------------------------------------
 // Name : ContainsPoint()
@@ -252,7 +230,7 @@ void ControlUI::setControlFonts(std::vector<ELEMENT_FONT>& elementsFonts)
 //-----------------------------------------------------------------------------
 // Name : getType ()
 //-----------------------------------------------------------------------------
-GLuint ControlUI::getType()
+GLuint ControlUI::getType() const
 {
     return m_type;
 }
@@ -284,21 +262,15 @@ void ControlUI::renderText(Sprite &textSprite, mkFont *font, std::string text, g
 }
 
 //-----------------------------------------------------------------------------
-// Name : RenderText ()
-// Desc : Render the text store in the static to the screen
+// Name : calcPositionOffset ()
 //-----------------------------------------------------------------------------
-//void ControlUI::RenderText(const char strText[], RECT rcDest, LPD3DXFONT pFont, DWORD format, LPD3DXSPRITE pSprite, D3DCOLOR textColor, POINT offset)
-//{
-//    // checks the parameters are valid
-//    if (!strText || !pFont ||  !pSprite || strText[0] == '\0')
-//        return;
-
-//    OffsetRect(&rcDest, offset.x, offset.y);
-
-//    //pFont->DrawTextA(pSprite, strText, -1, &rcDest,/* DT_NOCLIP |*/ DT_CENTER | DT_VCENTER ,textColor);
-//    pFont->DrawTextA(pSprite, strText, -1, &rcDest, format ,textColor);
-
-//}
+Point ControlUI::calcPositionOffset()
+{
+    Point dialogPos = m_pParentDialog->getLocation();
+    long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
+    dialogPos.y += dialogCaptionHeihgt;
+    return dialogPos;
+}
 
 //-----------------------------------------------------------------------------
 // Name : UpdateRects
@@ -351,7 +323,7 @@ void ControlUI::setVisible(bool bVisible)
 //-----------------------------------------------------------------------------
 // Name : getEnabled
 //-----------------------------------------------------------------------------
-bool ControlUI::getEnabled()
+bool ControlUI::getEnabled() const
 {
     return m_bEnabled;
 }
@@ -359,7 +331,7 @@ bool ControlUI::getEnabled()
 //-----------------------------------------------------------------------------
 // Name : getVisible
 //-----------------------------------------------------------------------------
-bool ControlUI::getVisible()
+bool ControlUI::getVisible() const
 {
     return m_bVisible;
 }
@@ -367,7 +339,7 @@ bool ControlUI::getVisible()
 //-----------------------------------------------------------------------------
 // Name : getParentDialog
 //-----------------------------------------------------------------------------
-DialogUI* ControlUI::getParentDialog()
+DialogUI* ControlUI::getParentDialog() const
 {
     return m_pParentDialog;
 }
@@ -375,7 +347,7 @@ DialogUI* ControlUI::getParentDialog()
 //-----------------------------------------------------------------------------
 // Name : getID
 //-----------------------------------------------------------------------------
-int ControlUI::getID()
+int ControlUI::getID() const
 {
     return m_ID;
 }
@@ -383,7 +355,7 @@ int ControlUI::getID()
 //-----------------------------------------------------------------------------
 // Name : getX
 //-----------------------------------------------------------------------------
-int ControlUI::getX()
+int ControlUI::getX() const
 {
     return m_x;
 }
@@ -391,7 +363,7 @@ int ControlUI::getX()
 //-----------------------------------------------------------------------------
 // Name : getY
 //-----------------------------------------------------------------------------
-int ControlUI::getY()
+int ControlUI::getY() const
 {
     return m_y;
 }
@@ -399,7 +371,7 @@ int ControlUI::getY()
 //-----------------------------------------------------------------------------
 // Name : getWidth
 //-----------------------------------------------------------------------------
-int ControlUI::getWidth()
+int ControlUI::getWidth() const
 {
     return m_width;
 }
@@ -407,7 +379,7 @@ int ControlUI::getWidth()
 //-----------------------------------------------------------------------------
 // Name : getHeight
 //-----------------------------------------------------------------------------
-int ControlUI::getHeight()
+int ControlUI::getHeight() const
 {
     return m_height;
 }

@@ -10,29 +10,21 @@ public:
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
     ScrollBarUI(void);
+    ScrollBarUI(std::istream& inputFile);
     virtual ~ScrollBarUI(void);
 
 	//-------------------------------------------------------------------------
 	// functions that handle user Input to control
 	//-------------------------------------------------------------------------
-    virtual bool handleMouseEvent(MouseEvent event);
-//	virtual bool    HandleKeyboard( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-//	virtual bool    HandleMouse	  ( HWND hWnd, UINT uMsg, POINT mousePoint, INPUT_STATE inputstate, CTimer* timer);
+    virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool	Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
-    virtual bool    Released			( Point pt);
-    virtual bool    Dragged				( Point pt);
-//	virtual bool    Pressed		  ( HWND hWnd, POINT pt, INPUT_STATE inputState, CTimer* timer);
-//	virtual bool	Released	  ( HWND hWnd, POINT pt);
-//    virtual bool    Dragged		  ( Point pt);
+    virtual bool	Pressed      (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Released	 ( Point pt);
+    virtual bool    Dragged		 ( Point pt);
 
-	//virtual bool	SaveToFile	  (std::ostream& SaveFile);
+    virtual bool	SaveToFile   (std::ostream& SaveFile);
 
-	// TODO: add support for controls to have access to other messages than keyboard and mouse inputs..
-	// with new slots and signal system could be no need for MsgProc...
-	//virtual bool    MsgProc		  ( UINT uMsg, WPARAM wParam, LPARAM lParam );
-
-    virtual void    Render(Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void    Render       (Sprite& sprite, Sprite& textSprite, double timeStamp);
 
 	//-------------------------------------------------------------------------
 	// functions that handle control specific properties

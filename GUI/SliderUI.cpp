@@ -2,7 +2,7 @@
 #include "DialogUI.h"
 
 //-----------------------------------------------------------------------------
-// Name : CSliderUI(constructor) 
+// Name : SliderUI(constructor)
 //-----------------------------------------------------------------------------
 SliderUI::SliderUI(DialogUI* pParentDialog, int ID, int x, int y, int width, int height, int min, int max, int nValue )
     :ControlUI(pParentDialog, ID, x, y, width ,height)
@@ -18,7 +18,7 @@ SliderUI::SliderUI(DialogUI* pParentDialog, int ID, int x, int y, int width, int
 }
 
 //-----------------------------------------------------------------------------
-// Name : CSliderUI(constructor from InputFile) 
+// Name : SliderUI(constructor from InputFile)
 //-----------------------------------------------------------------------------
 SliderUI::SliderUI(std::istream& inputFile)
     :ControlUI(inputFile)
@@ -36,7 +36,7 @@ SliderUI::SliderUI(std::istream& inputFile)
 }
 
 //-----------------------------------------------------------------------------
-// Name : CSliderUI(destructor) 
+// Name : SliderUI(destructor)
 //-----------------------------------------------------------------------------
 SliderUI::~SliderUI(void)
 {
@@ -53,7 +53,7 @@ bool SliderUI::ContainsPoint( Point pt )
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent()
 //-----------------------------------------------------------------------------
-bool SliderUI::handleMouseEvent(MouseEvent event)
+bool SliderUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     if( !m_bEnabled || !m_bVisible )
         return false;
@@ -64,7 +64,7 @@ bool SliderUI::handleMouseEvent(MouseEvent event)
     {
         if(event.down)
         {
-            if ( Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp))
+            if ( Pressed(event.cursorPos, modifierStates, event.timeStamp))
                 return true;
         }
         else
@@ -94,7 +94,7 @@ bool SliderUI::handleMouseEvent(MouseEvent event)
 //-----------------------------------------------------------------------------
 // Name : Pressed() 
 //-----------------------------------------------------------------------------
-bool SliderUI::Pressed( Point pt, INPUT_STATE inputState, double timeStamp)
+bool SliderUI::Pressed( Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     if (m_rcButton.isPointInRect(pt))
 	{

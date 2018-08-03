@@ -6,8 +6,28 @@
 bool EditBoxUI::s_bHideCaret;
 int EditBoxUI::s_caretBlinkTime = 100;
 
-//TODO: make scrolling and choosing a char work accurate
 
+//-----------------------------------------------------------------------------
+// Define << and >> operators for glm::vec4
+//-----------------------------------------------------------------------------
+std::ostream& operator<<(std::ostream& os, const glm::vec4 v)
+{
+    os << v.x << " " << v.y << " " << v.z << " " << v.w;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, glm::vec4 v)
+{
+    float x,y,z,w;
+    is >> x;
+    is >> y;
+    is >> z;
+    is >> w;
+    v = glm::vec4(x,y,z,w);
+    return is;
+}
+
+//TODO: remake editbox so when scrolling text will less glitchy
 //-----------------------------------------------------------------------------
 // Name : CEditBoxUI(constructor) 
 //-----------------------------------------------------------------------------
@@ -69,13 +89,13 @@ EditBoxUI::EditBoxUI(std::istream& inputFile)
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 	inputFile >> m_bCaretOn;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//	inputFile >> m_TextColor;
+    inputFile >> m_TextColor;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//	inputFile >> m_SelTextColor;
+    inputFile >> m_SelTextColor;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//	inputFile >> m_SelBkColor;
+    inputFile >> m_SelBkColor;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//	inputFile >> m_CaretColor;
+    inputFile >> m_CaretColor;
 	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 }
 
@@ -349,7 +369,7 @@ bool EditBoxUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down, const Modi
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent()
 //-----------------------------------------------------------------------------
-bool EditBoxUI::handleMouseEvent(MouseEvent event)
+bool EditBoxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     if( !m_bEnabled || !m_bVisible )
         return false;
@@ -359,7 +379,7 @@ bool EditBoxUI::handleMouseEvent(MouseEvent event)
     case MouseEventType::LeftButton:
     {
         if (event.down)
-            return Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp);
+            return Pressed(event.cursorPos, modifierStates, event.timeStamp);
         else
             return Released(event.cursorPos);
     }break;
@@ -377,7 +397,7 @@ bool EditBoxUI::handleMouseEvent(MouseEvent event)
 //-----------------------------------------------------------------------------
 // Name : Pressed() 
 //-----------------------------------------------------------------------------
-bool EditBoxUI::Pressed(Point pt, INPUT_STATE inputState, double timeStamp)
+bool EditBoxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
 	if( !ContainsPoint( pt ) )
 		return false;
@@ -934,10 +954,10 @@ bool EditBoxUI::SaveToFile(std::ostream& SaveFile)
 	SaveFile << m_nBorder << "| EditBox Border Number" << "\n";
 	SaveFile << m_nSpacing << "| EditBox Spacing" << "\n";
 	SaveFile << m_bCaretOn << "| is EditBox Caret On" << "\n";
-// 	SaveFile << m_TextColor << "| EditBox Text Color" << "\n";
-// 	SaveFile << m_SelTextColor << "| EditBox Selection Color" << "\n";
-// 	SaveFile << m_SelBkColor << "| EditBox Background Color" << "\n";
-//	SaveFile << m_CaretColor << "| EditBox Caret Color" << "\n";
+    SaveFile << m_TextColor << "| EditBox Text Color" << "\n";
+    SaveFile << m_SelTextColor << "| EditBox Selection Color" << "\n";
+    SaveFile << m_SelBkColor << "| EditBox Background Color" << "\n";
+    SaveFile << m_CaretColor << "| EditBox Caret Color" << "\n";
 
 	return true;
 }

@@ -6,23 +6,6 @@
 #include <ostream>
 #include "ControlUI.h"
 
-//std::ostream& operator<<(std::ostream& os, const glm::vec4 v)
-//{
-//    os << v.x << " " << v.y << " " << v.z << " " << v.w;
-//    return os;
-//}
-
-//std::istream& operator>>(std::istream& is, glm::vec4 v)
-//{
-//    float x,y,z,w;
-//    is >> x;
-//    is >> y;
-//    is >> z;
-//    is >> w;
-//    v = glm::vec4(x,y,z,w);
-//    return is;
-//}
-
 class EditBoxUI : public ControlUI
 {
 public:
@@ -39,9 +22,9 @@ public:
 	//-------------------------------------------------------------------------
     virtual bool        handleKeyEvent		(unsigned char key , bool down);
     virtual bool        handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
-    virtual bool        handleMouseEvent    (MouseEvent event);
+    virtual bool        handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool        Pressed				(Point pt, INPUT_STATE inputState, double timeStamp);
+    virtual bool        Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool        Released			(Point pt);
     virtual bool        Dragged				(Point pt);
 

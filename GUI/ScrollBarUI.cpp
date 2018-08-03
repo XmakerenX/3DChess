@@ -2,13 +2,38 @@
 #include "DialogUI.h"
 
 const int ScrollBarUI::SCROLLBAR_MINTHUMBSIZE = 8;
-const float			ScrollBarUI::SCROLLBAR_ARROWCLICK_DELAY = 0.33f;
-const float			ScrollBarUI::SCROLLBAR_ARROWCLICK_REPEAT = 0.05f;
-
+const float	ScrollBarUI::SCROLLBAR_ARROWCLICK_DELAY = 0.33f;
+const float	ScrollBarUI::SCROLLBAR_ARROWCLICK_REPEAT = 0.05f;
 //-----------------------------------------------------------------------------
 // Name : CScrollBarUI(constructor)
 //-----------------------------------------------------------------------------
 ScrollBarUI::ScrollBarUI(void)
+{
+    m_type = SCROLLBAR;
+    m_bShowThumb = false;
+    m_bDrag = false;
+
+    m_rcElements[UPBUTTON] = Rect(0, 0 ,0 ,0);
+    m_rcElements[DOWNBUTTON] = Rect(0, 0 ,0 ,0);
+    m_rcElements[TRACK] = Rect(0, 0 ,0 ,0);
+    m_rcElements[THUMB] = Rect(0, 0 ,0 ,0);
+
+    m_nPosition = 0;
+    m_nPageSize = 1;
+    m_nStart = 0;
+    m_nEnd = 1;
+
+    m_LastMouse.x = 0;
+    m_LastMouse.y = 0;
+
+    m_Arrow = CLEAR;
+    m_dArrowTS = 0.0;
+}
+
+//-----------------------------------------------------------------------------
+// Name : CScrollBarUI(constructor)
+//-----------------------------------------------------------------------------
+ScrollBarUI::ScrollBarUI(std::istream& inputFile) : ControlUI(inputFile)
 {
     m_type = SCROLLBAR;
     m_bShowThumb = false;
@@ -42,7 +67,7 @@ ScrollBarUI::~ScrollBarUI(void)
 // Name : handleMouseEvent()
 // Desc : handles mouse input
 //-----------------------------------------------------------------------------
-bool ScrollBarUI::handleMouseEvent(MouseEvent event)
+bool ScrollBarUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     static int ThumbOffsetY;
 
@@ -55,7 +80,7 @@ bool ScrollBarUI::handleMouseEvent(MouseEvent event)
     {
         if (event.down)
         {
-            if (Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp))
+            if (Pressed(event.cursorPos, modifierStates, event.timeStamp))
                 return true;
         }
         else
@@ -80,7 +105,7 @@ bool ScrollBarUI::handleMouseEvent(MouseEvent event)
 //-----------------------------------------------------------------------------
 // Name : Pressed()
 //-----------------------------------------------------------------------------
-bool ScrollBarUI::Pressed( Point pt, INPUT_STATE inputState, double timeStamp)
+bool ScrollBarUI::Pressed( Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     // Check for click on up button
     if (m_rcElements[UPBUTTON].isPointInRect(pt))
@@ -181,14 +206,11 @@ bool ScrollBarUI::Dragged( Point pt)
 // Name : SaveToFile()
 // NOTE : seems to be no need to save the Scrollbar as it is automatically generated
 //-----------------------------------------------------------------------------
-// bool CScrollBarUI::SaveToFile(std::ostream& SaveFile)
-// {
-// 	CControlUI::SaveToFile(SaveFile);
-//
-// 	SaveFile <<
-//
-// 	return true;
-// }
+bool ScrollBarUI::SaveToFile(std::ostream& SaveFile)
+{
+    ControlUI::SaveToFile(SaveFile);
+    return true;
+}
 
 //-----------------------------------------------------------------------------
 // Name : Render()

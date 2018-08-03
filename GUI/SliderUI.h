@@ -20,10 +20,10 @@ public:
 	//-------------------------------------------------------------------------
 	// functions that handle user input to the control
 	//-------------------------------------------------------------------------
-    virtual bool    handleMouseEvent    (MouseEvent event);
+    virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
     //virtual bool    HandleMouse			( HWND hWnd, UINT uMsg, POINT mousePoint, INPUT_STATE inputstate, CTimer* timer  );
 
-    virtual bool	Pressed				( Point pt, INPUT_STATE inputState, double timeStamp);
+    virtual bool	Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Released			( Point pt);
     virtual bool    Scrolled			( int nScrollAmount);
     virtual bool    Dragged				( Point pt);

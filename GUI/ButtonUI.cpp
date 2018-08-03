@@ -8,7 +8,6 @@ ButtonUI::ButtonUI(DialogUI* pParentDialog, int ID, const std::string& strText, 
     :StaticUI(pParentDialog, ID, strText, x, y, width, height)
 {
     m_type = ControlUI::BUTTON;
-
     m_nHotkey = nHotkey;
     m_bPressed = false;
     m_textColor = glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -23,8 +22,8 @@ ButtonUI::ButtonUI(std::istream& inputFile)
     m_type = ControlUI::BUTTON;
 
     GLuint nHotkey;
-
     inputFile >> nHotkey;
+
     m_bPressed = false;
     setHotKey(nHotkey);
     inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
@@ -43,53 +42,39 @@ ButtonUI::~ButtonUI(void)
 //-----------------------------------------------------------------------------
 void ButtonUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 {
-    if (m_bVisible)
-    {
-        //no texture was given abort rendering
-        if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1)
-            return;
+    //no texture was given abort rendering
+    if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 && !m_bVisible)
+        return;
 
-        Point dialogPos = m_pParentDialog->getLocation();
-        long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
-        dialogPos.y += dialogCaptionHeihgt;
+    Point dialogPos = calcPositionOffset();
 
-        //calculate the the button rendering rect
-        Rect rcWindow(m_x, m_y, m_x + m_width, m_y + m_height);
+    //calculate the the button rendering rect
+    Rect rcWindow(m_x, m_y, m_x + m_width, m_y + m_height);
 
-        //if the button is not pressed or doesn't have the cursor on it render it normally
-        if (!m_bMouseOver)
-        {
-            if (!m_bEnabled)
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 0.4f, 0.4f, 0.4f, 1.0f ), dialogPos);
-                //renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 1.0f, 0.4f, 0.4f, 1.0f ), dialogPos);
-            else
-                renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4( 0.785f, 0.785f, 0.785f, 1.0f ), dialogPos);
-        }
+    glm::vec4 tintColor;
+    if (!m_bEnabled)
+        tintColor = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
+    else
+        if (m_bPressed)
+            tintColor = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
         else
-        {
-            // if the button is pressed and the cursor is on it darken it to showed it is pressed
-            if (m_bMouseOver && m_bPressed)
-                renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 0.6f, 0.6f, 0.6f, 1.0f ), dialogPos);
+            if (m_bMouseOver)
+                tintColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
             else
-                // if the button has the cursor on it high light
-                if (m_bMouseOver)
-                    renderRect(sprite, rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f ), dialogPos);
-        }
+                tintColor = glm::vec4(0.785f, 0.785f, 0.785f, 1.0f);
 
-        if (m_elementsFonts.size() > 0)
-        {
-            Rect rcTextRect(rcWindow);
-            rcTextRect.offset(dialogPos.x, dialogPos.y);
-            m_elementsFonts[0].font->renderToRect(textSprite, m_strText, rcTextRect, m_textColor, mkFont::TextFormat::Center);
-        }
-    }
+    renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+
+    if (m_elementsFonts.size() > 0)
+        renderText(textSprite, m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
+
 }
 
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent ()
 // Desc : handles mouse events for this button
 //-----------------------------------------------------------------------------
-bool ButtonUI::handleMouseEvent(MouseEvent event)
+bool ButtonUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     switch(event.type)
     {
@@ -98,7 +83,7 @@ bool ButtonUI::handleMouseEvent(MouseEvent event)
     {
         if (event.down)
         {
-            if (Pressed(event.cursorPos, INPUT_STATE(), event.timeStamp))
+            if (Pressed(event.cursorPos, modifierStates, event.timeStamp))
                 return true;
         }
         else
@@ -129,8 +114,7 @@ bool ButtonUI::handleKeyEvent(unsigned char key, bool down, const ModifierKeysSt
             if (m_bPressed)
             {
                 m_bPressed = false;
-                //TODO: send clicked signal
-                //m_pParentDialog->SendEvent(1, true, m_ID, hWnd);
+                m_clickedSig(this);
                 return true;
             }
         }
@@ -140,57 +124,9 @@ bool ButtonUI::handleKeyEvent(unsigned char key, bool down, const ModifierKeysSt
 }
 
 //-----------------------------------------------------------------------------
-// Name : handleVirtualKey ()
-// Desc : handles key events for this button
-//-----------------------------------------------------------------------------
-//bool ButtonUI::handleVirtualKey(GK_VirtualKey virtualKey, bool down)
-//{
-
-//}
-
-//-----------------------------------------------------------------------------
-// Name : HandleKeyboard ()
-// Desc : handles keyboard events for this button
-//-----------------------------------------------------------------------------
-//bool ButtonUI::HandleKeyboard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-//{
-//    switch(uMsg)
-//    {
-//    case WM_KEYDOWN:
-//        {
-//            switch(wParam)
-//            {
-//            case VK_SPACE:
-//                m_bPressed = true;
-//                return true;
-//            };
-//        }break;
-
-//    case WM_KEYUP:
-//        {
-//            switch(wParam)
-//            {
-//            case VK_SPACE:
-//                {
-//                    if ( m_bPressed == true )
-//                    {
-//                        m_bPressed = false;
-//                        m_pParentDialog->SendEvent(1, true, m_ID, hWnd);
-//                        return true;
-//                    }
-//                }break;
-//            }
-//        }
-
-//    }
-
-//    return false;
-//}
-
-//-----------------------------------------------------------------------------
 // Name : Pressed ()
 //-----------------------------------------------------------------------------
-bool ButtonUI::Pressed (Point pt, INPUT_STATE inputState, float timeStamp)
+bool ButtonUI::Pressed (Point pt, const ModifierKeysStates &modifierStates, float timeStamp)
 {
     if ( ContainsPoint( pt ) )
     {
@@ -214,7 +150,6 @@ bool ButtonUI::Released(Point pt)
     {
         m_bPressed = false;
 
-        //TODO: something here about keyboard input from dialog... ????
         if (ContainsPoint(pt))
             m_clickedSig(this);
 
@@ -248,15 +183,7 @@ bool ButtonUI::SaveToFile(std::ostream& SaveFile)
 
     SaveFile << m_nHotkey << "| Button HotKey" << "\n";
 
-//TODO: add the abilty to save custom buttons
-// 	if  ( isControlDefualt() )
-// 	{
-// 		outputFile << "1" << " Control Default" << "\n";
-// 	}
-// 	else
-// 	{
-// 		outputFile << "0" << " Control Default" << "\n";
-// 	}
+    //TODO: add the abilty to save custom buttons
     return true;
 }
 

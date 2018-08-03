@@ -104,15 +104,6 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
 
     GLuint textureIndex, fontIndex;
 
-    // create the controls font
-//    mkFont* font = assetManger.getFont("Times New Roman:bold", 12);
-//    if (!font)
-//        return false;
-
-//    ELEMENT_FONT elementFont(FontInfo("Times New Roman", 12), font);
-
-    //ELEMENT_GFX elementGFX;
-
     //-------------------------------------
     // Init Static elements
     //-------------------------------------
@@ -123,7 +114,6 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     if (!controlsFont)
         return false;
 
-//    ELEMENT_FONT elementFont2(fontIndex,nFontHeight, assetManger.getFontItem(fontIndex).width);
     ELEMENT_FONT elementFont2(FontInfo("Times New Roman",12), controlsFont);
 
     elementFontVec.push_back(elementFont2);
@@ -188,6 +178,15 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
 
     if (!initControlGFX(assetManger, ControlUI::LISTBOX, "tex.png", listTexturesRects, elementFontVec))
         return false;
+
+    //-------------------------------------
+    // Init Itembox elements
+    //-------------------------------------
+//    const std::vector<Rect> itemBoxTexturesRects = {Rect( 13, 123, 241, 160),      // Main texture rect
+//                                                     Rect( 16, 166, 240, 183)}; // Selection texture rect
+
+//    if (!initControlGFX(assetManger, ControlUI::ITEMBOX, "tex.png", itemBoxTexturesRects, elementFontVec))
+//        return false;
 
     //-------------------------------------
     // Init Slider elements
@@ -364,16 +363,14 @@ bool DialogUI::OnRender(Sprite& sprite, Sprite& textSprite, AssetManager& assetM
     {
         textureName = assetManger.getTexture(m_texturePath);
         if (textureName == NO_TEXTURE)
-            return false;
+            std::cout << "Failed to load the dialog texture " << m_texturePath << "\n";
     }
 
     sprite.AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, textureName);
-
     if (m_bCaption)
         sprite.AddTintedQuad(m_rcCaptionBox, glm::vec4(0.78125f, 1.0f, 0.0f, 1.0f));
 
     bool drawFocusedControl = false;
-
     for(GLuint i = 0; i < m_Controls.size(); i++)
     {
         //if (m_Controls[i] != s_pControlFocus)
@@ -429,7 +426,7 @@ bool DialogUI::handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const 
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent ()
 //-----------------------------------------------------------------------------
-bool DialogUI::handleMouseEvent(MouseEvent event)
+bool DialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     if (!m_bVisible)
         return false;
@@ -441,17 +438,16 @@ bool DialogUI::handleMouseEvent(MouseEvent event)
     // it the first chance at handling the message.
     if( m_pControlFocus && m_pControlFocus->getEnabled() )
     {
+
         if( m_pControlFocus->handleMouseEvent(MouseEvent(event.type, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight),
-                                                         event.down, event.timeStamp, event.nLinesToScroll)))
-        //if( m_pControlFocus->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
+                                                         event.down, event.timeStamp, event.nLinesToScroll), modifierStates))
             return true;
     }
 
     for (GLuint i = 0; i < m_Controls.size(); i++)
     {
         if( m_Controls[i]->handleMouseEvent(MouseEvent(event.type, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight),
-                                                         event.down, event.timeStamp, event.nLinesToScroll)))
-        //if (m_Controls[i]->handleMouseEvent(event, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight), down, 0))
+                                                         event.down, event.timeStamp, event.nLinesToScroll), modifierStates))
         {
             return true;
         }
@@ -530,227 +526,6 @@ bool DialogUI::handleMouseEvent(MouseEvent event)
 }
 
 //-----------------------------------------------------------------------------
-// Name : MsgProc ()
-// Desc : process messages that were sent to the dialog
-//-----------------------------------------------------------------------------
-bool DialogUI::MsgProc(GLuint uMsg, Timer* timer , bool windowed)
-{
-//    bool bHandled = false;
-
-//    if (!m_bVisible)
-//        return false;
-
-//    INPUT_STATE curInputState;
-
-//    // needs to be calcualted in linux
-//    curInputState.bDoubleClick = uMsg == WM_LBUTTONDBLCLK;
-//    curInputState.bCtrl = (wParam & MK_CONTROL) == MK_CONTROL;
-//    curInputState.bShift = (wParam & MK_SHIFT) == MK_SHIFT;
-
-//    // also needs to be calcualted
-//    UINT uLines;
-//    SystemParametersInfo( SPI_GETWHEELSCROLLLINES, 0, &uLines, 0 );
-//    curInputState.nScrollAmount = int( ( short )HIWORD( wParam ) ) / WHEEL_DELTA * uLines;
-
-
-//    // If a control is in focus, it belongs to this dialog, and it's enabled, then give
-//    // it the first chance at handling the message.
-//    if( s_pControlFocus &&
-//        s_pControlFocus->getParentDialog() == this &&
-//        s_pControlFocus->getEnabled() )
-//    {
-//        // If the control MsgProc handles it, then we don't.
-//        if( s_pControlFocus->MsgProc( uMsg, wParam, lParam ) )
-//            return true;
-//    }
-
-//    switch (uMsg)
-//    {
-
-//    // ConfigureNotify
-//    case WM_SIZE:
-//    case WM_MOVE:
-//        {
-//            // Handle sizing and moving messages so that in case the mouse cursor is moved out
-//            // of an UI control because of the window adjustment, we can properly
-//            // unhighlight the highlighted control.
-//            POINT pt = {-1, -1};
-//            OnMouseMove(pt);
-//        }break;
-
-//    // ButtonPress
-//    // ButtonRelease
-//    case WM_KEYDOWN:
-//    case WM_SYSKEYDOWN:
-//    case WM_KEYUP:
-//    case WM_SYSKEYUP:
-//        {
-//            // If a control is in focus, it belongs to this dialog, and it's enabled, then give
-//            // it the first chance at handling the message.
-//            if( s_pControlFocus && s_pControlFocus->getParentDialog() == this &&
-//                s_pControlFocus->getEnabled() )
-//            {
-//                if( s_pControlFocus->HandleKeyboard( hWnd, uMsg, wParam, lParam ) )
-//                    return true;
-//            }
-
-//        }break;
-
-//    // needs to be calcualted in linux
-//    case WM_RBUTTONDBLCLK:
-//        {
-//            POINT mousePoint;
-
-//            GetCursorPos(&mousePoint);
-//            if (windowed)
-//                ScreenToClient(hWnd,&mousePoint);
-
-//            mousePoint.x -= m_x;
-//            mousePoint.y -= m_y;
-
-//            if( m_bCaption )
-//                mousePoint.y -= m_nCaptionHeight;
-
-//            CControlUI* pControl = getControlAtPoint( mousePoint );
-//            if( pControl != NULL && pControl->getEnabled() )
-//            {
-//                RemoveControl( pControl->getID() );
-//            }
-//        }break;
-
-//    // ButtonPress
-//    // MotionNotify??
-//    case WM_MOUSEMOVE:
-//    case WM_LBUTTONDOWN:
-//    case WM_LBUTTONUP:
-//    case WM_MBUTTONDOWN:
-//    case WM_MBUTTONUP:
-//    case WM_RBUTTONDOWN:
-//    case WM_RBUTTONUP:
-//    case WM_XBUTTONDOWN:
-//    case WM_XBUTTONUP:
-//    case WM_LBUTTONDBLCLK:
-//    case WM_MBUTTONDBLCLK:
-//    //case WM_RBUTTONDBLCLK:
-//    case WM_XBUTTONDBLCLK:
-//    case WM_MOUSEWHEEL:
-//        {
-//            //next let controls handle the mouse message
-//            POINT mousePoint;
-//            GetCursorPos(&mousePoint);
-//            if (windowed)
-//                ScreenToClient(hWnd,&mousePoint);
-//            mousePoint.x -= m_x;
-//            mousePoint.y -= m_y + getCaptionHeight();
-
-//            // If a control is in focus, it belongs to this dialog, and it's enabled, then give
-//            // it the first chance at handling the message.
-//            if( s_pControlFocus && s_pControlFocus->getParentDialog() == this &&
-//                s_pControlFocus->getEnabled() )
-//            {
-//                if( s_pControlFocus->HandleMouse( hWnd, uMsg, mousePoint, curInputState, timer ) )
-//                    return true;
-//            }
-
-//            for (UINT i = 0; i < m_Controls.size(); i++)
-//            {
-//                if (m_Controls[i]->HandleMouse(hWnd,uMsg,mousePoint, curInputState, timer))
-//                {
-//                    bHandled = true;
-//                    break;
-//                }
-//            }
-
-//            //bHandled = m_Controls[0]->HandleMouse(hWnd,uMsg,mousePoint, wParam, lParam,timer);
-//            if (bHandled)
-//                return bHandled;
-
-//        }break;
-
-//    }
-
-//    // Mouse not over any controls in this dialog, if there was a control
-//    // which had focus it just lost it
-//    if( uMsg == WM_LBUTTONDOWN && s_pControlFocus &&
-//        s_pControlFocus->getParentDialog() == this )
-//    {
-//        s_pControlFocus->OnFocusOut();
-//        s_pControlFocus = NULL;
-//    }
-
-//    // the message was not for any of the controls
-//    // lets the dialog handle the message
-//    switch(uMsg)
-//    {
-//    // MotionNotify
-//    case WM_MOUSEMOVE:
-//        {
-//            // check if we need to highlight a control as the mouse is over it
-//            POINT mousePoint;
-//            GetCursorPos(&mousePoint);
-//            if (windowed)
-//                ScreenToClient(hWnd,&mousePoint);
-//            //mousePoint.y -=  m_rcCaptionBox.bottom;
-//// 			mousePoint.x -= m_x;
-//// 			mousePoint.y -= m_y;
-
-//            OnMouseMove(mousePoint);
-
-//            // return false to allow the message to be handled by app for mouse camera
-//            return false;
-//        }break;
-
-//    case WM_LBUTTONDOWN:
-//        {
-//            GetCursorPos(&m_startDragPos);
-//            if (windowed)
-//                ScreenToClient(hWnd,&m_startDragPos);
-
-//            if (PtInRect(&m_rcCaptionBox, m_startDragPos))
-//            {
-//                m_bDrag = true;
-//                SetCapture(hWnd);
-//                return true;
-//            }
-//        }break;
-
-//    // ButtonRelease
-//    case WM_LBUTTONUP:
-//        {
-//            if (m_bDrag)
-//            {
-//                m_bDrag = false;
-//                ReleaseCapture();
-//                return true;
-//            }
-//        }break;
-
-//    case WM_RBUTTONDOWN:
-//        {
-//            SetCapture( m_hWnd );
-
-//            POINT mousePoint;
-//            CControlUI* pCurSelectedControl = nullptr;
-
-//            GetCursorPos(&mousePoint);
-//            if (windowed)
-//                ScreenToClient(hWnd,&mousePoint);
-
-//            mousePoint.x -= getLocation().x;
-//            mousePoint.y -= getLocation().y + getCaptionHeight();
-
-//            pCurSelectedControl = getControlAtPoint(mousePoint);
-
-//            if (pCurSelectedControl != nullptr)
-//                m_controlRightClkSig(pCurSelectedControl);
-
-//        }break;
-//    }
-
-    return false;
-}
-
-//-----------------------------------------------------------------------------
 // Name : connectToControlRightClicked
 //-----------------------------------------------------------------------------
 void DialogUI::connectToControlRightClicked(const signal_controlClicked::slot_type& subscriber)
@@ -792,32 +567,32 @@ void DialogUI::OnMouseMove(Point pt)
         UpdateRects();
 
         m_startDragPos = pt;
-        return;
     }
-
-    pt.x -= m_x;
-    pt.y -= m_y;
-    pt.y -= getCaptionHeight();
-
-    ControlUI* pControl = getControlAtPoint(pt);
-    ControlUI* pPrevMouseOverControl = m_pMouseOverControl;
-
-    if (pControl != nullptr)
+    else
     {
-        // check if the current control was already highlighted
-        if (pControl == m_pMouseOverControl)
-            return;
+        pt.x -= m_x;
+        pt.y -= m_y;
+        pt.y -= getCaptionHeight();
 
-        // sets the new mouseOverControl and highlight it
-        m_pMouseOverControl = pControl;
-        pControl->onMouseEnter();
-    }
+        ControlUI* pControl = getControlAtPoint(pt);
+        ControlUI* pPrevMouseOverControl = m_pMouseOverControl;
 
-    // if there was a control highlighted restore it to normal
-    if (pPrevMouseOverControl)
-    {
-        m_pMouseOverControl->onMouseLeave();
-        m_pMouseOverControl = nullptr;
+        if (pControl != pPrevMouseOverControl)
+        {
+            // if there was a control highlighted restore it to normal
+            if (pPrevMouseOverControl)
+            {
+                pPrevMouseOverControl->onMouseLeave();
+                m_pMouseOverControl = nullptr;
+            }
+
+            if (pControl != nullptr)
+            {
+                // sets the new mouseOverControl and highlight it
+                m_pMouseOverControl = pControl;
+                pControl->onMouseEnter();
+            }
+        }
     }
 }
 
@@ -952,9 +727,9 @@ bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width,
 // Name : addListBox()
 // Desc : add a control of type ListBox to the dialog
 //-----------------------------------------------------------------------------
-bool DialogUI::addListBox(int ID, int x, int y, int width, int height, GLuint style/* = 0*/, ListBoxUI** ppListBoxCreated/* = NULL*/, std::string strID /*= ""*/)
+bool DialogUI::addListBox(int ID, int x, int y, int width, int height, bool multiSelection/* = false*/, ListBoxUI<int> **ppListBoxCreated/* = NULL*/, std::string strID /*= ""*/)
 {
-    ListBoxUI* pListBox = new ListBoxUI(this, ID, x, y, width, height, style);
+    ListBoxUI<int>* pListBox = new ListBoxUI<int>(this, ID, x, y, width, height, multiSelection);
 
     initControl(pListBox);
     // !!! list box needs to update it's Rects on init
@@ -1119,9 +894,9 @@ bool DialogUI::addComboBoxFromFile(std::istream& InputFIle, ComboBoxUI** ppCombo
 // Name : addListBoxFromFile()
 // Desc : loads from file a control of type ListBox to the dialog
 //-----------------------------------------------------------------------------
-bool DialogUI::addListBoxFromFile(std::istream& InputFIle, ListBoxUI** ppListBoxCreated /* = NULL */)
+bool DialogUI::addListBoxFromFile(std::istream& InputFIle, ListBoxUI<int> **ppListBoxCreated /* = NULL */)
 {
-    ListBoxUI* pListBox = new ListBoxUI(InputFIle);
+    ListBoxUI<int>* pListBox = new ListBoxUI<int>(InputFIle);
 
     initControl(pListBox);
     // !!! list box needs to update it's Rects on init
@@ -1256,9 +1031,7 @@ bool DialogUI::initControl(ControlUI* pControl)
         }
     }
 
-    //sets the check box parent .. this dialog
     pControl->setParent(this);
-
     return pControl->onInit();
 }
 
@@ -1660,9 +1433,9 @@ EditBoxUI * DialogUI::getEditBox( int ID )
 //-----------------------------------------------------------------------------
 // Name : GetListBox
 //-----------------------------------------------------------------------------
-ListBoxUI * DialogUI::getListBox( int ID )
+ListBoxUI<int> * DialogUI::getListBox( int ID )
 {
-    return static_cast<ListBoxUI*> (getControl(ID, ControlUI::LISTBOX));
+    return static_cast<ListBoxUI<int>*> (getControl(ID, ControlUI::LISTBOX));
 }
 
 //-----------------------------------------------------------------------------
