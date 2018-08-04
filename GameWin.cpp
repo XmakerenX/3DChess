@@ -61,6 +61,7 @@ Atom GameWin::s_selection = None;
 std::future<void> GameWin::clipboardSender;
 Window GameWin::clipboardWindow = 0;
 std::string GameWin::s_clipboardString;
+const double GameWin::s_doubleClickTime = 0.5;
 
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
@@ -81,6 +82,9 @@ GameWin::GameWin()
     meshIndex = -1;
     hit = false;
     selectedObj = nullptr;
+
+    lastLeftClickTime = 0;
+    lastRightClickTime = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1019,6 +1023,16 @@ int GameWin::BeginGame()
 //                                           keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
 //                                           keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
 
+                    double curTime = timer.getCurrentTime();
+                    if (curTime - lastLeftClickTime < s_doubleClickTime)
+                    {
+                        std::cout << "left button was double clicked\n";
+                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                    }
+                    else
+                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                    lastLeftClickTime = curTime;
+
                     m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
                     //m_dialog.handleMouseEvent( MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), ModifierKeysStates);
 
@@ -1041,7 +1055,16 @@ int GameWin::BeginGame()
                     else
                         hit = 0;
 
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
+                    double curTime = timer.getCurrentTime();
+                    if (curTime - lastRightClickTime < s_doubleClickTime)
+                    {
+                        std::cout << "right button was double clicked\n";
+                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                    }
+                    else
+                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
+                    lastRightClickTime = curTime;
+
                 }
 
                 if (event.xbutton.button == Button4)

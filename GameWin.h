@@ -63,6 +63,9 @@ private:
     static Window clipboardWindow;
     static std::string s_clipboardString;
 
+    static bool ctxErrorOccurred;
+    static const double s_doubleClickTime;
+
     Window m_win;
     
     GLuint m_winWidth;
@@ -84,21 +87,19 @@ private:
     bool gameRunning;
     
     Timer timer;
-    //AssetManager assetManager_;
+    double lastLeftClickTime;
+    double lastRightClickTime;
 
     int height_;
     float m_hDpi;
     float m_vDpi;
 
-    static bool ctxErrorOccurred;
-    
     Scene m_scene;
 
     Shader* textShader;
     Shader* textureShader;
     Shader* spriteShader;
     Shader* spriteTextShader;
-    //Shader* projShader;
 
     bool keysStatus[256];
     Point oldCursorLoc;
