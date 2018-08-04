@@ -13,9 +13,9 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-             EditBoxUI(DialogUI *pParentDialog, int ID, std::string strText, int x, int y, int width, int height);
-             EditBoxUI(std::istream& inputFile);
-    virtual ~EditBoxUI(void);
+                        EditBoxUI(DialogUI *pParentDialog, int ID, std::string strText, int x, int y, int width, int height);
+                        EditBoxUI(std::istream& inputFile);
+    virtual             ~EditBoxUI(void);
 
 	//-------------------------------------------------------------------------
 	// Functions that handle user input logic
@@ -28,7 +28,7 @@ public:
     virtual bool        Released			(Point pt);
     virtual bool        Dragged				(Point pt);
 
-    void                connectToEditboxChg	(const signal_editbox::slot_type& subscriber);
+            void        connectToEditboxChg	(const signal_editbox::slot_type& subscriber);
 	//-------------------------------------------------------------------------
 	// Functions that handle Rendering Logic
 	//-------------------------------------------------------------------------
@@ -69,23 +69,23 @@ protected:
     void                pasteFromClipboard ();
 
     std::string	 m_buffer;        // Buffer to hold text
-	int			 m_nBorder;       // Border of the window
-	int			 m_nSpacing;      // Spacing between the text and the edge of border
-	int			 m_nVisibleChars; //
-	int			 m_nBackwardChars;
-    Rect		 m_rcText;        // Bounding rectangle for the text
-    Rect		 m_rcRender[9];   // Convenient rectangles for rendering elements
-	double		 m_dfBlink;       // Caret blink time in milliseconds
-	double		 m_dfLastBlink;   // Last timestamp of caret blink
-	bool		 m_bCaretOn;      // Flag to indicate whether caret is currently visible
-	int			 m_nCaret;        // Caret position, in characters
-	bool		 m_bInsertMode;   // If true, control is in insert mode. Else, overwrite mode.
-	int			 m_nSelStart;     // Starting position of the selection. The caret marks the end.
-	int			 m_nFirstVisible; // First visible character in the edit control
-    glm::vec4	 m_TextColor;     // Text color
-    glm::vec4	 m_SelTextColor;  // Selected text color
-    glm::vec4	 m_SelBkColor;    // Selected background color
-    glm::vec4	 m_CaretColor;    // Caret color
+    int          m_nBorder;       // Border of the window
+    int          m_nSpacing;      // Spacing between the text and the edge of border
+    int          m_nVisibleChars; //
+    int          m_nBackwardChars;
+    Rect         m_rcText;        // Bounding rectangle for the text
+    Rect         m_rcRender[9];   // Convenient rectangles for rendering elements
+    double       m_dfBlink;       // Caret blink time in milliseconds
+    double       m_dfLastBlink;   // Last timestamp of caret blink
+    bool         m_bCaretOn;      // Flag to indicate whether caret is currently visible
+    int          m_nCaret;        // Caret position, in characters
+    bool         m_bInsertMode;   // If true, control is in insert mode. Else, overwrite mode.
+    int          m_nSelStart;     // Starting position of the selection. The caret marks the end.
+    int          m_nFirstVisible; // First visible character in the edit control
+    glm::vec4    m_TextColor;     // Text color
+    glm::vec4    m_SelTextColor;  // Selected text color
+    glm::vec4    m_SelBkColor;    // Selected background color
+    glm::vec4    m_CaretColor;    // Caret color
 
     boost::signals2::signal<void (EditBoxUI*)> m_editboxChangedSig;
 

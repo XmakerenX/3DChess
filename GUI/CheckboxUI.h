@@ -6,19 +6,19 @@
 class CheckboxUI : public ButtonUI
 {
 public:
-    CheckboxUI					(DialogUI* pParentDialog, int ID, int x, int y, GLuint width, GLuint height, GLuint nHotkey);
-    CheckboxUI					(std::istream& inputFile);
-    virtual ~CheckboxUI			(void);
+    CheckboxUI                  (DialogUI* pParentDialog, int ID, int x, int y, GLuint width, GLuint height, GLuint nHotkey);
+    CheckboxUI                  (std::istream& inputFile);
+    virtual ~CheckboxUI         (void);
 
-    virtual void    Render				(Sprite &sprite, Sprite &textSprite, double timeStamp);
+    virtual void    Render              (Sprite &sprite, Sprite &textSprite, double timeStamp);
 
     virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool    Released			(Point pt);
+    virtual bool    Released            (Point pt);
 
-    virtual bool    SaveToFile			(std::ostream& SaveFile);
+    virtual bool    SaveToFile          (std::ostream& SaveFile);
 
-            bool    getChecked			();
+            bool    getChecked          ();
 
 protected:
     bool m_bChecked;

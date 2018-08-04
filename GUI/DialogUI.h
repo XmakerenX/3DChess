@@ -63,7 +63,7 @@ public:
     DialogUI(void);
     virtual ~DialogUI(void);
 
-    bool init    (GLuint width, GLuint height, int nCaptionHeight, std::string captionText, std::string newTexturePath, glm::vec4 dialogColor, AssetManager& assetManger);
+    bool init(GLuint width, GLuint height, int nCaptionHeight, std::string captionText, std::string newTexturePath, glm::vec4 dialogColor, AssetManager& assetManger);
     bool initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType, std::string texturePath, const std::vector<Rect> textureRects, std::vector<ELEMENT_FONT>& elementFontVec);
 
 
@@ -190,8 +190,6 @@ private:
     static ControlUI* m_pControlFocus; // The control which has focus
     ControlUI* m_pMouseOverControl;
 
-    // Pointer to the callback event function that the dialog sends events to
-    //PCALLBACKGUIEVENT m_pCallbackEvent;
     boost::signals2::signal<void (ControlUI*)> m_controlRightClkSig;
 };
 

@@ -9,36 +9,36 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-    ScrollBarUI(void);
-    ScrollBarUI(std::istream& inputFile);
-    virtual ~ScrollBarUI(void);
+                    ScrollBarUI     (void);
+                    ScrollBarUI     (std::istream& inputFile);
+    virtual         ~ScrollBarUI    (void);
 
 	//-------------------------------------------------------------------------
 	// functions that handle user Input to control
 	//-------------------------------------------------------------------------
-    virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
+    virtual bool    handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool	Pressed      (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool    Released	 ( Point pt);
-    virtual bool    Dragged		 ( Point pt);
+    virtual bool	Pressed         (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Released        (Point pt);
+    virtual bool    Dragged         (Point pt);
 
-    virtual bool	SaveToFile   (std::ostream& SaveFile);
+    virtual bool	SaveToFile      (std::ostream& SaveFile);
 
-    virtual void    Render       (Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void    Render          (Sprite& sprite, Sprite& textSprite, double timeStamp);
 
 	//-------------------------------------------------------------------------
 	// functions that handle control specific properties
 	//-------------------------------------------------------------------------
-	void            SetTrackRange( int nStart, int nEnd );
-	void            SetTrackPos( int nPosition );
+            void    SetTrackRange   (int nStart, int nEnd);
+            void    SetTrackPos     (int nPosition);
 
-	int             GetTrackPos();
-	int             GetPageSize();
+            int     GetTrackPos     ();
+            int     GetPageSize     ();
 
-	void            SetPageSize( int nPageSize );
+            void    SetPageSize     (int nPageSize);
 
-	void            Scroll( int nDelta );    // Scroll by nDelta items (plus or minus)
-	void            ShowItem( int nIndex );  // Ensure that item nIndex is displayed, scroll if necessary
+            void    Scroll          (int nDelta);    // Scroll by nDelta items (plus or minus)
+            void    ShowItem        (int nIndex);  // Ensure that item nIndex is displayed, scroll if necessary
 
 private:
 	// ARROWSTATE indicates the state of the arrow buttons.

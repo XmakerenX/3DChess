@@ -98,22 +98,22 @@ public:
     virtual bool    Scrolled			(int nScrollAmount);
     virtual bool    Dragged				(Point pt);
 
-    virtual void    Render	(Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
+    virtual void    Render              (Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
 
-    void	renderRect		(Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
-    void    renderText      (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos,
-                             mkFont::TextFormat format = mkFont::TextFormat::Center);
+            void    renderRect          (Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
+            void    renderText          (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos,
+                                         mkFont::TextFormat format = mkFont::TextFormat::Center);
 
-    Point calcPositionOffset();
+            Point calcPositionOffset();
 
-    virtual bool ContainsPoint(Point pt);
+    virtual bool  ContainsPoint(Point pt);
 
-    virtual void onMouseEnter();
-    virtual void onMouseLeave();
+    virtual void  onMouseEnter ();
+    virtual void  onMouseLeave ();
 
-    virtual bool CanHaveFocus();
-    virtual void OnFocusIn();
-    virtual void OnFocusOut();
+    virtual bool  CanHaveFocus ();
+    virtual void  OnFocusIn    ();
+    virtual void  OnFocusOut   ();
 
     void	SetID				(int ID);
     void	setLocation			(int x, int y);

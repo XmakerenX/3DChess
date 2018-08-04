@@ -11,45 +11,42 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-    SliderUI				(DialogUI* pParentDialog, int ID, int x, int y, int width, int height, int min, int max, int nValue );
-    SliderUI				(std::istream& inputFile);
-    virtual ~SliderUI		(void);
+                    SliderUI            (DialogUI* pParentDialog, int ID, int x, int y, int width, int height, int min, int max, int nValue );
+                    SliderUI            (std::istream& inputFile);
+    virtual         ~SliderUI           (void);
 
-    virtual bool    ContainsPoint( Point pt );
+    virtual bool    ContainsPoint       (Point pt);
 
 	//-------------------------------------------------------------------------
 	// functions that handle user input to the control
 	//-------------------------------------------------------------------------
     virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
-    //virtual bool    HandleMouse			( HWND hWnd, UINT uMsg, POINT mousePoint, INPUT_STATE inputstate, CTimer* timer  );
-
     virtual bool	Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool    Released			( Point pt);
-    virtual bool    Scrolled			( int nScrollAmount);
-    virtual bool    Dragged				( Point pt);
+    virtual bool    Released			(Point pt);
+    virtual bool    Scrolled			(int nScrollAmount);
+    virtual bool    Dragged				(Point pt);
 
-	void		    connectToSliderChg	( const signal_slider::slot_type& subscriber);
+    void		    connectToSliderChg	(const signal_slider::slot_type& subscriber);
 
 	//-------------------------------------------------------------------------
 	// functions that handle Rendering
 	//-------------------------------------------------------------------------
-	virtual void    UpdateRects	();
-	virtual bool    CanHaveFocus();
+    virtual void    UpdateRects         ();
+    virtual bool    CanHaveFocus        ();
 
-	virtual bool	SaveToFile	(std::ostream& SaveFile);
+    virtual bool	SaveToFile          (std::ostream& SaveFile);
 
-    virtual void    Render      (Sprite& sprite, Sprite& textSprite, double timeStamp);
-    //virtual void    Render( AssetManager& assetManger );
+    virtual void    Render              (Sprite& sprite, Sprite& textSprite, double timeStamp);
 
-	void            SetValue( int nValue );
-	int             GetValue() const;
+            void    SetValue            (int nValue);
+            int     GetValue            () const;
 
-	void            GetRange( int& nMin, int& nMax ) const;
-	void            SetRange( int nMin, int nMax );
+            void    GetRange            (int& nMin, int& nMax) const;
+            void    SetRange            (int nMin, int nMax);
 
 protected:
-	void            SetValueInternal( int nValue, bool bFromInput );
-	int             ValueFromPos( int x );
+            void    SetValueInternal    (int nValue, bool bFromInput);
+            int     ValueFromPos        (int x);
 
 	int m_nValue;
 

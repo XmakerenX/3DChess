@@ -24,31 +24,31 @@ public:
     //functions that handle user Input to this control
     //-------------------------------------------------------------------------
     virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
-    virtual void    OnHotkey();
+    virtual void    OnHotkey            ();
 
-    virtual bool	Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool    Released			( Point pt);
-    virtual bool    Scrolled			( int nScrollAmount);
+    virtual bool	Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Released            (Point pt);
+    virtual bool    Scrolled            (int nScrollAmount);
 
-    void			ConnectToSelectChg  ( const signal_comboBox::slot_type& subscriber);
+    void			ConnectToSelectChg  (const signal_comboBox::slot_type& subscriber);
 
     //-------------------------------------------------------------------------
     //functions that handle control Rendering
     //-------------------------------------------------------------------------
     virtual void    Render              (Sprite& sprite, Sprite& textSprite, double timeStamp);
-    virtual void    UpdateRects			();
+    virtual void    UpdateRects         ();
 
-    virtual bool    CanHaveFocus		();
-    virtual void    OnFocusOut			();
+    virtual bool    CanHaveFocus        ();
+    virtual void    OnFocusOut          ();
 
-    virtual bool	SaveToFile			(std::ostream& SaveFile);
-    void			CopyItemsFrom		(ComboBoxUI *sourceComboBox);
+    virtual bool	SaveToFile          (std::ostream& SaveFile);
+    void			CopyItemsFrom       (ComboBoxUI *sourceComboBox);
 
 
-    virtual bool ContainsPoint(Point pt);
+    virtual bool    ContainsPoint       (Point pt);
 
-    virtual void onMouseEnter();
-    virtual void onMouseLeave();
+    virtual void    onMouseEnter        ();
+    virtual void    onMouseLeave        ();
 
     //-------------------------------------------------------------------------
     //functions that handle checkBox specific properties
@@ -68,11 +68,11 @@ public:
 
     int             GetSelectedIndex    () const;
 
-    void*			GetSelectedData     ();
-    Item<int> *GetSelectedItem();
+    void*           GetSelectedData     ();
+    Item<int> *     GetSelectedItem     ();
 
     GLuint          GetNumItems         ();
-    Item<int> *GetItem(GLuint index);
+    Item<int>  *    GetItem             (GLuint index);
 
     bool            SetSelectedByIndex  (GLuint index);
     bool            SetSelectedByText   (std::string strText);

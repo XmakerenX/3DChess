@@ -60,7 +60,7 @@ public:
     virtual bool    CanHaveFocus     ();
 
     virtual bool    SaveToFile	     (std::ostream& SaveFile);
-    void            CopyItemsFrom    (ListBoxUI& sourceItems);
+            void    CopyItemsFrom    (ListBoxUI& sourceItems);
 
     //-------------------------------------------------------------------------
     //functions that handle the items in the itembox
@@ -74,7 +74,7 @@ public:
     void            RemoveAllItems      ();
     int             FindItem            (std::string strText, GLuint iStart = 0);
     bool            ContainsItem        (std::string strText, GLuint iStart = 0);
-    Item<T>*	    GetItem             (GLuint nIndex);
+    Item<T>*        GetItem             (GLuint nIndex);
     T*              GetItemData         (std::string strText);
     T*              GetItemData         (int nIndex);
     const std::vector<int>& GetSelectedIndices() const;
