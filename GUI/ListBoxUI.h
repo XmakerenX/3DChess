@@ -34,6 +34,7 @@ template<class T>
 class ListBoxUI : public ControlUI
 {
 public:
+    typedef boost::signals2::signal<void (ListBoxUI<T>*)> signal_listbox;
     //-------------------------------------------------------------------------
     // Constructors & Destructors for This Class.
     //-------------------------------------------------------------------------
@@ -50,6 +51,9 @@ public:
     virtual bool    Pressed	    (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Scrolled	(int nScrollAmount);
             bool    Highlight   (Point mousePoint);
+
+            void    ConnectToItemDoubleClick(const typename signal_listbox::slot_type& subscriber);
+            void    ConnectToListboxChanged (const typename signal_listbox::slot_type& subscriber);
 
     //-------------------------------------------------------------------------
     //functions that handle control Rendering
@@ -77,10 +81,11 @@ public:
     Item<T>*        GetItem             (GLuint nIndex);
     T*              GetItemData         (std::string strText);
     T*              GetItemData         (int nIndex);
+
     const std::vector<int>& GetSelectedIndices() const;
 
-    bool SelectItem(GLuint index, bool select);
-    bool SelectItem(std::string strText, bool select);
+    bool            SelectItem          (GLuint index, bool select);
+    bool            SelectItem          (std::string strText, bool select);
 
     GLuint          GetNumItems         ();
     void            ShowItem            (int nIndex);
@@ -92,14 +97,17 @@ private:
     enum ELEMENTS {MAIN, SELECTION};
 
     bool m_isMultiSelection;
-    std::vector<Item<T>> m_Items;
     int m_nSelected;    // the index from which shift drag will start
+    std::vector<Item<T>> m_Items;
     std::vector<int> m_selectedItems;
 
     Rect m_rcItembox;
     Rect m_rcItemboxText;
 
     ScrollBarUI m_ScrollBar;
+
+    signal_listbox m_itemDoubleClickSig;
+    signal_listbox m_listboxChangedig;
 
 };
 

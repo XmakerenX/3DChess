@@ -91,7 +91,7 @@ private:
     // used to access m_elementsGFX vector and no other use
     enum ELEMENTS {MAIN, BUTTON};
 
-    boost::signals2::signal<void (ComboBoxUI*)> m_selectionChangedSig;
+   signal_comboBox m_selectionChangedSig;
 };
 
 #endif  //_CCOMBOBOXUI_H

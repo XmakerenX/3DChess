@@ -122,11 +122,14 @@ bool ListBoxUI<T>::Pressed(Point pt, const ModifierKeysStates &modifierStates, d
                         int begin = std::min(m_nSelected, i);
                         int end = std::max(m_nSelected, i);
 
-                        for (int k = begin; k <= end; k++)
+                        int k;
+                        for (k = begin; k <= end; k++)
                         {
                             m_Items[k].bSelected = true;
                             m_selectedItems.push_back(k);
                         }
+                        if (k != begin)
+                            m_listboxChangedig(this);
                         break;
                     }
             }
@@ -150,6 +153,7 @@ bool ListBoxUI<T>::Pressed(Point pt, const ModifierKeysStates &modifierStates, d
                 if (selPos != m_selectedItems.end())
                     m_selectedItems.erase(selPos);
             }
+            m_listboxChangedig(this);
 
             return true;
         }
@@ -197,6 +201,24 @@ bool ListBoxUI<T>::Highlight(Point mousePoint)
         return true;
     }
     return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : ConnectToItemDoubleClick
+//-----------------------------------------------------------------------------
+template<class T>
+void ListBoxUI<T>::ConnectToItemDoubleClick(const typename signal_listbox::slot_type& subscriber)
+{
+    m_itemDoubleClickSig.connect(subscriber);
+}
+
+//-----------------------------------------------------------------------------
+// Name : ConnectToListboxChanged
+//-----------------------------------------------------------------------------
+template<class T>
+void ListBoxUI<T>::ConnectToListboxChanged (const typename signal_listbox::slot_type& subscriber)
+{
+    m_listboxChangedig.connect(subscriber);
 }
 
 //-----------------------------------------------------------------------------
@@ -395,6 +417,7 @@ void ListBoxUI<T>::RemoveItem(GLuint index)
         m_selectedItems.erase(selPos);
 
     m_ScrollBar.SetTrackRange( 0, m_Items.size() );
+    m_listboxChangedig(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -403,11 +426,19 @@ void ListBoxUI<T>::RemoveItem(GLuint index)
 template<class T>
 void ListBoxUI<T>::RemoveItemByData(T& data)
 {
-    for (GLuint i = 0; i < m_Items.size(); i++)
+    GLuint i;
+    for (i = 0; i < m_Items.size(); i++)
     {
         if (m_Items[i].data == data)
+        {
             m_Items.erase(i);
+            auto selPos = std::find(m_selectedItems.begin(), m_selectedItems.end(), i);
+            if (selPos != m_selectedItems.end())
+                m_selectedItems.erase(selPos);
+        }
     }
+    if (i != 0 )
+        m_listboxChangedig(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -419,6 +450,7 @@ void ListBoxUI<T>::RemoveAllItems()
     m_Items.clear();
     m_ScrollBar.SetTrackRange( 0, 1 );
     m_selectedItems.clear();
+    m_listboxChangedig(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -525,6 +557,7 @@ bool ListBoxUI<T>::SelectItem(GLuint index, bool select)
         if (selPos != m_selectedItems.end())
             m_selectedItems.erase(selPos);
     }
+    m_listboxChangedig(this);
 
     return true;
 }
@@ -551,6 +584,7 @@ bool ListBoxUI<T>::SelectItem(std::string strText, bool select)
             return true;
         }
     }
+    m_listboxChangedig(this);
 
     return false;
 }
