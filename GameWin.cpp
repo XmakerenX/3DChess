@@ -99,7 +99,7 @@ GameWin::~GameWin()
 //-----------------------------------------------------------------------------
 bool GameWin::initWindow()
 {
-    m_display = XOpenDisplay(NULL);
+    m_display = XOpenDisplay(nullptr);
     
     if (!m_display)
     {
@@ -108,7 +108,7 @@ bool GameWin::initWindow()
     }
 
 
-    clipboardDisplay = XOpenDisplay(NULL);
+    clipboardDisplay = XOpenDisplay(nullptr);
     if (!clipboardDisplay)
     {
             std::cout << "Failed to open X display for clipboard\n";
@@ -893,24 +893,49 @@ void GameWin::ProcessInput(double timeDelta)
         //float X = 0.0f,Y = 0.0f;
         bool ret;
 
-        Window root,child;
-        int x,y;
-        unsigned int maskRet;
+        Point currentCursorPos = getCursorPos();
+//        Window root,child;
+//        int x,y;
+//        unsigned int maskRet;
 
 
-        ret = XQueryPointer(m_display, m_win, &root, &child ,&x, &y,
-                            &cursorX, &cursorY, &maskRet);
+//        ret = XQueryPointer(m_display, m_win, &root, &child ,&x, &y,
+//                            &cursorX, &cursorY, &maskRet);
 
         //std::cout <<"process input:\n";
         //std::cout << "x = " << cursorX << " y = " << cursorY << "\n";
 
-        X = (float)(cursorX - oldCursorLoc.x) / 3.0f;
-        Y = (float)(cursorY - oldCursorLoc.y) / 3.0f;
+        X = (float)(currentCursorPos.x - oldCursorLoc.x) / 3.0f;
+        Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
 
+        //setCursorPos(Point(oldCursorLoc));
         //XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, oldCursorLoc.x, oldCursorLoc.y);
         XFlush(m_display);
     }
     m_scene.processInput(timeDelta, keysStatus, X, Y);
+}
+
+//-----------------------------------------------------------------------------
+// Name : setCursorPos ()
+//-----------------------------------------------------------------------------
+void GameWin::setCursorPos(Point newPos)
+{
+    XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, newPos.x, newPos.y);
+}
+
+//-----------------------------------------------------------------------------
+// Name : getCursorPos ()
+//-----------------------------------------------------------------------------
+Point GameWin::getCursorPos()
+{
+    Window root,child;
+    int cursorX  = 0, cursorY = 0 ,x = 0,y = 0;
+    unsigned int maskRet;
+
+    XQueryPointer(m_display, m_win, &root, &child ,&x, &y,
+                  &cursorX, &cursorY, &maskRet);
+
+    return Point(cursorX, cursorY);
 }
 
 //-----------------------------------------------------------------------------

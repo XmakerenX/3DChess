@@ -42,6 +42,8 @@ public:
     void reshape        (int width, int height);
     
     void ProcessInput   (double timeDelta);
+    void setCursorPos   (Point newPos);
+    Point getCursorPos();
 
     int  BeginGame      ();
     bool Shutdown       ();
