@@ -12,6 +12,7 @@ public:
     virtual                 ~StaticUI   (void);
 
                 void        setTextColor(glm::vec4 textColor);
+                void        setText     (const std::string& text);
     const       std::string getText     () const;
 
                 void        Render      (Sprite& sprite, Sprite& textSprite , double timeStamp);
