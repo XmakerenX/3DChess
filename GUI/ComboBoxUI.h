@@ -68,7 +68,7 @@ public:
 
     int             GetSelectedIndex    () const;
 
-    void*           GetSelectedData     ();
+    int *GetSelectedData();
     Item<int> *     GetSelectedItem     ();
 
     GLuint          GetNumItems         ();

@@ -45,7 +45,7 @@ EditBoxUI::EditBoxUI(DialogUI* pParentDialog, int ID, std::string strText, int x
 	m_nBackwardChars = 0;
 
 	m_bCaretOn = true;
-    m_dfBlink = s_caretBlinkTime * 0.001f;
+    m_dfBlink = s_caretBlinkTime * 0.001;
     m_dfLastBlink = 0;
 	s_bHideCaret = false;
 
@@ -67,7 +67,7 @@ EditBoxUI::EditBoxUI(std::istream& inputFile)
 {
     m_type = ControlUI::EDITBOX;
 
-    m_dfBlink = s_caretBlinkTime * 0.001f;
+    m_dfBlink = s_caretBlinkTime * 0.001;
     m_dfLastBlink = 0;
 	s_bHideCaret = false;
 	m_nCaret = m_nSelStart = 0;
@@ -389,9 +389,10 @@ bool EditBoxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mod
         if ( Dragged(event.cursorPos) )
             return true;
     }break;
-    }
 
-    return false;
+    default:
+        return false;
+    }
 }
 
 //-----------------------------------------------------------------------------

@@ -64,7 +64,7 @@ public:
     virtual bool    CanHaveFocus     ();
 
     virtual bool    SaveToFile	     (std::ostream& SaveFile);
-            void    CopyItemsFrom    (ListBoxUI& sourceItems);
+            void    CopyItemsFrom    (ListBoxUI<T> &sourceItems);
 
     //-------------------------------------------------------------------------
     //functions that handle the items in the itembox

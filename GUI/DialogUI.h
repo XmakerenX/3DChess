@@ -19,9 +19,6 @@
 #include "SliderUI.h"
 #include "EditBoxUI.h"
 
-// the callback function that used to send back GUI events to the main program
-//typedef void ( CALLBACK*PCALLBACKGUIEVENT )(HWND hWnd, GLuint nEvent, int nControlID, void* pUserContext );
-
 struct DEF_INFO
 {
     DEF_INFO(std::string newControlIDText, GLuint newControlID)
@@ -76,9 +73,6 @@ public:
     bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates &modifierStates);
     bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-
-    //void    SendEvent(GLuint nEvent, bool bTriggeredByUser, int nControlID, HWND hWnd = NULL );
-    //void    SetCallback( PCALLBACKGUIEVENT pCallback);
     void    connectToControlRightClicked( const signal_controlClicked::slot_type& subscriber);
 
     virtual bool OnRender(Sprite &sprite, Sprite& textSprite, AssetManager& assetManger, double timeStamp);
@@ -89,25 +83,26 @@ public:
     // Functions that handle the Dialog Controls
     //-------------------------------------------------------------------------
     bool			 initControl			(ControlUI* pControl);
+    void			 UpdateControlDefText	(const std::string& strDefText, int controlID);
     void			 UpdateControlDefText	(std::string&& strDefText, int controlID);
 
-    bool			 addStatic				( int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated = NULL, std::string strID = "");
-    bool             addButton              (int ID, const std::string& strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI **ppButtonCreated = NULL, std::string strID = "");
-    bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = NULL, std::string strID = "");
-    bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = NULL, std::string strID = "");
-    bool			 addComboBox			( int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = NULL, std::string strID = "");
-    bool		     addListBox				(int ID, int x, int y, int width, int height, bool multiSelection = false, ListBoxUI<int>** ppListBoxCreated = NULL, std::string strID = "");
-    bool		     addSlider				( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = NULL, std::string strID = "");
-    bool			 addEditbox				( int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = NULL, std::string strID = "");
+    bool			 addStatic				(int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated = nullptr, std::string strID = "");
+    bool             addButton              (int ID, const std::string& strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI **ppButtonCreated = nullptr, std::string strID = "");
+    bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = nullptr, std::string strID = "");
+    bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = nullptr, std::string strID = "");
+    bool			 addComboBox			(int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = nullptr, std::string strID = "");
+    bool		     addListBox				(int ID, int x, int y, int width, int height, bool multiSelection = false, ListBoxUI<int>** ppListBoxCreated = nullptr, std::string strID = "");
+    bool		     addSlider				(int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = nullptr, std::string strID = "");
+    bool			 addEditbox				(int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = nullptr, std::string strID = "");
 
-    bool			 addStaticFromFile		( std::istream& InputFIle, StaticUI** ppStaticCreated = NULL);
-    bool			 addButtonFromFile		( std::istream& InputFIle, ButtonUI** ppButtonCreated = NULL);
-    bool			 addCheckBoxFromFile    ( std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = NULL);
-    bool			 addRadioButtonFromFile ( std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = NULL);
-    bool			 addComboBoxFromFile    ( std::istream& InputFIle, ComboBoxUI** ppComboxCreated = NULL);
-    bool			 addListBoxFromFile     ( std::istream& InputFIle, ListBoxUI<int>** ppListBoxCreated = NULL);
-    bool			 addSliderFromFile      ( std::istream& InputFIle, SliderUI** ppSliderCreated = NULL);
-    bool			 addEditBoxFromFile     ( std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated = NULL);
+    bool			 addStaticFromFile		(std::istream& InputFIle, StaticUI** ppStaticCreated = nullptr);
+    bool			 addButtonFromFile		(std::istream& InputFIle, ButtonUI** ppButtonCreated = nullptr);
+    bool			 addCheckBoxFromFile    (std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = nullptr);
+    bool			 addRadioButtonFromFile (std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = nullptr);
+    bool			 addComboBoxFromFile    (std::istream& InputFIle, ComboBoxUI** ppComboxCreated = nullptr);
+    bool			 addListBoxFromFile     (std::istream& InputFIle, ListBoxUI<int>** ppListBoxCreated = nullptr);
+    bool			 addSliderFromFile      (std::istream& InputFIle, SliderUI** ppSliderCreated = nullptr);
+    bool			 addEditBoxFromFile     (std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated = nullptr);
 
     void			 RemoveControl			( int ID);
     void			 RemoveAllControls		( );
@@ -137,8 +132,8 @@ public:
     //-------------------------------------------------------------------------
     // Save/Load Functions
     //-------------------------------------------------------------------------
-    bool				SaveDilaogToFile	(std::string &&FileName, GLulong curControlID);
-    GLulong			    LoadDialogFromFile	(std::string &&FileName, Timer *timer);
+    bool				SaveDilaogToFile	(const std::string &FileName, GLulong curControlID);
+    GLulong			    LoadDialogFromFile	(const std::string &FileName, Timer *timer);
 
     //-------------------------------------------------------------------------
     // get and set Functions

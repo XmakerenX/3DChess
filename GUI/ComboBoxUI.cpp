@@ -398,7 +398,7 @@ int ComboBoxUI::GetSelectedIndex() const
 // Name : GetSelectedData()
 // Desc : returns the data of the current selected Item
 //-----------------------------------------------------------------------------
-void* ComboBoxUI::GetSelectedData()
+int* ComboBoxUI::GetSelectedData()
 {
     const std::vector<int> selIndices = m_dropDown.GetSelectedIndices();
     if (selIndices.size() > 0)

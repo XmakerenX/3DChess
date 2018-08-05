@@ -328,14 +328,14 @@ bool ListBoxUI<T>::SaveToFile(std::ostream& SaveFile)
 // Name : CopyItemsFrom
 //-----------------------------------------------------------------------------
 template<class T>
-void ListBoxUI<T>::CopyItemsFrom(ListBoxUI& sourceItems)
+void ListBoxUI<T>::CopyItemsFrom(ListBoxUI<T>& sourceItems)
 {
     // clears the items vector
     RemoveAllItems();
 
     for (GLuint i = 0; i < sourceItems.GetNumItems(); i++)
     {
-        AddItem(sourceItems.GetItem(i)->strText, sourceItems.GetItem(i)->pData );
+        AddItem(sourceItems.GetItem(i)->strText, sourceItems.GetItem(i)->data );
     }
 }
 

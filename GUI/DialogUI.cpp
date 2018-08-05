@@ -102,8 +102,6 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     std::vector<ELEMENT_FONT> elementFontVec;
     CONTROL_GFX	controlGFX;
 
-    GLuint textureIndex, fontIndex;
-
     //-------------------------------------
     // Init Static elements
     //-------------------------------------
@@ -224,8 +222,6 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     std::vector<ELEMENT_GFX>  elementGFXvec;
     std::vector<ELEMENT_FONT> elementFontVec;
     CONTROL_GFX	controlGFX;
-
-    GLuint textureIndex, fontIndex;
 
     //-------------------------------------
     // Init Static elements
@@ -1035,6 +1031,18 @@ bool DialogUI::initControl(ControlUI* pControl)
     return pControl->onInit();
 }
 
+//-----------------------------------------------------------------------------
+// Name : UpdateControlDefText()
+//-----------------------------------------------------------------------------
+void DialogUI::UpdateControlDefText(const std::string& strDefText, int controlID)
+{
+    for (GLuint i = 0; i < m_defInfo.size(); i++)
+        if (m_defInfo[i].controlID == controlID)
+        {
+            m_defInfo[i].controlIDText = strDefText;
+            break;
+        }
+}
 
 //-----------------------------------------------------------------------------
 // Name : UpdateControlDefText()
@@ -1169,7 +1177,7 @@ void DialogUI::ClearFocus()
 // Name : SaveDilaogToFile
 // Desc : Saves the dialog and all of his contorls to file
 //-----------------------------------------------------------------------------
-bool DialogUI::SaveDilaogToFile(std::string&& FileName, GLulong curControlID)
+bool DialogUI::SaveDilaogToFile(const std::string& FileName, GLulong curControlID)
 {
     std::ofstream saveFile,defFile;
     std::string defFileName = FileName;
@@ -1211,7 +1219,7 @@ bool DialogUI::SaveDilaogToFile(std::string&& FileName, GLulong curControlID)
 // Name : LoadDialogFromFile
 // Desc : loads the dialog and all of his controls from file
 //-----------------------------------------------------------------------------
-GLulong DialogUI::LoadDialogFromFile(std::string&& FileName, Timer* timer)
+GLulong DialogUI::LoadDialogFromFile(const std::string& FileName, Timer* timer)
 {
     return 0;
 //    std::ifstream inputFile;
