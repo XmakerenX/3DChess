@@ -1033,7 +1033,7 @@ int GameWin::BeginGame()
                         m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
                     lastLeftClickTime = curTime;
 
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                    //m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
                     //m_dialog.handleMouseEvent( MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), ModifierKeysStates);
 
 //                    std::cout <<"loop:\n";
