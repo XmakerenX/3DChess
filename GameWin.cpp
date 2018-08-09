@@ -7,59 +7,13 @@
 #include <X11/Xatom.h>
 #include "gameInput.h"
 
-/* Helper function to convert GLSL types to storage sizes */
-size_t TypeSize(GLenum type)
-{
-    size_t size;
-
-    #define CASE(Enum, Count, Type) \
-    case Enum: size = Count * sizeof(Type); break
-    switch (type)
-    {
-    CASE(GL_FLOAT,              1,  GLfloat);
-    CASE(GL_FLOAT_VEC2,         2,  GLfloat);
-    CASE(GL_FLOAT_VEC3,         3,  GLfloat);
-    CASE(GL_FLOAT_VEC4,         4,  GLfloat);
-    CASE(GL_INT,                1,  GLint);
-    CASE(GL_INT_VEC2,           2,  GLint);
-    CASE(GL_INT_VEC3,           3,  GLint);
-    CASE(GL_INT_VEC4,           4,  GLint);
-    CASE(GL_UNSIGNED_INT,       1,  GLuint);
-    CASE(GL_UNSIGNED_INT_VEC2,  2,  GLuint);
-    CASE(GL_UNSIGNED_INT_VEC3,  3,  GLuint);
-    CASE(GL_UNSIGNED_INT_VEC4,  4,  GLuint);
-    CASE(GL_BOOL,               1,  GLboolean);
-    CASE(GL_BOOL_VEC2,          2,  GLboolean);
-    CASE(GL_BOOL_VEC3,          3,  GLboolean);
-    CASE(GL_BOOL_VEC4,          4,  GLboolean);
-    CASE(GL_FLOAT_MAT2,         4,  GLfloat);
-    CASE(GL_FLOAT_MAT2x3,       6,  GLfloat);
-    CASE(GL_FLOAT_MAT2x4,       8,  GLfloat);
-    CASE(GL_FLOAT_MAT3,         9,  GLfloat);
-    CASE(GL_FLOAT_MAT3x2,       6,  GLfloat);
-    CASE(GL_FLOAT_MAT3x4,       12, GLfloat);
-    CASE(GL_FLOAT_MAT4,         16, GLfloat);
-    CASE(GL_FLOAT_MAT4x2,       8,  GLfloat);
-    CASE(GL_FLOAT_MAT4x3,       12, GLfloat);
-    #undef CASE
-
-    default:
-        std::cerr << "Unknown type:" << type << "\n";
-        exit(EXIT_FAILURE);
-    break;
-    }
-
-    return size;
-}
-
-
 bool GameWin::ctxErrorOccurred = false;
-Display * GameWin::clipboardDisplay = nullptr;
+Display * GameWin::s_clipboardDisplay = nullptr;
 Atom GameWin::s_utf8 = None ;
 Atom GameWin::s_targets = None;
 Atom GameWin::s_selection = None;
-std::future<void> GameWin::clipboardSender;
-Window GameWin::clipboardWindow = 0;
+std::future<void> GameWin::s_clipboardSender;
+Window GameWin::s_clipboardWindow = 0;
 std::string GameWin::s_clipboardString;
 const double GameWin::s_doubleClickTime = 0.5;
 
@@ -85,6 +39,7 @@ GameWin::GameWin()
 
     lastLeftClickTime = 0;
     lastRightClickTime = 0;
+    m_scene = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -108,34 +63,31 @@ bool GameWin::initWindow()
     }
 
 
-    clipboardDisplay = XOpenDisplay(nullptr);
-    if (!clipboardDisplay)
+    if ( s_clipboardDisplay == nullptr)
     {
-            std::cout << "Failed to open X display for clipboard\n";
-            return false;
-    }
+        s_clipboardDisplay = XOpenDisplay(nullptr);
+        if (!s_clipboardDisplay )
+        {
+                std::cout << "Failed to open X display for clipboard\n";
+                return false;
+        }
 
-    // get needed atoms for the clipboard operations
-    s_selection = XInternAtom(clipboardDisplay, "CLIPBOARD", False);
-    s_utf8 = XInternAtom(clipboardDisplay, "UTF8_STRING", False);
-    s_targets = XInternAtom(clipboardDisplay, "TARGETS", False);
+        // get needed atoms for the clipboard operations
+        s_selection = XInternAtom( s_clipboardDisplay, "CLIPBOARD", False);
+        s_utf8 = XInternAtom( s_clipboardDisplay, "UTF8_STRING", False);
+        s_targets = XInternAtom( s_clipboardDisplay, "TARGETS", False);
+    }
     
     return true;
 }
 
 //-----------------------------------------------------------------------------
-// Name : initOpenGL ()
+// Name : getBestFBConfig ()
 //-----------------------------------------------------------------------------
-bool GameWin::initOpenGL(int width, int height)
+GLXFBConfig GameWin::getBestFBConfig()
 {
-    int err;
-    std::cout << "InitOpenGL started\n";
-
-    //------------------------------------
-    // Window and OpenGL context creation
-    //------------------------------------
     // Get a matching FB config
-  /*static*/ int visual_attribs[] =
+    int visual_attribs[] =
     {
       GLX_X_RENDERABLE    , True,
       GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
@@ -159,21 +111,20 @@ bool GameWin::initOpenGL(int width, int height)
         std::cout << "No X display! but it did open it....\n";
     
     // FBConfigs were added in GLX version 1.3.
-    if ( !glXQueryVersion( m_display, &glx_major, &glx_minor ) ||
+    if ( !glXQueryVersion(m_display, &glx_major, &glx_minor) ||
         ( ( glx_major == 1 ) && ( glx_minor < 3 ) ) || ( glx_major < 1 ) )
     {
         std::cout << "Invalid GLX Version\n";
-        return false;
+        return nullptr;
     }
        
     std::cout << "Getting matching framebuffer configs\n"; 
-  
     int fbcount;
     GLXFBConfig* fbc = glXChooseFBConfig(m_display, DefaultScreen(m_display), visual_attribs, &fbcount);
     if (!fbc)
     {
         std::cout << "Failed to retrieve a framebuffer config\n";
-        return false;
+        return nullptr;
     }
     std::cout << "Found " << fbcount << " matching FB configs.\n";
     
@@ -204,13 +155,23 @@ bool GameWin::initOpenGL(int width, int height)
     }
     
     GLXFBConfig bestFbc = fbc[ best_fbc ];
-
     // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
     XFree( fbc );
-
+    return bestFbc;
+}
+    
+//-----------------------------------------------------------------------------
+// Name : createWindow ()
+//-----------------------------------------------------------------------------
+bool GameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
+{
+    if (!bestFbc)
+        return false;
+    
     // Get a visual
     XVisualInfo *vi = glXGetVisualFromFBConfig( m_display, bestFbc );
     std::cout << "Chosen visual ID = 0x" << std::hex << vi->visualid << "\n";
+    std::cout << std::dec;
 
     std::cout << "Creating colormap\n";
     XSetWindowAttributes swa;
@@ -247,6 +208,14 @@ bool GameWin::initOpenGL(int width, int height)
     std::cout << "Mapping window\n";
     XMapWindow( m_display, m_win );
     
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+// Name : createOpenGLContext ()
+//-----------------------------------------------------------------------------
+bool GameWin::createOpenGLContext(GLXFBConfig bestFbc)
+{
     // Get the default screen's GLX extension list
     const char *glxExts = glXQueryExtensionsString( m_display,
                                                   DefaultScreen( m_display ) );
@@ -256,7 +225,7 @@ bool GameWin::initOpenGL(int width, int height)
     glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
     glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
     
-    //GLXContext ctx = 0;
+    GLXContext ctx = 0;
 
     // Install an X error handler so the application won't exit if GL 3.0
     // context allocation fails.
@@ -324,6 +293,82 @@ bool GameWin::initOpenGL(int width, int height)
     std::cout << "Making context current\n";
     glXMakeCurrent( m_display, m_win, ctx );
     
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+// Name : initGUI ()
+//-----------------------------------------------------------------------------
+void GameWin::initGUI()
+{
+//     m_dialog.init(300,300, 18, "Caption!", "", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), m_asset);
+//     m_dialog.setLocation(50, 100);
+//     m_dialog.initDefControlElements(m_asset);
+//     //m_dialog.initWoodControlElements(m_asset);
+//     ButtonUI* pButton;
+//     m_dialog.addButton(1, "button text", 20,20, 200, 25, 0, &pButton);
+//     pButton->setEnabled(false);
+//     m_dialog.addButton(2, "enabled button", 20, 60, 200, 25, 0);
+//     m_dialog.addCheckBox(3, 100,100, 50, 50, 0);
+//     m_dialog.addRadioButton(4, 30, 150, 25,25,0,1);
+//     m_dialog.addRadioButton(5, 90, 150, 25,25,0,1);
+//     ComboBoxUI* pCombo;
+//     //m_dialog.addComboBox(6, "Box", 20, 200, 200, 40, 0, &pCombo);
+//     m_dialog.addComboBox(6, "Box", 20, 200, 300, 60, 0, &pCombo);
+//     pCombo->AddItem("Sunday", 1);
+//     pCombo->AddItem("Monday", 2);
+//     pCombo->AddItem("Tuesday", 3);
+//     pCombo->AddItem("Wednesday", 4);
+//     pCombo->AddItem("Thursday", 5);
+//     pCombo->AddItem("Friday", 6);
+//     pCombo->AddItem("Saturday", 7);
+// 
+//     ListBoxUI<int>* pListbox;
+//     m_dialog.addListBox(7, 350,200, 200,100, true, &pListbox);
+//     pListbox->AddItem("Sunday", 1);
+//     pListbox->AddItem("Monday", 2);
+//     pListbox->AddItem("Tuesday", 3);
+//     pListbox->AddItem("Wednesday", 4);
+//     pListbox->AddItem("Thursday", 5);
+//     pListbox->AddItem("Friday", 6);
+//     pListbox->AddItem("Saturday", 7);
+// 
+//     m_dialog.addSlider(8, 0, 0, 200, 40, 0, 100, 50);
+// 
+//     m_dialog.addEditbox(9, "Test TgTy",180, 100, 100, 35, nullptr );
+// 
+//     //m_dialog.addButton(10, "Center me", 20, 300, 400, 141, 0);
+// 
+//     m_dialog.addEditbox(11, "Test TgTy",420, 300, 400, 100, nullptr );
+}
+
+//-----------------------------------------------------------------------------
+// Name : setRenderStates ()
+//-----------------------------------------------------------------------------
+void GameWin::setRenderStates()
+{
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+    
+//-----------------------------------------------------------------------------
+// Name : initOpenGL ()
+//-----------------------------------------------------------------------------
+bool GameWin::initOpenGL(int width, int height)
+{
+    int err;
+    std::cout << "InitOpenGL started\n";
+
+    GLXFBConfig bestFbc = getBestFBConfig();
+    if (!createWindow(width, height, bestFbc))
+        return false; 
+        
+    if(!createOpenGLContext(bestFbc))
+        return false;
+    
     // register interest in the delete window message
     wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(m_display, m_win, &wmDeleteMessage, 1);
@@ -344,123 +389,53 @@ bool GameWin::initOpenGL(int width, int height)
     //------------------------------------
     // Render states
     //------------------------------------
-    glEnable(GL_DEPTH_TEST);
+    setRenderStates();
     //glEnable(GL_NORMALIZE);
 
     //------------------------------------
     // buffers creation
     //------------------------------------
-    // restore cout to print numbers in decimal base
-    std::cout<<std::dec;
-
     glBindVertexArray(0);
 
     //------------------------------------
     // Shader loading
     //------------------------------------
     // complie shaders
-    textShader = new Shader("text.vs", "text.frag");
-    textureShader = new Shader("texture.vs", "texture.frag");
-    spriteShader = new Shader("sprite.vs", "sprite.frag");
-    spriteTextShader = new Shader("spriteText.vs", "spriteText.frag");
-    //projShader = new Shader("shader2.vs", "shader2.frag");
+    //textShader = new Shader("text.vs", "text.frag");
+    //textureShader = new Shader("texture.vs", "texture.frag");
+    spriteShader = m_asset.getShader("sprite");
+    //spriteShader = new Shader("sprite.vs", "sprite.frag");
+    spriteTextShader = m_asset.getShader("spriteText");
+    //spriteTextShader = new Shader("spriteText.vs", "spriteText.frag");
 
     //------------------------------------
     // Init Scene
     //------------------------------------
-    m_scene.InitScene();
-    m_scene.InitCamera(width, height);
-    selectedObj = &m_scene.GetObject(1);
-
+    if (m_scene)
+    {
+        m_scene->InitScene();
+        m_scene->InitCamera(width, height);
+    }
+    //selectedObj = &m_scene->GetObject(1);
+    
     // init our font
     font_ = m_asset.getFont("NotoMono", 40);
-    //font_.init(40, height, (int)m_hDpi, (int)m_vDpi);
     // make sure the viewport is updated
     reshape(width,height);
 
+    m_sprites[0].Init();
+    m_sprites[1].Init();
+    m_topSprites[0].Init();
+    m_topSprites[1].Init();
 
-    m_sprite.Init();
-    m_textSprite.Init();
-
-    //------------------------------------
-    // Init Dialog
-    //------------------------------------
-    //GLuint buttonTexture = m_asset.getTexture("woodGUI2.png");
-    m_dialog.init(300,300, 18, "Caption!", "", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), m_asset);
-    m_dialog.setLocation(50, 100);
-    m_dialog.initDefControlElements(m_asset);
-    //m_dialog.initWoodControlElements(m_asset);
-    //m_dialog.initDefControlElements(m_asset);
-    ButtonUI* pButton;
-    m_dialog.addButton(1, "button text", 20,20, 200, 25, 0, &pButton);
-    //std::vector<ELEMENT_GFX> buttonGFX;
-    //buttonGFX.emplace_back(buttonTexture, Rect(0, 0, 84, 34));
-    //buttonGFX.emplace_back(buttonTexture, Rect(0, 34, 84, 68));
-    //pButton->setControlGFX(buttonGFX);
-    pButton->setEnabled(false);
-    m_dialog.addButton(2, "enabled button", 20, 60, 200, 25, 0);
-    m_dialog.addCheckBox(3, 100,100, 50, 50, 0);
-    m_dialog.addRadioButton(4, 30, 150, 25,25,0,1);
-    m_dialog.addRadioButton(5, 90, 150, 25,25,0,1);
-    ComboBoxUI* pCombo;
-    //m_dialog.addComboBox(6, "Box", 20, 200, 200, 40, 0, &pCombo);
-    m_dialog.addComboBox(6, "Box", 20, 200, 300, 60, 0, &pCombo);
-    pCombo->AddItem("Sunday", 1);
-    pCombo->AddItem("Monday", 2);
-    pCombo->AddItem("Tuesday", 3);
-    pCombo->AddItem("Wednesday", 4);
-    pCombo->AddItem("Thursday", 5);
-    pCombo->AddItem("Friday", 6);
-    pCombo->AddItem("Saturday", 7);
-
-    ListBoxUI<int>* pListbox;
-    m_dialog.addListBox(7, 350,200, 200,100, true, &pListbox);
-    pListbox->AddItem("Sunday", 1);
-    pListbox->AddItem("Monday", 2);
-    pListbox->AddItem("Tuesday", 3);
-    pListbox->AddItem("Wednesday", 4);
-    pListbox->AddItem("Thursday", 5);
-    pListbox->AddItem("Friday", 6);
-    pListbox->AddItem("Saturday", 7);
-
-    m_dialog.addSlider(8, 0, 0, 200, 40, 0, 100, 50);
-
-    m_dialog.addEditbox(9, "Test TgTy",180, 100, 100, 35, nullptr );
-
-    //m_dialog.addButton(10, "Center me", 20, 300, 400, 141, 0);
-
-    m_dialog.addEditbox(11, "Test TgTy",420, 300, 400, 100, nullptr );
-
+    initGUI();
+    
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
         std::cout <<"Init: ERROR bitches\n";
         std::cout << gluErrorString(err);
     }
-
-    //----------------------------------
-    // usesless crap a head!
-    //----------------------------------
-    // Configure VAO/VBO for texture quads
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    // set indices for quad rendering
-    // first triangle
-    indices[0] = 0;
-    indices[1] = 1;
-    indices[2] = 2;
-    // secound triangle
-    indices[3] = 0;
-    indices[4] = 3;
-    indices[5] = 2;
 
     return true;
 }
@@ -527,7 +502,7 @@ void GameWin::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bit
 
     if (type != None)
     {
-        XChangeProperty(clipboardDisplay, sev->requestor, sev->property, type, bitsPerDataElement, PropModeReplace,
+        XChangeProperty( s_clipboardDisplay, sev->requestor, sev->property, type, bitsPerDataElement, PropModeReplace,
                         data, dataLength);
         ssev.property = sev->property;
     }
@@ -536,7 +511,7 @@ void GameWin::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bit
         // can't convert clipboard data to client desired type
         ssev.property = None;
 
-    XSendEvent(clipboardDisplay, sev->requestor, False, NoEventMask, (XEvent *)&ssev);
+    XSendEvent( s_clipboardDisplay, sev->requestor, False, NoEventMask, (XEvent *)&ssev);
 }
 
 //-----------------------------------------------------------------------------
@@ -549,7 +524,7 @@ void GameWin::sendClipboardLoop(Window clipboardWindow)
         XEvent ev;
         XSelectionRequestEvent *sev;
 
-        XNextEvent(clipboardDisplay, &ev);
+        XNextEvent( s_clipboardDisplay, &ev);
         std::cout <<"got event :" << ev.type << "\n";
         switch (ev.type)
         {
@@ -557,7 +532,7 @@ void GameWin::sendClipboardLoop(Window clipboardWindow)
             {
                     std::cout << "Lost selection ownership\n";
                     // close our temp window
-                    XDestroyWindow(clipboardDisplay, clipboardWindow);
+                    XDestroyWindow( s_clipboardDisplay, clipboardWindow);
                     clipboardWindow = 0;
                     return;
             }break;
@@ -595,9 +570,9 @@ void GameWin::copyToClipboard(const std::string &text)
 
     std::cout << "copy to clipboard\n";
     // check if the thread is still running
-    if (clipboardSender.valid())
+    if ( s_clipboardSender.valid())
     {
-        std::future_status status = clipboardSender.wait_for(std::chrono::microseconds(0));
+        std::future_status status = s_clipboardSender.wait_for(std::chrono::microseconds(0));
         if (status != std::future_status::ready)
         {
             return;
@@ -606,15 +581,15 @@ void GameWin::copyToClipboard(const std::string &text)
 
     std::cout << "finishing copying\n";
     // either first time or clipthread is not running
-    Window root = RootWindow(clipboardDisplay, DefaultScreen(clipboardDisplay));
+    Window root = RootWindow( s_clipboardDisplay, DefaultScreen( s_clipboardDisplay ));
 
     // We need a window to receive messages from other clients.
-    clipboardWindow = XCreateSimpleWindow(clipboardDisplay, root, -10, -10, 1, 1, 0, 0, 0);
-    XSelectInput(clipboardDisplay, clipboardWindow, SelectionClear | SelectionRequest);
+    s_clipboardWindow = XCreateSimpleWindow( s_clipboardDisplay, root, -10, -10, 1, 1, 0, 0, 0);
+    XSelectInput( s_clipboardDisplay, s_clipboardWindow, SelectionClear | SelectionRequest);
     // Claim ownership of the clipboard.
-    XSetSelectionOwner(clipboardDisplay, s_selection, clipboardWindow, CurrentTime);
+    XSetSelectionOwner( s_clipboardDisplay, s_selection, s_clipboardWindow, CurrentTime);
     // Create a thread to send the clipboard while we are the owners of it
-    clipboardSender = std::async(std::launch::async, GameWin::sendClipboardLoop, clipboardWindow);
+    s_clipboardSender = std::async(std::launch::async, GameWin::sendClipboardLoop, s_clipboardWindow );
 
 }
 
@@ -643,7 +618,7 @@ std::string GameWin::PasteClipboard()
     }
 
     // we are the owner of the clipboard return the saved string
-    if (owner == clipboardWindow)
+    if (owner == s_clipboardWindow )
     {
         XCloseDisplay(pasteDisplay);
         return s_clipboardString;
@@ -738,106 +713,53 @@ void GameWin::drawing()
 
     ProcessInput(timer.getTimeElapsed());
 
-    glEnable(GL_CULL_FACE);
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    //TODO: Move this  to some where sane
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    m_scene.Darwing();
+    if(m_scene)
+        m_scene->Darwing();
 	
     // Render debug text to the screen
-    textShader->Use();
+    //textShader->Use();
 
     std::stringstream ss;
     ss << timer.getFPS();
     ss << " ";
-    //glm::vec3 obj2Pos = m_scene.GetObject(1).GetPosition();
-    glm::vec3 obj2Pos = selectedObj->GetPosition();
-    ss << obj2Pos.x;
-    ss << " ";
-    ss << obj2Pos.y;
-    ss << " ";
-    ss << obj2Pos.z;
-    ss << " ";
-    ss << faceCount;
-    ss << " ";
-    ss << meshIndex;
-    ss << " ";
-    if (hit)
-        ss << "Hit!";
-    else
-        ss << "Miss :(";
+//     //glm::vec3 obj2Pos = m_scene.GetObject(1).GetPosition();
+//     glm::vec3 obj2Pos = selectedObj->GetPosition();
+//     ss << obj2Pos.x;
+//     ss << " ";
+//     ss << obj2Pos.y;
+//     ss << " ";
+//     ss << obj2Pos.z;
+//     ss << " ";
+//     ss << faceCount;
+//     ss << " ";
+//     ss << meshIndex;
+//     ss << " ";
+//     if (hit)
+//         ss << "Hit!";
+//     else
+//         ss << "Miss :(";
 
-    //font_.renderText(textShader, ss.str(),0.0f, 0.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    //font_.renderTextBatched(textShader, "60 18.5 -0 5 0 -1 -1 Miss :(", 0, -7,  1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    //font_.renderTextBatched(textShader, "60 18.5 -0 5 0 -1 -1 Miss :(", 0, 100,  1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    renderFPS(m_sprites[1], *font_);
 
     //int textureName = m_asset.getTexture("gold.png");
     int textureName = m_asset.getTexture("yor.bmp");
 
     glDisable(GL_DEPTH_TEST);
 
-//    textShader->Use();
+    renderGUI();
 
-//    glUniform3f(glGetUniformLocation(textShader->Program, "textColor"), 1.0f, 1.0f, 1.0f);
-//    glBindVertexArray(VAO);
-//    // Update VBO for each character
-//    GLfloat vertices[4][4] = {
-//        { 0,            0 + 200,   0.0, 1.0 },
-//        { 0,            0,       0.0, 0.0 },
-//        { 0 + 200, 0,       1.0, 0.0 },
-//        { 0 + 200, 0 + 200,   1.0, 1.0 }
-//    };
-
-//    // Render glyph texture over quad
-//    glBindTexture(GL_TEXTURE_2D, font_.renderFontAtlas(m_sprite));
-//    // Update content of VBO memory
-//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//    // Be sure to use glBufferSubData and not glBufferData
-//    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-//    // Render quad
-//    glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, indices);
-//    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-
-
-
-    //mkFont* ff = &m_asset.getFont("Time New Roman bold2", 12);
-    //ff->renderFontAtlas(m_sprite, Rect(0,0,256,128));
-    //mkFont* ff2 = &m_asset.getFont("Liberation Serif", 12);
-    //ff2->renderFontAtlas(m_sprite, Rect(0,128,128,256));
-   // mkFont* ff3 = &m_asset.getFont("Times New Roman:bold", 12);
-    //ff3->renderFontAtlas(m_sprite, Rect(0,128,256,384));
-    //m_sprite.AddTexturedQuad(Rect(0,0,1024,1024), textureName, Rect(0,0,0,0));
-    //std::cout << "time !!" << timer.getTimeElapsed() << "\n";
-    m_dialog.OnRender(m_sprite, m_textSprite, m_asset, timer.getCurrentTime());
-    //font_->renderFontAtlas(m_sprite);
-
-    //font_->renderText(textShader, "abcdefghijklmnopqrstuvwxyz", 0.0f, 20.0f, 1.0f, glm::vec3(0.0f,1.0f,0.0f));
-    //font_->renderTextAtlas(m_textSprite, "abcdefghijklmnopqrstuvwxyz", 0.0f, 20.0f, 1.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    //Rect rc(50,200, 646, 253);
-    //Rect rc(50,200, 630, 253);
-    Rect rc(50,300, 900, 553);
-    //font_->renderToRect(m_textSprite, "stuff to  rint to screey", rc, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), mkFont::TextFormat::Center);
-    //font_->renderToRect(m_textSprite, "stuffgjpqi to  rint to screey", rc, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), mkFont::TextFormat::Center);
-    Point textSize = font_->calcTextRect("[]a");
-    font_->renderToRect(m_textSprite, "[]a", Rect(0,50, 0 + textSize.x, 50 + textSize.y), WHITE_COLOR);
-    m_sprite.AddTintedQuad(Rect(0,50,0 + textSize.x, 50 + textSize.y), glm::vec4(1.0f, 0.0, 0.0, 1.0f));
-    //m_sprite.AddTintedQuad(rc, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-    m_sprite.Render(spriteShader);
-    m_sprite.Clear();
-    m_textSprite.Render(spriteTextShader);
-    m_textSprite.Clear();
-    
+    m_sprites[0].Render(spriteShader);
+    m_sprites[0].Clear();
+    m_sprites[1].Render(spriteTextShader);
+    m_sprites[1].Clear();
+    m_topSprites[0].Render(spriteShader);
+    m_topSprites[0].Clear();
+    m_topSprites[1].Render(spriteTextShader);
+    m_topSprites[1].Clear();
+        
     glEnable(GL_DEPTH_TEST);
 
     err = glGetError();
@@ -851,26 +773,45 @@ void GameWin::drawing()
 }
 
 //-----------------------------------------------------------------------------
+// Name : renderGUI ()
+//-----------------------------------------------------------------------------
+void GameWin::renderGUI()
+{
+//     m_dialog.OnRender(m_sprite, m_textSprite, m_asset, timer.getCurrentTime());;
+//     Point textSize = font_->calcTextRect("[]a");
+//     font_->renderToRect(m_textSprite, "[]a", Rect(0,50, 0 + textSize.x, 50 + textSize.y), WHITE_COLOR);
+//     m_sprite.AddTintedQuad(Rect(0,50,0 + textSize.x, 50 + textSize.y), glm::vec4(1.0f, 0.0, 0.0, 1.0f));
+}
+
+//-----------------------------------------------------------------------------
+// Name : renderFPS ()
+//-----------------------------------------------------------------------------
+void GameWin::renderFPS(Sprite& textSprite, mkFont& font)
+{
+    font.renderToRect(textSprite, std::to_string(timer.getFPS()), Rect(0,0, 65,60), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+}
+
+//-----------------------------------------------------------------------------
 // Name : reshape ()
 //-----------------------------------------------------------------------------
 void GameWin::reshape(int width, int height)
 {
-    float left,right,bottom,top;
-    float AR;
-	
     if(m_winWidth != width || m_winHeight != height)
     {
         std::cout <<"reshape called\n";
         m_winWidth = width;
         m_winHeight = height;
 
-        height_ = height;
-        m_scene.reshape(m_winWidth,m_winHeight);
+        if(m_scene)
+            m_scene->reshape(m_winWidth,m_winHeight);
+        else
+            //m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 1000.0f);
+            glViewport(0.0f,0.0f, width, height);
 
-        textShader->Use();
-        glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
-        textureShader->Use();
-        glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
+//         textShader->Use();
+//         glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
+//         textureShader->Use();
+//         glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
         spriteShader->Use();
         glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
         spriteTextShader->Use();
@@ -888,31 +829,17 @@ void GameWin::ProcessInput(double timeDelta)
     float X = 0.0f,Y = 0.0f;
     if (mouseDrag)
     {
-        int cursorX;
-        int cursorY;
-        //float X = 0.0f,Y = 0.0f;
-        bool ret;
-
         Point currentCursorPos = getCursorPos();
-//        Window root,child;
-//        int x,y;
-//        unsigned int maskRet;
-
-
-//        ret = XQueryPointer(m_display, m_win, &root, &child ,&x, &y,
-//                            &cursorX, &cursorY, &maskRet);
-
-        //std::cout <<"process input:\n";
-        //std::cout << "x = " << cursorX << " y = " << cursorY << "\n";
 
         X = (float)(currentCursorPos.x - oldCursorLoc.x) / 3.0f;
         Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
 
         //setCursorPos(Point(oldCursorLoc));
-        //XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, oldCursorLoc.x, oldCursorLoc.y);
         XFlush(m_display);
     }
-    m_scene.processInput(timeDelta, keysStatus, X, Y);
+    
+    if(m_scene)
+        m_scene->processInput(timeDelta, keysStatus, X, Y);
 }
 
 //-----------------------------------------------------------------------------
@@ -967,14 +894,19 @@ int GameWin::BeginGame()
             }break;
 
             case KeyPress:
+            case KeyRelease:
             {
                 char buf[128];
                 KeySym key;
 
                 if (event.xkey.keycode - 8 >= 0)
-                    keysStatus[event.xkey.keycode - 8] = true;
+                    keysStatus[event.xkey.keycode - 8] = event.type == KeyPress;
 
-                std::cout << "key pressed\n";
+                if(event.type == KeyPress)
+                    std::cout << "key pressed\n";
+                else
+                    std::cout << "key released\n";
+                
                 std::cout << event.xkey.keycode << "\n";
                 XLookupString(&event.xkey, buf, 128, &key, nullptr);
                 std::cout << "KeySym: " << key << " " << "char: " <<  buf << "\n";
@@ -987,49 +919,18 @@ int GameWin::BeginGame()
                         GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
                         std::cout << "Virtual key was " << (int)vKey << "\n";
 
-                        m_dialog.handleVirtualKeyEvent(vKey, true, modifierKeys);
+                        sendVirtualKeyEvent(vKey, event.type == KeyPress, modifierKeys);
                     }
                 }
                 else
                 {
-                    m_dialog.handleKeyEvent(buf[0], true);
+                    sendKeyEvent(buf[0], event.type == KeyPress);
                 }
             }break;
-
-            case KeyRelease:
-            {
-                char buf[128];
-                KeySym key;
-
-                if (event.xkey.keycode - 8 >= 0)
-                    keysStatus[event.xkey.keycode - 8] = false;
-
-                std::cout << "key released\n";
-                std::cout << event.xkey.keycode << "\n";
-
-                XLookupString(&event.xkey, buf, 128, &key, nullptr);
-                if (buf[0] == '\0')
-                {
-                    if (key > 0xff && key <= 0xffff)
-                    {
-                        int temp = key - 0xff00;
-                        GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
-                        std::cout << "Virtual key was " << (int)vKey << "\n";
-
-                        m_dialog.handleVirtualKeyEvent(vKey, false, modifierKeys);
-                    }
-                }
-                else
-                {
-                    m_dialog.handleKeyEvent(buf[0], false);
-                }
-            }break;
-
+            
             case MotionNotify:
             {
-                m_dialog.handleMouseEvent( MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
-                //std::cout << "mouse moved\n";
-                //std::cout << "x: " << event.xmotion.x << " y:" << event.xmotion.y << "\n";
+                sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
             }break;
 
             case ButtonPress:
@@ -1037,57 +938,32 @@ int GameWin::BeginGame()
                 if (event.xbutton.button == Button1)
                 {
                     std::cout << "left button pressed\n";
-                    //std::cout << "Time : "<< event.xbutton.time << "\n";
                     oldCursorLoc.x = event.xbutton.x;
                     oldCursorLoc.y = event.xbutton.y;
-                    //mouseDrag = true;
-                    //int ret = XDefineCursor(m_display, m_win, emptyCursorPixmap);
-                    //ret++;
-
-//                    ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
-//                                           keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
-//                                           keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
 
                     double curTime = timer.getCurrentTime();
                     if (curTime - lastLeftClickTime < s_doubleClickTime)
                     {
                         std::cout << "left button was double clicked\n";
-                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
                     }
                     else
-                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
                     lastLeftClickTime = curTime;
-
-                    //m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
-                    //m_dialog.handleMouseEvent( MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), ModifierKeysStates);
-
-//                    std::cout <<"loop:\n";
-//                    std::cout << "x = " << event.xbutton.x << " y = " << event.xbutton.y << "\n";
                 }
 
                 if (event.xbutton.button == Button3)
                 {
                     std::cout << "right button pressed\n";
-                    Point cursorPoint;
-                    cursorPoint.x = event.xbutton.x;
-                    cursorPoint.y = event.xbutton.y;
-                    Object* pObj = m_scene.PickObject(cursorPoint,faceCount, meshIndex);
-                    if (pObj != nullptr)
-                    {
-                        selectedObj = pObj;
-                        hit = 1;
-                    }
-                    else
-                        hit = 0;
 
                     double curTime = timer.getCurrentTime();
                     if (curTime - lastRightClickTime < s_doubleClickTime)
                     {
                         std::cout << "right button was double clicked\n";
-                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
                     }
                     else
-                        m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
                     lastRightClickTime = curTime;
 
                 }
@@ -1095,13 +971,13 @@ int GameWin::BeginGame()
                 if (event.xbutton.button == Button4)
                 {
                     std::cout << "mouse scroll up\n";
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button5)
                 {
                     std::cout << "mouse scroll down\n";
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1), modifierKeys);
                 }
 
             }break;
@@ -1113,12 +989,12 @@ int GameWin::BeginGame()
                     std::cout << "left button released\n";
                     mouseDrag = false;
                     //XUndefineCursor(m_display, m_win);
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button3)
                 {
-                    m_dialog.handleMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
             }break;
@@ -1149,24 +1025,57 @@ int GameWin::BeginGame()
 }
 
 //-----------------------------------------------------------------------------
+// Name : sendKeyEvent ()
+//-----------------------------------------------------------------------------
+bool GameWin::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+{
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : sendKeyEvent ()
+//-----------------------------------------------------------------------------
+void GameWin::sendKeyEvent(unsigned char key, bool down)
+{
+    //m_dialog.handleKeyEvent(key, down);
+}
+
+//-----------------------------------------------------------------------------
+// Name : sendVirtualKeyEvent ()
+//-----------------------------------------------------------------------------
+void GameWin::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
+{
+    //m_dialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
+}
+
+//-----------------------------------------------------------------------------
+// Name : sendMouseEvent ()
+//-----------------------------------------------------------------------------
+void GameWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+{
+    handleMouseEvent(event, modifierStates);
+    if (m_scene != nullptr)
+        m_scene->handleMouseEvent(event, modifierStates);
+    //m_dialog.handleMouseEvent(event, modifierStates);
+}
+
+//-----------------------------------------------------------------------------
 // Name : Shutdown ()
 //-----------------------------------------------------------------------------
 bool GameWin::Shutdown()
 {
     // send event to the clipboard window to make the clipboard thread to shutdown
-    if (clipboardWindow != 0)
+    if ( s_clipboardWindow != 0)
     {
         XSelectionClearEvent event;
         event.type = SelectionClear;
-        event.display = clipboardDisplay;
+        event.display = s_clipboardDisplay;
         event.time = CurrentTime;
         // fake that something took ownership of the clipboard
-        XSendEvent(m_display, clipboardWindow, False, NoEventMask, (XEvent *)&event);
+        XSendEvent(m_display, s_clipboardWindow, False, NoEventMask, (XEvent *)&event);
     }
+    
     // Properly de-allocate all resources once they've outlived their purpose
-    //delete meshShader;
-    delete textShader;
-
     glXMakeCurrent( m_display, 0, 0 );
     glXDestroyContext( m_display, ctx );
 
@@ -1174,7 +1083,8 @@ bool GameWin::Shutdown()
     XDestroyWindow( m_display, m_win );
     XFreeColormap( m_display, cmap );
     XCloseDisplay( m_display );
-    XCloseDisplay( clipboardDisplay );
-    
+    XCloseDisplay( s_clipboardDisplay );
+        
     return true;
+    
 }

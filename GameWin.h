@@ -37,8 +37,15 @@ public:
     
     bool initWindow     ();
     bool initOpenGL     (int width, int height);
+    GLXFBConfig getBestFBConfig();
+    bool createWindow(int width, int height ,GLXFBConfig bestFbc);
+    bool createOpenGLContext(GLXFBConfig bestFbc);
+        
+    void setRenderStates();
     
     void drawing        ();
+    
+    void renderFPS      (Sprite& textSprite, mkFont& font);
     void reshape        (int width, int height);
     
     void ProcessInput   (double timeDelta);
@@ -54,15 +61,24 @@ public:
     static void copyToClipboard(const std::string& text);
     static std::string PasteClipboard();
     
-private:
+protected:
     static void sendClipboardLoop(Window clipboardWindow);
     static void sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength);
+    
+    virtual void initGUI();
+    virtual void renderGUI();
+    virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
+    virtual void sendKeyEvent(unsigned char key, bool down);
+    virtual void sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates);
+    virtual void sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
+    
+    
 
     Display * m_display;
-    static Display * clipboardDisplay;
+    static Display * s_clipboardDisplay;
     static Atom s_utf8, s_targets, s_selection;
-    static std::future<void> clipboardSender;
-    static Window clipboardWindow;
+    static std::future<void> s_clipboardSender;
+    static Window s_clipboardWindow;
     static std::string s_clipboardString;
 
     static bool ctxErrorOccurred;
@@ -92,14 +108,11 @@ private:
     double lastLeftClickTime;
     double lastRightClickTime;
 
-    int height_;
     float m_hDpi;
     float m_vDpi;
 
-    Scene m_scene;
+    Scene* m_scene;
 
-    Shader* textShader;
-    Shader* textureShader;
     Shader* spriteShader;
     Shader* spriteTextShader;
 
@@ -109,15 +122,11 @@ private:
 
     AssetManager m_asset;
     mkFont* font_;
-    Sprite m_sprite;
-    Sprite m_textSprite;
-    DialogUI m_dialog;
-
-    //crap to delete
-    GLuint VAO;
-    GLuint VBO;
-    VertexIndex indices[6];
-
+    Sprite m_sprites[2];
+    //Sprite m_sprite;
+    //Sprite m_textSprite;
+    Sprite m_topSprites[2];
+    //DialogUI m_dialog;
 };
 
 #endif  //_GAMEWIN_H
