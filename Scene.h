@@ -7,6 +7,8 @@
 #include "FreeCam.h"
 #include "Object.h"
 #include "input.h"
+#include "mouseEventsGame.h"
+#include "gameInput.h"
 
 struct LIGHT_PREFS
 {
@@ -64,7 +66,8 @@ public:
     void SetAttribute(Attribute& attrib);
 
     void reshape(int width, int height);
-    void processInput(float timeDelta, bool keysStatus[], float X, float Y);
+    void processInput (double timeDelta, bool keysStatus[], float X, float Y);
+    virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
     Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
     Object& GetObject(int objIndex);

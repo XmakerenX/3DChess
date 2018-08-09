@@ -136,10 +136,9 @@ void Scene::Darwing()
     glm::mat4x4 projViewMat = m_camera.GetProjMatrix() * m_camera.GetViewMatrix();
     for (GLuint i = 0; i < attribVector.size(); i++)
     {
+        SetAttribute(attribVector[i]);
         for (Object obj : m_objects)
         {
-            SetAttribute(attribVector[i]);
-
             //obj.Draw(meshShader, i, projViewMat);
             obj.Draw(projectionLoc, matWorldLoc, matWorldInverseLoc, i, projViewMat);
         }
@@ -185,7 +184,7 @@ void Scene::reshape(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : processInput ()
 //-----------------------------------------------------------------------------
-void Scene::processInput(float timeDelta, bool keysStatus[], float X, float Y)
+void Scene::processInput(double timeDelta, bool keysStatus[], float X, float Y)
 {
     GLuint direction = 0;
 
@@ -266,6 +265,27 @@ void Scene::processInput(float timeDelta, bool keysStatus[], float X, float Y)
     if (X != 0.0f || Y != 0.0)
         if (X || Y)
             m_camera.Rotate(-Y, -X, 0.0f);
+}
+
+//-----------------------------------------------------------------------------
+// Name : handleMouseEvent ()
+//-----------------------------------------------------------------------------
+bool Scene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+{
+    switch(event.type)
+    {
+        case MouseEventType::RightButton:
+        {
+            int faceCount, meshIndex;
+            PickObject(event.cursorPos, faceCount, meshIndex);
+            return true;
+        }break;
+        
+        default:
+            return false;
+    }
+    
+    return false;
 }
 
 //-----------------------------------------------------------------------------
