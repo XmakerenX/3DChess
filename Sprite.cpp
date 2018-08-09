@@ -54,25 +54,11 @@ void StreamOfVertices::addQuad(const Rect& spriteRect, const Rect& texRect, cons
     spriteWidth = spriteRect.right - spriteRect.left;
     spriteHeight = spriteRect.bottom - spriteRect.top;
 
-    //startU = 0.5;
-    //widthU = 0.5;
     startV = 1 - startV;
 
     Point quadPos = Point(spriteRect.left, spriteRect.top);
 
     GLuint vIndex = vertices.size();
-
-    // creates the four vertices of our quad
-//    vertices.emplace_back(quadPos.x, quadPos.y, 0, tintColor,
-//                          startU, startV - heightV);
-//    vertices.emplace_back(quadPos.x + spriteWidth * scale.x, quadPos.y, 0,tintColor,
-//                          startU + widthU, startV - heightV);
-//    vertices.emplace_back(quadPos.x, quadPos.y + spriteHeight * scale.y, 0, tintColor,
-//                          startU, startV);
-//    vertices.emplace_back(quadPos.x + spriteWidth * scale.x,
-//                          quadPos.y + spriteHeight * scale.y, 0, tintColor,
-//                          startU + widthU, startV);
-
 
     vertices.emplace_back(quadPos.x, quadPos.y, 0, tintColor,
                           startU, startV);
@@ -83,15 +69,14 @@ void StreamOfVertices::addQuad(const Rect& spriteRect, const Rect& texRect, cons
     vertices.emplace_back(quadPos.x + spriteWidth * scale.x,
                           quadPos.y + spriteHeight * scale.y, 0, tintColor,
                           startU + widthU, startV - heightV);
-
-    // triangle 201
-//    indices.push_back(vIndex + 2); // #2 vertex  0---1 4---5
-//    indices.push_back(vIndex);     // #0 vertex  -   - -   -
-//    indices.push_back(vIndex + 1); // #1 vertex  2---3 6---7
-//    // triangle 213
-//    indices.push_back(vIndex + 2); // #2 vertex
-//    indices.push_back(vIndex + 1); // #1 vertex
-//    indices.push_back(vIndex + 3); // #3 vertex
+    
+    // exceeding MAX_QUADS is very bad and will cause weird graphicals bugs
+    // this check here to make sure it is clear when MAX_QUADS was exceeded
+    if (vertices.size() > Sprite::MAX_QUADS * 4)
+    {
+        std::cout << "ARRAY OUT OF BOUNDS\n";
+        std::cout << "Array size is " << vertices.size() << "\n";
+    }
 
     // triangle 201
     indices.push_back(vIndex); // #2 vertex  0---1 4---5

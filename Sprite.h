@@ -28,12 +28,6 @@ struct VertexSprite
     glm::vec2 uv;
 };
 
-//struct Quad
-//{
-//    VertexSprite vertices[4];
-//    GLuint indices[6];
-//};
-
 struct StreamOfVertices
 {
     StreamOfVertices(GLuint textureName);
@@ -47,19 +41,11 @@ struct StreamOfVertices
     std::vector<VertexIndex> indices;
 };
 
-//struct BufferBounds
-//{
-//    GLuint textureNmae;
-//    GLuint bufferStartVertex;
-//    GLuint bufferEndVertex;
-//    GLuint bufferStartIndex;
-//    GLuint bufferEndIndex;
-//};
-
 class Sprite
 {
 public:
     enum STREAMTYPE{BACKGROUND, REGULAR, HIGHLIGHT, TOP, STREAMTYPE_MAX};
+    static const GLuint MAX_QUADS = 20000;
 
     Sprite();
     ~Sprite();
@@ -75,7 +61,6 @@ public:
     bool Render(Shader *shader);
 
 private:
-    const GLuint MAX_QUADS = 200;
 
     GLuint m_vertexArrayObject;
     GLuint m_vertexBuffer;
