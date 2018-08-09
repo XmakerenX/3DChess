@@ -40,10 +40,10 @@ ButtonUI::~ButtonUI(void)
 // Name : Render ()
 // Desc : renders the button
 //-----------------------------------------------------------------------------
-void ButtonUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void ButtonUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     //no texture was given abort rendering
-    if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 && !m_bVisible)
+    if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 || !m_bVisible)
         return;
 
     Point dialogPos = calcPositionOffset();
@@ -63,10 +63,10 @@ void ButtonUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
             else
                 tintColor = glm::vec4(0.785f, 0.785f, 0.785f, 1.0f);
 
-    renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
 
     if (m_elementsFonts.size() > 0)
-        renderText(textSprite, m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
+        renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
 
 }
 
@@ -76,6 +76,9 @@ void ButtonUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 //-----------------------------------------------------------------------------
 bool ButtonUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
+    if(!m_bVisible || !m_bEnabled)
+        return false;
+    
     switch(event.type)
     {
     case MouseEventType::LeftButton:
@@ -100,8 +103,11 @@ bool ButtonUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
 // Name : handleKeyEvent ()
 // Desc : handles key events for this button
 //-----------------------------------------------------------------------------
-bool ButtonUI::handleKeyEvent(unsigned char key, bool down, const ModifierKeysStates &modifierStates)
+bool ButtonUI::handleKeyEvent(unsigned char key, bool down)
 {
+    if(!m_bVisible || !m_bEnabled)
+        return false;
+        
     if (key == ' ')
     {
         if (down)
@@ -126,7 +132,7 @@ bool ButtonUI::handleKeyEvent(unsigned char key, bool down, const ModifierKeysSt
 //-----------------------------------------------------------------------------
 // Name : Pressed ()
 //-----------------------------------------------------------------------------
-bool ButtonUI::Pressed (Point pt, const ModifierKeysStates &modifierStates, float timeStamp)
+bool ButtonUI::Pressed (Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     if ( ContainsPoint( pt ) )
     {

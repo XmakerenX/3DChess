@@ -10,7 +10,7 @@ public:
     CheckboxUI                  (std::istream& inputFile);
     virtual ~CheckboxUI         (void);
 
-    virtual void    Render              (Sprite &sprite, Sprite &textSprite, double timeStamp);
+    virtual void    Render              (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp);
 
     virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);

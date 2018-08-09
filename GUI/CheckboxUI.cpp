@@ -33,7 +33,7 @@ CheckboxUI::~CheckboxUI(void)
 //-----------------------------------------------------------------------------
 // Name : Render ()
 //-----------------------------------------------------------------------------
-void CheckboxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void CheckboxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     //no texture was given abort rendering
     if (m_elementsGFX.size() < 2 || m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 || !m_bVisible)
@@ -57,9 +57,9 @@ void CheckboxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
             else
                 tintColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    renderRect(sprite, rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
     if (m_bChecked)
-        renderRect(sprite,rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, tintColor, dialogPos);
+        renderRect(sprites[NORMAL],rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, tintColor, dialogPos);
 }
 
 //-----------------------------------------------------------------------------
@@ -73,6 +73,7 @@ bool CheckboxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
     switch (event.type)
     {
     case MouseEventType::LeftButton:
+    case MouseEventType::DoubleLeftButton:
     {
         if (event.down)
         {

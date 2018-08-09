@@ -26,23 +26,23 @@ public:
     virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual void    OnHotkey            ();
 
-    virtual bool	Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Released            (Point pt);
     virtual bool    Scrolled            (int nScrollAmount);
 
-    void			ConnectToSelectChg  (const signal_comboBox::slot_type& subscriber);
+    void            ConnectToSelectChg  (const signal_comboBox::slot_type& subscriber);
 
     //-------------------------------------------------------------------------
     //functions that handle control Rendering
     //-------------------------------------------------------------------------
-    virtual void    Render              (Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void    Render              (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp);
     virtual void    UpdateRects         ();
 
     virtual bool    CanHaveFocus        ();
     virtual void    OnFocusOut          ();
 
-    virtual bool	SaveToFile          (std::ostream& SaveFile);
-    void			CopyItemsFrom       (ComboBoxUI *sourceComboBox);
+    virtual bool    SaveToFile          (std::ostream& SaveFile);
+            void    CopyItemsFrom       (ComboBoxUI *sourceComboBox);
 
 
     virtual bool    ContainsPoint       (Point pt);
@@ -53,13 +53,13 @@ public:
     //-------------------------------------------------------------------------
     //functions that handle checkBox specific properties
     //-------------------------------------------------------------------------
-    bool            AddItem             (std::string strText, int pData);
+    bool            AddItem             (std::string strText, int data);
     void            RemoveItem          (GLuint index);
     void            RemoveAllItems      ();
     int             FindItem            (std::string strText, GLuint iStart = 0);
     bool            ContainsItem        (std::string strText, GLuint iStart = 0);
-    void    *   	GetItemData         (std::string strText);
-    void    *		GetItemData         (int nIndex);
+    void*           GetItemData         (std::string strText);
+    void*           GetItemData         (int nIndex);
 
     void            SetDropHeight       (GLuint nHeight);
 
@@ -68,7 +68,7 @@ public:
 
     int             GetSelectedIndex    () const;
 
-    int *GetSelectedData();
+    int*            GetSelectedData     ();
     Item<int> *     GetSelectedItem     ();
 
     GLuint          GetNumItems         ();

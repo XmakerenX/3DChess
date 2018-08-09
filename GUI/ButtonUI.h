@@ -15,11 +15,11 @@ public:
                     ButtonUI            (std::istream& inputFile);
     virtual         ~ButtonUI           (void);
 
-    virtual void	Render              (Sprite &sprite, Sprite& textSprite , double timeStamp);
+    virtual void    Render              (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp);
 
-    virtual bool    handleKeyEvent      (unsigned char key, bool down, const ModifierKeysStates& modifierStates);
+    virtual bool    handleKeyEvent      (unsigned char key, bool down);
     virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
-    virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, float timeStamp);
+    virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Released            (Point pt);
 
     virtual bool    CanHaveFocus        ();

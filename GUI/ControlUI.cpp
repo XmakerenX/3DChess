@@ -80,6 +80,7 @@ ControlUI::~ControlUI(void)
 //-----------------------------------------------------------------------------
 bool ControlUI::onInit()
 {
+    UpdateRects();
     return true;
 }
 
@@ -309,6 +310,9 @@ void ControlUI::OnFocusOut()
 //-----------------------------------------------------------------------------
 void ControlUI::setEnabled(bool bEnabled)
 {
+    if (m_x == 330 && m_y == 533)
+        std::cout << "stoping here\n";
+    
     m_bEnabled = bEnabled;
 }
 
@@ -389,7 +393,7 @@ int ControlUI::getHeight() const
 //-----------------------------------------------------------------------------
 bool ControlUI::SaveToFile(std::ostream& SaveFile)
 {
-    SaveFile << m_type	  << "| Control Type"   << "\n";
+    //SaveFile << m_type	  << "| Control Type"   << "\n";
     SaveFile << m_ID	  << "| Control ID"     << "\n";
 
     SaveFile << m_x       << "| Control X"	   << "\n";

@@ -48,8 +48,8 @@ public:
     //-------------------------------------------------------------------------
     virtual bool    handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool    Pressed	    (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool    Scrolled	(int nScrollAmount);
+    virtual bool    Pressed     (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool    Scrolled    (int nScrollAmount);
             bool    Highlight   (Point mousePoint);
 
             void    ConnectToItemDoubleClick(const typename signal_listbox::slot_type& subscriber);
@@ -58,7 +58,7 @@ public:
     //-------------------------------------------------------------------------
     //functions that handle control Rendering
     //-------------------------------------------------------------------------
-    virtual void    Render           (Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void    Render           (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp);
     virtual void    UpdateRects	     ();
 
     virtual bool    CanHaveFocus     ();

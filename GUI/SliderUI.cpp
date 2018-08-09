@@ -215,7 +215,7 @@ bool SliderUI::SaveToFile(std::ostream& SaveFile)
 //-----------------------------------------------------------------------------
 // Name : Render() 
 //-----------------------------------------------------------------------------
-void SliderUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void SliderUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
 	if (!m_bVisible)
 		return;
@@ -228,13 +228,13 @@ void SliderUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 
 	if (m_bMouseOver)
 	{
-        renderRect(sprite, m_rcBoundingBox, m_elementsGFX[TRACK].iTexture, m_elementsGFX[TRACK].rcTexture, WHITE_COLOR, dialogPos);
-        renderRect(sprite, m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, WHITE_COLOR, dialogPos);
+        renderRect(sprites[NORMAL], m_rcBoundingBox, m_elementsGFX[TRACK].iTexture, m_elementsGFX[TRACK].rcTexture, WHITE_COLOR, dialogPos);
+        renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, WHITE_COLOR, dialogPos);
 	}
 	else
 	{
-        renderRect(sprite, m_rcBoundingBox, m_elementsGFX[TRACK].iTexture, m_elementsGFX[TRACK].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
-        renderRect(sprite, m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
+        renderRect(sprites[NORMAL], m_rcBoundingBox, m_elementsGFX[TRACK].iTexture, m_elementsGFX[TRACK].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
+        renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
 	}
 }
 

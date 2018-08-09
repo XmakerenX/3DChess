@@ -69,7 +69,7 @@ const std::string StaticUI::getText() const
 // Name : Render ()
 // Desc : Render the text store in the static to the screen
 //-----------------------------------------------------------------------------
-void StaticUI::Render(Sprite& sprite, Sprite &textSprite, double timeStamp)
+void StaticUI::Render(Sprite sprites[SPRITES_SIZE], Sprite textSprite[SPRITES_SIZE], double timeStamp)
 {
     if (m_bVisible)
     {
@@ -83,7 +83,7 @@ void StaticUI::Render(Sprite& sprite, Sprite &textSprite, double timeStamp)
         Point dialogPos = calcPositionOffset();
 
         if (m_elementsFonts.size() > 0)
-            renderText(textSprite, m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
+            renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
     }
 }
 

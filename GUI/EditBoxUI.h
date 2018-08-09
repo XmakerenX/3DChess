@@ -20,15 +20,15 @@ public:
 	//-------------------------------------------------------------------------
 	// Functions that handle user input logic
 	//-------------------------------------------------------------------------
-    virtual bool        handleKeyEvent		(unsigned char key , bool down);
-    virtual bool        handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
+    virtual bool        handleKeyEvent      (unsigned char key , bool down);
+    virtual bool        handleVirtualKey    (GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
     virtual bool        handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool        Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool        Released			(Point pt);
-    virtual bool        Dragged				(Point pt);
+    virtual bool        Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool        Released            (Point pt);
+    virtual bool        Dragged             (Point pt);
 
-            void        connectToEditboxChg	(const signal_editbox::slot_type& subscriber);
+            void        connectToEditboxChg (const signal_editbox::slot_type& subscriber);
 	//-------------------------------------------------------------------------
 	// Functions that handle Rendering Logic
 	//-------------------------------------------------------------------------
@@ -39,7 +39,7 @@ public:
     virtual bool        SaveToFile      (std::ostream& SaveFile);
 
     virtual void        UpdateRects     ();
-    virtual void        Render          (Sprite& sprite, Sprite& textSprite, double timeStamp);
+    virtual void        Render          (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp);
     void                renderSelection (Sprite& sprite, Sprite& textSprite, Point dialogPos);
     void                renderCaret     (Sprite& sprite, double timeStamp, std::string &textTorender, Point dialogPos);
 

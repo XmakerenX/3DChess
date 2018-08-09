@@ -70,6 +70,11 @@ bool ListBoxUI<T>::handleMouseEvent(MouseEvent event, const ModifierKeysStates &
     if (!m_bEnabled || !m_bVisible)
         return false;
 
+    if (event.type == MouseEventType::LeftButton)
+    {
+        std::cout << "stop here plz\n";
+    }
+    
     // Let the scroll bar handle it first.
     if( m_ScrollBar.handleMouseEvent(event, modifierStates))
         return true;
@@ -225,7 +230,7 @@ void ListBoxUI<T>::ConnectToListboxChanged (const typename signal_listbox::slot_
 // Name : Render
 //-----------------------------------------------------------------------------
 template<class T>
-void ListBoxUI<T>::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void ListBoxUI<T>::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     // check that there is actual fonts
     if (!m_bVisible ||  m_elementsFonts.size() == 0)
@@ -233,9 +238,9 @@ void ListBoxUI<T>::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 
     Point dialogPos = calcPositionOffset();
 
-    m_ScrollBar.Render(sprite, textSprite, timeStamp);
+    m_ScrollBar.Render(sprites, topSprites, timeStamp);
 
-    renderRect(sprite, m_rcItembox, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, WHITE_COLOR, dialogPos);
+    renderRect(sprites[NORMAL], m_rcItembox, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, WHITE_COLOR, dialogPos);
 
     int curY = m_rcItemboxText.top;
     int nRemainingHeight =  m_rcItemboxText.getHeight();
@@ -261,12 +266,12 @@ void ListBoxUI<T>::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
 
         if(item.bSelected)
         {
-            renderRect(sprite, item.rcActive, m_elementsGFX[SELECTION].iTexture, m_elementsGFX[SELECTION].rcTexture, WHITE_COLOR, dialogPos);
-            renderText(textSprite, m_elementsFonts[0].font, item.strText, WHITE_COLOR, item.rcActive, dialogPos, mkFont::TextFormat::Center);
+            renderRect(sprites[NORMAL], item.rcActive, m_elementsGFX[SELECTION].iTexture, m_elementsGFX[SELECTION].rcTexture, WHITE_COLOR, dialogPos);
+            renderText(sprites[TEXT], m_elementsFonts[0].font, item.strText, WHITE_COLOR, item.rcActive, dialogPos, mkFont::TextFormat::Center);
         }
         else
         {
-            renderText(textSprite, m_elementsFonts[0].font, item.strText, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), item.rcActive, dialogPos, mkFont::TextFormat::Center);
+            renderText(sprites[TEXT], m_elementsFonts[0].font, item.strText, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), item.rcActive, dialogPos, mkFont::TextFormat::Center);
         }
     }
 }

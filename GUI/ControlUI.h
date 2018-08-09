@@ -76,7 +76,8 @@ public:
     //-----------------------------------------------------------------------------
     // Public Enumerators
     //-----------------------------------------------------------------------------
-    enum CONTROLS{STATIC, BUTTON, CHECKBOX, RADIOBUTTON, COMBOBOX, EDITBOX, LISTBOX, SCROLLBAR, SLIDER};
+    enum CONTROLS{STATIC, BUTTON, CHECKBOX, RADIOBUTTON, COMBOBOX, LISTBOX, EDITBOX,SLIDER, SCROLLBAR};
+    enum SPRITES_TYPES{NORMAL = 0, TEXT, SPRITES_SIZE};
 
     ControlUI(void);
     ControlUI(DialogUI* pParentDialog, int ID, int x, int y, GLuint width, GLuint height);
@@ -89,54 +90,54 @@ public:
     //-------------------------------------------------------------------------
     // functions that handle user input
     //-------------------------------------------------------------------------
-    virtual bool    handleKeyEvent		(unsigned char key , bool down);
-    virtual bool    handleVirtualKey	(GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
-    virtual bool    handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
+    virtual bool        handleKeyEvent      (unsigned char key , bool down);
+    virtual bool        handleVirtualKey    (GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
+    virtual bool        handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    virtual bool	Pressed				(Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
-    virtual bool    Released			(Point pt);
-    virtual bool    Scrolled			(int nScrollAmount);
-    virtual bool    Dragged				(Point pt);
+    virtual bool        Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
+    virtual bool        Released            (Point pt);
+    virtual bool        Scrolled            (int nScrollAmount);
+    virtual bool        Dragged             (Point pt);
+                                                                                                                           
+    virtual void        Render              (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp) = 0;
 
-    virtual void    Render              (Sprite& sprite, Sprite& textSprite, double timeStamp) = 0; //pure abstract function
+            void        renderRect          (Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
+            void        renderText          (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos,
+                                             mkFont::TextFormat format = mkFont::TextFormat::Center);
 
-            void    renderRect          (Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
-            void    renderText          (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos,
-                                         mkFont::TextFormat format = mkFont::TextFormat::Center);
+            Point       calcPositionOffset();
 
-            Point calcPositionOffset();
+    virtual bool        ContainsPoint     (Point pt);
 
-    virtual bool  ContainsPoint(Point pt);
+    virtual void        onMouseEnter      ();
+    virtual void        onMouseLeave      ();
 
-    virtual void  onMouseEnter ();
-    virtual void  onMouseLeave ();
+    virtual bool        CanHaveFocus      ();
+    virtual void        OnFocusIn         ();
+    virtual void        OnFocusOut        ();
 
-    virtual bool  CanHaveFocus ();
-    virtual void  OnFocusIn    ();
-    virtual void  OnFocusOut   ();
+            void        SetID             (int ID);
+            void        setLocation       (int x, int y);
+            void        setSize           (GLuint width, GLuint height);
+            void        setParent         (DialogUI* pParentDialog);
+            void        setControlGFX     (std::vector<ELEMENT_GFX>& elementsGFX);
+            void        setControlFonts   (std::vector<ELEMENT_FONT>& elementsFonts);
+            void        setEnabled        (bool bEnabled);
+            void        setVisible        (bool bVisible);
 
-    void	SetID				(int ID);
-    void	setLocation			(int x, int y);
-    void	setSize				(GLuint width, GLuint height);
-    void	setParent			(DialogUI* pParentDialog);
-    void    setControlGFX		(std::vector<ELEMENT_GFX>& elementsGFX);
-    void    setControlFonts     (std::vector<ELEMENT_FONT>& elementsFonts);
-    void	setEnabled			(bool bEnabled);
-    void    setVisible			(bool bVisible);
+            int         getID             () const;
+            GLuint      getType           () const;
+            bool        getEnabled        () const;
+            bool        getVisible        () const;
+            int         getX              () const;
+            int         getY              () const;
+            int         getWidth          () const;
+            int         getHeight         () const;
+            DialogUI *  getParentDialog   () const;
 
-    int		getID				() const;
-    GLuint  getType				() const;
-    bool	getEnabled			() const;
-    bool    getVisible			() const;
-    int		getX				() const;
-    int		getY				() const;
-    int		getWidth			() const;
-    int		getHeight			() const;
-    DialogUI* getParentDialog() const;
+    virtual bool	SaveToFile        (std::ostream& SaveFile);
 
-    virtual bool	SaveToFile  (std::ostream& SaveFile);
-
-    virtual void UpdateRects();
+    virtual void        UpdateRects       ();
 protected:
 
     DialogUI* m_pParentDialog;

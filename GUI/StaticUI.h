@@ -15,7 +15,7 @@ public:
                 void        setText     (const std::string& text);
     const       std::string getText     () const;
 
-                void        Render      (Sprite& sprite, Sprite& textSprite , double timeStamp);
+                void        Render      (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp);
 
     virtual     bool        SaveToFile  ( std::ostream& SaveFile );
 

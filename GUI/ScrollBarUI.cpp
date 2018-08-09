@@ -1,11 +1,11 @@
 #include "ScrollBarUI.h"
 #include "DialogUI.h"
 
-const int ScrollBarUI::SCROLLBAR_MINTHUMBSIZE = 8;
-const float	ScrollBarUI::SCROLLBAR_ARROWCLICK_DELAY = 0.33f;
-const float	ScrollBarUI::SCROLLBAR_ARROWCLICK_REPEAT = 0.05f;
+const int   ScrollBarUI::SCROLLBAR_MINTHUMBSIZE = 8;
+const float ScrollBarUI::SCROLLBAR_ARROWCLICK_DELAY = 0.33f;
+const float ScrollBarUI::SCROLLBAR_ARROWCLICK_REPEAT = 0.05f;
 //-----------------------------------------------------------------------------
-// Name : CScrollBarUI(constructor)
+// Name : ScrollBarUI(constructor)
 //-----------------------------------------------------------------------------
 ScrollBarUI::ScrollBarUI(void)
 {
@@ -69,6 +69,9 @@ ScrollBarUI::~ScrollBarUI(void)
 //-----------------------------------------------------------------------------
 bool ScrollBarUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
+    if (!m_bVisible || !m_bEnabled)
+        return false;
+    
     static int ThumbOffsetY;
 
     m_LastMouse = event.cursorPos;
@@ -167,7 +170,7 @@ bool ScrollBarUI::Released( Point pt)
     UpdateThumbRect();
     m_Arrow = CLEAR;
 
-    return false;// ??
+    return ContainsPoint(pt);
 }
 
 //-----------------------------------------------------------------------------
@@ -216,7 +219,7 @@ bool ScrollBarUI::SaveToFile(std::ostream& SaveFile)
 // Name : Render()
 // Desc : renders the scroll bar to the screen
 //-----------------------------------------------------------------------------
-void ScrollBarUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void ScrollBarUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     if (m_bVisible)
     {
@@ -287,7 +290,7 @@ void ScrollBarUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
             long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
             dialogPos.y += dialogCaptionHeihgt;
 
-            renderRect(sprite, m_rcElements[i], m_elementsGFX[i].iTexture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
+            renderRect(sprites[NORMAL], m_rcElements[i], m_elementsGFX[i].iTexture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
         }
     }
 }

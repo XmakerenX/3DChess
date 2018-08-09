@@ -2,8 +2,6 @@
 #include <iostream>
 #include <limits>
 
-ControlUI* DialogUI::m_pControlFocus = nullptr;
-
 //-----------------------------------------------------------------------------
 // Name : DialogUI (constructor)
 //-----------------------------------------------------------------------------
@@ -348,7 +346,7 @@ bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS con
 // Name : OnRender ()
 // Desc : renders the dialog and all of his controls
 //-----------------------------------------------------------------------------
-bool DialogUI::OnRender(Sprite& sprite, Sprite& textSprite, AssetManager& assetManger, double timeStamp)
+bool DialogUI::OnRender(Sprite sprites[ControlUI::SPRITES_SIZE], Sprite topSprites[ControlUI::SPRITES_SIZE], AssetManager& assetManger, double timeStamp)
 {
     GLuint textureName = NO_TEXTURE;
 
@@ -362,25 +360,24 @@ bool DialogUI::OnRender(Sprite& sprite, Sprite& textSprite, AssetManager& assetM
             std::cout << "Failed to load the dialog texture " << m_texturePath << "\n";
     }
 
-    sprite.AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, textureName);
+    sprites[ControlUI::NORMAL].AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, textureName);
     if (m_bCaption)
-        sprite.AddTintedQuad(m_rcCaptionBox, glm::vec4(0.78125f, 1.0f, 0.0f, 1.0f));
+    {
+        sprites[ControlUI::NORMAL].AddTintedQuad(m_rcCaptionBox, glm::vec4(0.78125f, 1.0f, 0.0f, 1.0f));
+        if (m_captionFont != nullptr)
+            m_captionFont->renderToRect(sprites[ControlUI::TEXT], m_captionText, m_rcCaptionBox, glm::vec4(0.0f,0.0f,0.0f,1.0f), mkFont::TextFormat::Center);
+    }
 
     bool drawFocusedControl = false;
     for(GLuint i = 0; i < m_Controls.size(); i++)
     {
-        //if (m_Controls[i] != s_pControlFocus)
-            m_Controls[i]->Render(sprite, textSprite,timeStamp);
+        if (m_Controls[i] != m_pControlFocus)
+            m_Controls[i]->Render(sprites, topSprites, timeStamp);
     }
 
-//    if (drawFocusedControl)
-//            s_pControlFocus->Render(assetManger);
-
-    if (m_captionFont != nullptr)
-    {
-        if (m_bCaption)
-            m_captionFont->renderToRect(textSprite, m_captionText, m_rcCaptionBox, WHITE_COLOR, mkFont::TextFormat::Center);
-    }
+    //if (drawFocusedControl)
+    if(m_pControlFocus != nullptr)
+        m_pControlFocus->Render(sprites, topSprites, timeStamp);
 
     return true;
 }
@@ -504,17 +501,23 @@ bool DialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
             m_pControlFocus = getControlAtPoint(cursorPos);
 
             if (m_pControlFocus != nullptr)
+            {
                 m_controlRightClkSig(m_pControlFocus);
+                return true;
+            }
         }
     }break;
 
     case MouseEventType::MouseMoved:
     {
-                    // check if we need to highlight a control as the mouse is over it
-                    OnMouseMove(cursorPos);
-                    // return false to allow others to proceess this event
-                    return false;
+        // check if we need to highlight a control as the mouse is over it
+        OnMouseMove(cursorPos);
+        // return false to allow others to proceess this event
+        return false;
     }break;
+    
+    default:
+        return false;
 
     }
 
@@ -932,7 +935,7 @@ bool DialogUI::addSliderFromFile(std::istream& InputFIle, SliderUI** ppSliderCre
 // Name : addEditBoxFromFile()
 // Desc : loads from file a control of type EditBox to the dialog
 //-----------------------------------------------------------------------------
-bool DialogUI::addEditBoxFromFile(std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated /* = NULL */)
+bool DialogUI::addEditBoxFromFile(std::istream& InputFIle, EditBoxUI** ppEditBoxCreated /* = NULL */)
 {
     EditBoxUI* pEditBox = new EditBoxUI(InputFIle);
 
@@ -1202,13 +1205,14 @@ bool DialogUI::SaveDilaogToFile(const std::string& FileName, GLulong curControlI
     saveFile << m_captionText << "| Dialog Caption Text" << "\n";
     saveFile << curControlID << "| Current Control ID" << "\n";
 
-    saveFile << "/////////////////////////////////////////////////////////////////////////////\n";
+    saveFile << "//--------------------------------------------------------------------------\n";
 
     for (GLuint i = 0; i < m_Controls.size(); i++)
     {
+        saveFile << m_Controls[i]->getType() << "| Control Type" << "\n";
         m_Controls[i]->SaveToFile(saveFile);
 
-        saveFile << "/////////////////////////////////////////////////////////////////////////////\n";
+        saveFile << "//---------------------------------------------------------------------------\n";
     }
 
     saveFile.close();
@@ -1219,124 +1223,122 @@ bool DialogUI::SaveDilaogToFile(const std::string& FileName, GLulong curControlI
 // Name : LoadDialogFromFile
 // Desc : loads the dialog and all of his controls from file
 //-----------------------------------------------------------------------------
-GLulong DialogUI::LoadDialogFromFile(const std::string& FileName, Timer* timer)
+GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
 {
-    return 0;
-//    std::ifstream inputFile;
-//    GLuint controlType;
+   std::ifstream inputFile;
+   GLuint controlType;
 
-//    // clear controls on the dialog
-//    RemoveAllControls();
+   // clear controls on the dialog
+   RemoveAllControls();
 
-//    inputFile.open(FileName, std::ifstream::in);
+   inputFile.open(FileName, std::ifstream::in);
 
-//    //load the Dialog parameters
-//    inputFile >> m_width;
-//    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//    inputFile >> m_height;
-//    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//    inputFile >> m_nCaptionHeight;
-//    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+   //load the Dialog parameters
+   inputFile >> m_width;
+   inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+   inputFile >> m_height;
+   inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+   inputFile >> m_nCaptionHeight;
+   inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
-//    std::string captionText;
-//    std::getline(inputFile, captionText);
-//    captionText = captionText.substr(0, captionText.find('|') );
-//    strcpy_s(m_captionText, MAX_PATH, captionText.c_str() );
+   std::getline(inputFile, m_captionText, '|');
+   inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
-//    ULONG curControlID = 0;
-//    inputFile >> curControlID;
-//    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+   GLulong curControlID = 0;
+   inputFile >> curControlID;
+   inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
-//    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+   inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
-//    do
-//    {
-//        inputFile >> controlType;
-//        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//        if (inputFile.eof() )
-//            break;
+   do
+   {
+       inputFile >> controlType;
+       inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+       if (inputFile.eof() )
+           break;
 
-//        switch(controlType)
-//        {
-//        case CControlUI::STATIC:
-//            {
-//                addStaticFromFile(inputFile);
-//            }break;
+       switch(controlType)
+       {
+       case ControlUI::STATIC:
+           {
+               addStaticFromFile(inputFile);
+           }break;
 
-//        case CControlUI::BUTTON:
-//            {
-//                addButtonFromFile(inputFile);
-//            }break;
+       case ControlUI::BUTTON:
+           {
+               addButtonFromFile(inputFile);
+           }break;
 
-//        case CControlUI::CHECKBOX:
-//            {
-//                addCheckBoxFromFile(inputFile);
-//            }break;
+       case ControlUI::CHECKBOX:
+           {
+               addCheckBoxFromFile(inputFile);
+           }break;
 
-//        case CControlUI::COMBOBOX:
-//            {
-//                addComboBoxFromFile(inputFile);
-//            }break;
+       case ControlUI::COMBOBOX:
+           {
+               addComboBoxFromFile(inputFile);
+           }break;
 
-//        case CControlUI::EDITBOX:
-//            {
-//                addEditBoxFromFile(inputFile, timer);
-//            }break;
+       case ControlUI::EDITBOX:
+           {
+               addEditBoxFromFile(inputFile);
+           }break;
 
-//        case CControlUI::LISTBOX:
-//            {
-//                addListBoxFromFile(inputFile);
-//            }break;
+       case ControlUI::LISTBOX:
+           {
+               addListBoxFromFile(inputFile);
+           }break;
 
-//        case CControlUI::RADIOBUTTON:
-//            {
-//                addRadioButtonFromFile(inputFile);
-//            }break;
+       case ControlUI::RADIOBUTTON:
+           {
+               addRadioButtonFromFile(inputFile);
+           }break;
 
-//        case CControlUI::SLIDER:
-//            {
-//                addSliderFromFile(inputFile);
-//            }
-//        }
+       case ControlUI::SLIDER:
+           {
+               addSliderFromFile(inputFile);
+           }
+       }
 
-//        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-//    }while(!inputFile.eof());
+       inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+   }while(!inputFile.eof());
 
-//    inputFile.close();
+   inputFile.close();
 
-//    m_defInfo.clear();
+   m_defInfo.clear();
 
-//    std::ifstream inputDefFile;
+   std::ifstream inputDefFile;
 
-//    std::string defFileName;
-//    std::string strID, sID;
-//    int ID;
+   std::string defFileName;
+   std::string strID, sID;
+   int ID;
 
-//    defFileName = FileName;
-//    defFileName.resize(defFileName.size() - 4); //deleting the file extension (.xxx)
-//    defFileName = defFileName + "Def.h";
+   defFileName = FileName;
+   defFileName.resize(defFileName.size() - 4); //deleting the file extension (.xxx)
+   defFileName = defFileName + "Def.h";
 
-//    inputDefFile.open(defFileName);
+   inputDefFile.open(defFileName);
 
-//    do
-//    {
-//        inputDefFile >> strID;
+   do
+   {
+       inputDefFile >> strID;
 
-//        if (inputDefFile.eof())
-//            break;
+       if (inputDefFile.eof())
+           break;
 
-//        inputDefFile >> strID;
-//        inputDefFile >> sID;
-//        ID = std::stoi(sID);
+       inputDefFile >> strID;
+       inputDefFile >> sID;
+       ID = std::stoi(sID);
 
-//        m_defInfo.push_back( DEF_INFO(strID, ID) );
+       m_defInfo.push_back( DEF_INFO(strID, ID) );
 
-//        inputDefFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-//    }while(!inputDefFile.eof());
+       inputDefFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+   }while(!inputDefFile.eof());
 
-//    inputDefFile.close();
+   inputDefFile.close();
+   UpdateRects();
 
-//    return curControlID;
+   return curControlID;
 }
 
 //-----------------------------------------------------------------------------
@@ -1379,7 +1381,7 @@ ControlUI* DialogUI::getControl( int ID, GLuint nControlType )
     }
 
     // Not found
-    return NULL;
+    return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -1457,12 +1459,12 @@ int DialogUI::getControlsNum()
 //-----------------------------------------------------------------------------
 // Name : getControlIDText
 //-----------------------------------------------------------------------------
-const char* DialogUI::getControlIDText(int ID)
+std::string DialogUI::getControlIDText(int ID)
 {
     for (GLuint i = 0; i <m_defInfo.size(); i++)
     {
         if (m_defInfo[i].controlID == ID)
-            return m_defInfo[i].controlIDText.c_str();
+            return m_defInfo[i].controlIDText;
     }
 
     return nullptr;

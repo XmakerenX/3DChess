@@ -27,7 +27,13 @@ ComboBoxUI::ComboBoxUI(std::istream& inputFile)
 
     m_bOpened = false;
     m_dropDown.setVisible(m_bOpened);
-    m_iFocused = -1;
+    if (m_dropDown.GetNumItems() > 0)
+    {
+        m_iFocused = 0;
+        m_dropDown.SelectItem(0, true);
+    }
+    else
+        m_iFocused = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -135,7 +141,7 @@ bool ComboBoxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, dou
 //-----------------------------------------------------------------------------
 bool ComboBoxUI::Released(Point pt)
 {
-    if (m_dropDown.ContainsPoint(pt))
+    if (m_dropDown.ContainsPoint(pt) && m_dropDown.GetSelectedIndices().size() > 0)
     {
         m_iFocused = m_dropDown.GetSelectedIndices().back();
         m_bOpened = false;
@@ -212,7 +218,7 @@ void ComboBoxUI::ConnectToSelectChg( const signal_comboBox::slot_type& subscribe
 //-----------------------------------------------------------------------------
 // Name : Render()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void ComboBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {    
     // check that there is actual fonts
     if (!m_bVisible ||  m_elementsFonts.size() == 0)
@@ -223,7 +229,7 @@ void ComboBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
     //if Combobox is open render the scrollbar
     if (m_bOpened)
     {
-        m_dropDown.Render(sprite, textSprite, timeStamp);
+        m_dropDown.Render(topSprites, topSprites, timeStamp);
     }
 
     // Render the main combobox elements
@@ -239,8 +245,8 @@ void ComboBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
             else
                 tintColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    renderRect(sprite, m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
-    renderRect(sprite, m_rcText, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], m_rcText, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, tintColor, dialogPos);
 
     // Render combobox text
     const std::vector<int>& selectedIndices =  m_dropDown.GetSelectedIndices();
@@ -253,7 +259,7 @@ void ComboBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
             textColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
         if (m_iFocused != -1)
-            renderText(textSprite, m_elementsFonts[0].font, m_dropDown.GetItem(m_iFocused)->strText
+            renderText(sprites[TEXT], m_elementsFonts[0].font, m_dropDown.GetItem(m_iFocused)->strText
                     , textColor, m_rcText, dialogPos, mkFont::TextFormat::Center);
     }
 }
@@ -279,9 +285,9 @@ void ComboBoxUI::UpdateRects()
 // Name : AddItem()
 // Desc : add an item to the combobox
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::AddItem( std::string strText, int pData )
+bool ComboBoxUI::AddItem( std::string strText, int data )
 {
-    bool ret = m_dropDown.AddItem(strText, 1);
+    bool ret = m_dropDown.AddItem(strText, data);
     if (m_dropDown.GetNumItems() == 1)
     {
         m_iFocused = 0;
@@ -400,9 +406,8 @@ int ComboBoxUI::GetSelectedIndex() const
 //-----------------------------------------------------------------------------
 int* ComboBoxUI::GetSelectedData()
 {
-    const std::vector<int> selIndices = m_dropDown.GetSelectedIndices();
-    if (selIndices.size() > 0)
-        return m_dropDown.GetItemData(selIndices.back());
+    if (m_iFocused != -1)
+        return m_dropDown.GetItemData(m_iFocused);
     else
         return nullptr;
 }
@@ -413,11 +418,16 @@ int* ComboBoxUI::GetSelectedData()
 //-----------------------------------------------------------------------------
 Item<int>* ComboBoxUI::GetSelectedItem()
 {
-    const std::vector<int> selIndices = m_dropDown.GetSelectedIndices();
-    if (selIndices.size() > 0)
-        return m_dropDown.GetItem(selIndices.back());
+    if (m_iFocused != -1)
+        return m_dropDown.GetItem(m_iFocused);
     else
         return nullptr;
+    
+//     const std::vector<int> selIndices = m_dropDown.GetSelectedIndices();
+//     if (selIndices.size() > 0)
+//         return m_dropDown.GetItem(selIndices.back());
+//     else
+//         return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -528,7 +538,6 @@ bool ComboBoxUI::SaveToFile(std::ostream& SaveFile)
 //-----------------------------------------------------------------------------
 void ComboBoxUI::CopyItemsFrom(ComboBoxUI* sourceComboBox)
 {
-    //m_dropDown.CopyItemsFrom();
     // clears the items vector
     RemoveAllItems();
 

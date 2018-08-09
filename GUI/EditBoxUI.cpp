@@ -393,6 +393,8 @@ bool EditBoxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mod
     default:
         return false;
     }
+    
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -543,58 +545,58 @@ void EditBoxUI::UpdateRects()
 //-----------------------------------------------------------------------------
 // Name : Render() 
 //-----------------------------------------------------------------------------
-void EditBoxUI::Render(Sprite& sprite, Sprite& textSprite, double timeStamp)
+void EditBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     if( m_bVisible == false || m_elementsFonts.size() == 0)
-		return;
+        return;
 
     Point dialogPos =  m_pParentDialog->getLocation();
     long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
-	dialogPos.y += dialogCaptionHeihgt;
+    dialogPos.y += dialogCaptionHeihgt;
 
-	int nSelStartX = 0, nCaretX = 0;  // Left and right X cordinates of the selection region
+    int nSelStartX = 0, nCaretX = 0;  // Left and right X cordinates of the selection region
 
-	// Render the control graphics
+    // Render the control graphics
     for(GLuint i = 0; i < m_elementsGFX.size(); ++i)
-	{
-        renderRect(sprite, m_rcRender[i], m_elementsGFX[i].iTexture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
-	}
+    {
+        renderRect(sprites[NORMAL], m_rcRender[i], m_elementsGFX[i].iTexture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
+    }
 
-	//
-	// Compute the X coordinates of the first visible character.
-	//
+    //
+    // Compute the X coordinates of the first visible character.
+    //
     int nXFirst = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize;
-	// compute the x coordinates of the caret
-    nCaretX = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize; +
-              m_nCaret * m_elementsFonts[0].fontInfo.fontSize;
+    // compute the x coordinates of the caret
+    nCaretX = m_rcText.left + m_elementsFonts[0].fontInfo.fontSize; //+
+              //m_nCaret * m_elementsFonts[0].fontInfo.fontSize;
 
-	if (nCaretX > m_rcText.right)
-		      ;//m_nFirstVisible = (nCaretX - m_rcText.right) / fontItem.avgWidth;
+    if (nCaretX > m_rcText.right)
+        ;//m_nFirstVisible = (nCaretX - m_rcText.right) / fontItem.avgWidth;
 
     nCaretX = m_rcText.right - m_elementsFonts[0].fontInfo.fontSize;
 
-	// Render the text
+    // Render the text
     Rect rt = {0, 0, 0, 0};
     Rect rtFullText = {0, 0, 0, 0};
 
     std::string fullText = m_buffer.substr(0, m_buffer.size() - m_nBackwardChars);
     std::string textToRender;
 
-	if (m_nBackwardChars == 0)
+    if (m_nBackwardChars == 0)
         textToRender = m_buffer.substr(m_nFirstVisible, m_buffer.size() - m_nFirstVisible );
-	else
+    else
         //textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - m_nBackwardChars );
         textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - m_nFirstVisible );
 
-	if (m_nFirstVisible - m_nBackwardChars == 0)
-        renderText(textSprite, m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
-	else
-        renderText(textSprite, m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
+    if (m_nFirstVisible - m_nBackwardChars == 0)
+        renderText(sprites[TEXT], m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
+    else
+        renderText(sprites[TEXT], m_elementsFonts[0].font, textToRender, m_TextColor, m_rcText, dialogPos, mkFont::TextFormat::VerticalCenter);
 
-    renderSelection(sprite, textSprite, dialogPos);
+    renderSelection(sprites[NORMAL], sprites[TEXT], dialogPos);
 
-	// Render the caret if this control has the focus
-    renderCaret(sprite, timeStamp, textToRender,dialogPos);
+    // Render the caret if this control has the focus
+    renderCaret(sprites[NORMAL], timeStamp, textToRender,dialogPos);
 }
 
 //-----------------------------------------------------------------------------

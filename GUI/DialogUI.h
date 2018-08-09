@@ -67,87 +67,86 @@ public:
     bool initDefControlElements(AssetManager& assetManger);
     bool initWoodControlElements(AssetManager& assetManager);
 
-    void	OnMouseMove(Point pt);
+    void OnMouseMove(Point pt);
 
     bool handleKeyEvent(unsigned char key, bool down);
     bool handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates &modifierStates);
     bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    void    connectToControlRightClicked( const signal_controlClicked::slot_type& subscriber);
+    void connectToControlRightClicked( const signal_controlClicked::slot_type& subscriber);
 
-    virtual bool OnRender(Sprite &sprite, Sprite& textSprite, AssetManager& assetManger, double timeStamp);
+    virtual bool OnRender(Sprite sprites[ControlUI::SPRITES_SIZE], Sprite topSprites[ControlUI::SPRITES_SIZE], AssetManager& assetManger, double timeStamp);
 
-    void	UpdateRects();
+    void UpdateRects();
 
     //-------------------------------------------------------------------------
     // Functions that handle the Dialog Controls
     //-------------------------------------------------------------------------
-    bool			 initControl			(ControlUI* pControl);
-    void			 UpdateControlDefText	(const std::string& strDefText, int controlID);
-    void			 UpdateControlDefText	(std::string&& strDefText, int controlID);
+    bool                initControl             (ControlUI* pControl);
+    void                UpdateControlDefText    (const std::string& strDefText, int controlID);
+    void                UpdateControlDefText    (std::string&& strDefText, int controlID);
 
-    bool			 addStatic				(int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated = nullptr, std::string strID = "");
-    bool             addButton              (int ID, const std::string& strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI **ppButtonCreated = nullptr, std::string strID = "");
-    bool			 addCheckBox			(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = nullptr, std::string strID = "");
-    bool			 addRadioButton			(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = nullptr, std::string strID = "");
-    bool			 addComboBox			(int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = nullptr, std::string strID = "");
-    bool		     addListBox				(int ID, int x, int y, int width, int height, bool multiSelection = false, ListBoxUI<int>** ppListBoxCreated = nullptr, std::string strID = "");
-    bool		     addSlider				(int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = nullptr, std::string strID = "");
-    bool			 addEditbox				(int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = nullptr, std::string strID = "");
+    bool                addStatic               (int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated = nullptr, std::string strID = "");
+    bool                addButton               (int ID, const std::string& strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI **ppButtonCreated = nullptr, std::string strID = "");
+    bool                addCheckBox             (int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = nullptr, std::string strID = "");
+    bool                addRadioButton          (int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = nullptr, std::string strID = "");
+    bool                addComboBox             (int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = nullptr, std::string strID = "");
+    bool                addListBox              (int ID, int x, int y, int width, int height, bool multiSelection = false, ListBoxUI<int>** ppListBoxCreated = nullptr, std::string strID = "");
+    bool                addSlider               (int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = nullptr, std::string strID = "");
+    bool                addEditbox              (int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = nullptr, std::string strID = "");
 
-    bool			 addStaticFromFile		(std::istream& InputFIle, StaticUI** ppStaticCreated = nullptr);
-    bool			 addButtonFromFile		(std::istream& InputFIle, ButtonUI** ppButtonCreated = nullptr);
-    bool			 addCheckBoxFromFile    (std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = nullptr);
-    bool			 addRadioButtonFromFile (std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = nullptr);
-    bool			 addComboBoxFromFile    (std::istream& InputFIle, ComboBoxUI** ppComboxCreated = nullptr);
-    bool			 addListBoxFromFile     (std::istream& InputFIle, ListBoxUI<int>** ppListBoxCreated = nullptr);
-    bool			 addSliderFromFile      (std::istream& InputFIle, SliderUI** ppSliderCreated = nullptr);
-    bool			 addEditBoxFromFile     (std::istream& InputFIle, Timer* timer, EditBoxUI** ppEditBoxCreated = nullptr);
+    bool                addStaticFromFile       (std::istream& InputFIle, StaticUI** ppStaticCreated = nullptr);
+    bool                addButtonFromFile       (std::istream& InputFIle, ButtonUI** ppButtonCreated = nullptr);
+    bool                addCheckBoxFromFile     (std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = nullptr);
+    bool                addRadioButtonFromFile  (std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = nullptr);
+    bool                addComboBoxFromFile     (std::istream& InputFIle, ComboBoxUI** ppComboxCreated = nullptr);
+    bool                addListBoxFromFile      (std::istream& InputFIle, ListBoxUI<int>** ppListBoxCreated = nullptr);
+    bool                addSliderFromFile       (std::istream& InputFIle, SliderUI** ppSliderCreated = nullptr);
+    bool                addEditBoxFromFile      (std::istream& InputFIle, EditBoxUI** ppEditBoxCreated = nullptr);
 
-    void			 RemoveControl			( int ID);
-    void			 RemoveAllControls		( );
+    void                RemoveControl           (int ID);
+    void                RemoveAllControls       ();
 
-    ControlUI     * getControl				( int ID );
-    ControlUI     * getControl			    (int ID, GLuint nControlType );
-    StaticUI      * getStatic			    ( int ID );
-    ButtonUI      * getButton		        ( int ID );
-    CheckboxUI    * getCheckBox             ( int ID );
-    RadioButtonUI * getRadioButton			( int ID );
-    ComboBoxUI	   * getComboBox			( int ID );
-    ListBoxUI<int>	   * getListBox			    ( int ID );
-    SliderUI	   * getSlider				( int ID );
-    EditBoxUI	   * getEditBox				( int ID );
-    int				 getControlsNum			();
-    const char	   * getControlIDText		( int ID);
-    bool			 getVisible				();
+    ControlUI       *   getControl              (int ID);
+    ControlUI       *   getControl              (int ID, GLuint nControlType );
+    StaticUI        *   getStatic               (int ID);
+    ButtonUI        *   getButton               (int ID);
+    CheckboxUI      *   getCheckBox             (int ID);
+    RadioButtonUI   *   getRadioButton          (int ID);
+    ComboBoxUI      *   getComboBox             (int ID);
+    ListBoxUI<int>  *   getListBox              (int ID);
+    SliderUI        *   getSlider               (int ID);
+    EditBoxUI       *   getEditBox              (int ID);
+    int                 getControlsNum          ();
+    std::string         getControlIDText        (int ID);
+    bool                getVisible              ();
 
-    void		     ClearRadioButtonGruop	( GLuint nButtonGroup);
+    void                ClearRadioButtonGruop   (GLuint nButtonGroup);
 
-    ControlUI	   * getControlAtPoint		( Point pt);
+    ControlUI       *   getControlAtPoint       (Point pt);
 
-    void			 RequestFocus			( ControlUI* pControl );
-
-    static void      ClearFocus();
+    void                RequestFocus            (ControlUI* pControl);
+    void                ClearFocus              ();
 
     //-------------------------------------------------------------------------
     // Save/Load Functions
     //-------------------------------------------------------------------------
-    bool				SaveDilaogToFile	(const std::string &FileName, GLulong curControlID);
-    GLulong			    LoadDialogFromFile	(const std::string &FileName, Timer *timer);
+    bool    SaveDilaogToFile    (const std::string &FileName, GLulong curControlID);
+    GLulong LoadDialogFromFile  (const std::string& FileName);
 
     //-------------------------------------------------------------------------
     // get and set Functions
     //-------------------------------------------------------------------------
-    void	setSize			 (GLuint width, GLuint height);
-    void	setLocation		 (int x, int y);
-    void	setVisible		 (bool bVisible);
-    void	setCaption		 (bool bCaption);
+    void    setSize             (GLuint width, GLuint height);
+    void    setLocation         (int x, int y);
+    void    setVisible          (bool bVisible);
+    void    setCaption          (bool bCaption);
 
-    Point   getLocation	     ();
-    GLuint	getWidth	     ();
-    GLuint	getHeight		 ();
+    Point   getLocation         ();
+    GLuint  getWidth            ();
+    GLuint  getHeight           ();
 
-    long	getCaptionHeight ();
+    long    getCaptionHeight    ();
 
 private:
     int  m_x, m_y;
@@ -182,7 +181,7 @@ private:
     //TODO: map seems to fit defInfo use better..
     std::vector<DEF_INFO> m_defInfo;
 
-    static ControlUI* m_pControlFocus; // The control which has focus
+    ControlUI* m_pControlFocus; // The control which has focus
     ControlUI* m_pMouseOverControl;
 
     boost::signals2::signal<void (ControlUI*)> m_controlRightClkSig;
