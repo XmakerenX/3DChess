@@ -69,11 +69,6 @@ bool ListBoxUI<T>::handleMouseEvent(MouseEvent event, const ModifierKeysStates &
 {
     if (!m_bEnabled || !m_bVisible)
         return false;
-
-    if (event.type == MouseEventType::LeftButton)
-    {
-        std::cout << "stop here plz\n";
-    }
     
     // Let the scroll bar handle it first.
     if( m_ScrollBar.handleMouseEvent(event, modifierStates))
