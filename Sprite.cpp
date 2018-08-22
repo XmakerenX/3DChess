@@ -184,16 +184,16 @@ bool Sprite::Render(Shader* shader)
     for (StreamOfVertices& vertexStream : m_vertexStreams)
     {
         glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VertexSprite) * vertexStream.vertices.size(),
-                        vertexStream.vertices.data());
+         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VertexSprite) * vertexStream.vertices.size(),
+                         vertexStream.vertices.data());
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indicesBuffer);
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(VertexIndex) * vertexStream.indices.size(),
                         vertexStream.indices.data());
 
         if (vertexStream.textureName != 0)
         {
-            glUniform1i( glGetUniformLocation(shader->Program, "textured"), 1);
-            glBindTexture(GL_TEXTURE_2D, vertexStream.textureName);
+             glUniform1i( glGetUniformLocation(shader->Program, "textured"), 1);
+             glBindTexture(GL_TEXTURE_2D, vertexStream.textureName);
         }
         else
             glUniform1i( glGetUniformLocation(shader->Program, "textured"), 0);

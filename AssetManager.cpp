@@ -415,43 +415,43 @@ Mesh* AssetManager::getMesh(const std::string& meshPath)
 //-----------------------------------------------------------------------------
 Mesh* AssetManager::loadObjMesh(const std::string& meshPath)
 {
-	Model model(meshPath);
-	std::ifstream in;
-	
-	in.open(meshPath);
-	
-	if (!in.is_open())
-	{
-		std::cout << "Failed to open "<< meshPath << "\n";
-		return nullptr;
-	}
-	
+    Model model(meshPath);
+    std::ifstream in;
+    
+    in.open(meshPath);
+    
+    if (!in.is_open())
+    {
+        std::cout << "Failed to open "<< meshPath << "\n";
+        return nullptr;
+    }
+    
     objFirstPass(*this, in, model);
-	
-	// return to start of file
-	in.clear();
-	in.seekg(0, std::ios::beg);
-	
-	objSecondPass(in, model);
-	
-	// convert obj groups to subMeshes
-	std::vector<SubMesh> subMeshes;
-	std::vector<GLuint> meshMaterials;
-	for (Group& g : model.groups)
-	{
-		// ignore empty groups
-		if (g.vertices.size() != 0)
+    
+    // return to start of file
+    in.clear();
+    in.seekg(0, std::ios::beg);
+    
+    objSecondPass(in, model);
+    
+    // convert obj groups to subMeshes
+    std::vector<SubMesh> subMeshes;
+    std::vector<GLuint> meshMaterials;
+    for (Group& g : model.groups)
+    {
+        // ignore empty groups
+        if (g.vertices.size() != 0)
         {
             subMeshes.emplace_back(g.vertices, g.indices);
             if (g.material != -1)
                 meshMaterials.push_back(g.material);
         }
-	}
-	
-	m_meshCache.insert(std::pair<std::string, Mesh>(meshPath, 
-					Mesh(subMeshes, meshMaterials,std::vector<std::string>())) );
-	
-	return &m_meshCache[meshPath];
+    }
+    
+    m_meshCache.insert(std::pair<std::string, Mesh>(meshPath, 
+    Mesh(subMeshes, meshMaterials,std::vector<std::string>())) );
+    
+    return &m_meshCache[meshPath];
 }
 
 //-----------------------------------------------------------------------------
@@ -486,13 +486,13 @@ Shader* AssetManager::getShader(const std::string& shaderPath)
 
     // no such shader in cache , adding a new one 
     std::string vertexShader = shaderPath + ".vs";
-	std::string fragmentShader = shaderPath + ".frag";
+    std::string fragmentShader = shaderPath + ".frag";
     
-	Shader* shader = new Shader(vertexShader.c_str(), fragmentShader.c_str());
-	
-	m_shaderCache.insert(std::pair<std::string, Shader*>(shaderPath,shader));
-	
-	return shader;
+    Shader* shader = new Shader(vertexShader.c_str(), fragmentShader.c_str());
+    
+    m_shaderCache.insert(std::pair<std::string, Shader*>(shaderPath,shader));
+    
+    return shader;
 }
 
 //-----------------------------------------------------------------------------
@@ -500,16 +500,16 @@ Shader* AssetManager::getShader(const std::string& shaderPath)
 //-----------------------------------------------------------------------------
 int AssetManager::getMaterialIndex(const Material& mat)
 {
-	for (unsigned int i = 0; i < m_materials.size(); i++)
-	{
-		if (m_materials[i] == mat)
-			return i;
-	}
-	
-	// no matching material found , adding a new one
-	m_materials.push_back(mat);
-	
-	return m_materials.size() - 1;
+    for (unsigned int i = 0; i < m_materials.size(); i++)
+    {
+        if (m_materials[i] == mat)
+            return i;
+    }
+    
+    // no matching material found , adding a new one
+    m_materials.push_back(mat);
+    
+    return m_materials.size() - 1;
 }
 
 //-----------------------------------------------------------------------------

@@ -9,13 +9,13 @@ class Mesh {
 public:
     // Constructor
     Mesh();
-	Mesh(std::vector<SubMesh> sMeshes);
-	Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials,
-		std::vector<std::string> dTextures);
+    Mesh(std::vector<SubMesh> sMeshes);
+    Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials,
+    std::vector<std::string> dTextures);
 
     // Render the mesh
     void Draw(unsigned int subMeshIndex);
-	void addSubMesh(SubMesh subMesh);
+    void addSubMesh(SubMesh subMesh);
 
     bool IntersectTriangle(glm::vec3& rayObjOrigin,glm::vec3& rayObjDir, int& faceCount, int& subMeshIndex);
     void CalcVertexNormals(GLfloat angle);
@@ -24,9 +24,9 @@ public:
     std::vector<std::string>& getDefaultTextures();
 
 private:
-	std::vector<SubMesh> subMeshes;
-	std::vector<GLuint> defaultMaterials;
-	std::vector<std::string> defaultTextures;
+    std::vector<SubMesh> subMeshes;
+    std::vector<GLuint> defaultMaterials;
+    std::vector<std::string> defaultTextures;
 };
 
 

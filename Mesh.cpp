@@ -23,7 +23,11 @@ Mesh::Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials, std::ve
 :subMeshes(sMeshes),
  defaultMaterials(dMaterials),
  defaultTextures(dTextures)
-{}
+{
+    // add empty texture for every material that doesn't have one
+    for (int i = defaultTextures.size(); i < defaultMaterials.size(); i++)
+        defaultTextures.push_back("");
+}
 
 //-----------------------------------------------------------------------------
 // Name : Draw ()
