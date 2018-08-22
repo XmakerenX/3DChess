@@ -15,14 +15,11 @@ struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
     glm::vec2 TexCoords;
-	
-	Vertex()
-	:Position(), Normal(), TexCoords()
-	{}
-	
-	Vertex(glm::vec3 pos, glm::vec3 normal ,glm::vec2 texCord)
-	:Position(pos), Normal(normal), TexCoords(texCord)
-	{}
+
+    Vertex() :Position(), Normal(), TexCoords() {}
+    
+    Vertex(glm::vec3 pos, glm::vec3 normal ,glm::vec2 texCord) 
+        :Position(pos), Normal(normal), TexCoords(texCord) {}
 };
 
 class SubMesh {
@@ -31,7 +28,7 @@ public:
     std::vector<Vertex> vertices;
     std::vector<VertexIndex> indices;
 
-    SubMesh(std::vector<Vertex> vertices, std::vector<VertexIndex> indices);
+    SubMesh(const std::vector<Vertex>& vertices, const std::vector<VertexIndex>& indices);
 
     void Draw();
 

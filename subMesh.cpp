@@ -11,7 +11,7 @@ struct OBJnode
 // Name : SubMesh (constructor)
 //-----------------------------------------------------------------------------
 // TODO: make vertices and indices movable to reduce overhead
-SubMesh::SubMesh(std::vector<Vertex> vertices, std::vector<VertexIndex> indices)
+SubMesh::SubMesh(const std::vector<Vertex>& vertices, const std::vector<VertexIndex>& indices)
 {
     this->vertices = vertices;
     this->indices = indices;
@@ -31,6 +31,7 @@ void SubMesh::Draw()
 {
     // Draw mesh
     glBindVertexArray(this->VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
     glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
 }
 
