@@ -3,24 +3,21 @@
 //-----------------------------------------------------------------------------
 // Name : Object (constructor)
 //-----------------------------------------------------------------------------
-Object::Object()
-	:m_mthxWorld(1.0f),
-    //m_mtxTranslate(1.0f),
-	m_mtxRot(1.0f),
-	m_mtxScale(1.0f),
-    m_rotAngles(0.0f)
+Object::Object() : m_mthxWorld(1.0f),
+                   m_mtxRot(1.0f),
+                   m_mtxScale(1.0f),
+                   m_rotAngles(0.0f)
 {
     m_pMesh = nullptr;
-	m_hideObject = false;
-	m_worldDirty = false;
+    m_hideObject = false;
+    m_worldDirty = false;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Object (constructor)
 //-----------------------------------------------------------------------------
-Object::Object::Object(const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute)
-    ://m_mtxTranslate(1.0f),
-	m_mtxScale(1.0f)
+Object::Object::Object(const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute) 
+    : m_mtxScale(1.0f)
 {
     InitObject(pos, angle, scale, pMesh, meshAttribute);
 }
@@ -32,13 +29,16 @@ Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle
     :m_mtxScale(1.0f)
 {
     std::vector<GLuint> meshMaterial = pMesh->getDefaultMaterials();
+    std::vector<std::string> meshTextures = pMesh->getDefaultTextures();
     std::vector<unsigned int> objAtteributes;
 
     if (meshMaterial.size() != 0)
     {
-        for (GLuint i : meshMaterial)
+        int minimum = std::min(meshMaterial.size(), meshTextures.size());
+        std::cout << minimum;
+        for (GLuint attributeIndex  = 0; attributeIndex < std::min(meshMaterial.size(), meshTextures.size()); attributeIndex++)
         {
-            objAtteributes.push_back(asset.getAttribute("", i, shaderPath));
+            objAtteributes.push_back(asset.getAttribute(meshTextures[attributeIndex], meshMaterial[attributeIndex], shaderPath));
         }
     }
     else
@@ -52,7 +52,7 @@ Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle
         GLuint i = asset.getMaterialIndex(matt);
         objAtteributes.push_back(asset.getAttribute("", i, shaderPath));
     }
-
+    
     InitObject(pos, angle, scale,pMesh,objAtteributes);
 }
 
@@ -135,12 +135,8 @@ void Object::SetObjectHidden(bool newStatus)
 //-----------------------------------------------------------------------------
 void Object::SetPos(glm::vec3 newPos)
 {
-    //glm::translate(m_mtxTranslate, newPos);
-//	m_mtxTranslate[3][0] = newPos.x;
-//	m_mtxTranslate[3][1] = newPos.y;
-//    m_mtxTranslate[3][2] = -newPos.z;
     m_pos = newPos;
-	m_worldDirty = true;
+    m_worldDirty = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -154,10 +150,11 @@ void Object::SetRotAngles(glm::vec3 newRotAngles)
 
     m_rotAngles = newRotAngles;
 
-    glm::rotate(mtxRotX,m_rotAngles.x,glm::vec3(1.0f,0.0f,0.0f));
-    glm::rotate(mtxRotY,m_rotAngles.y,glm::vec3(0.0f,1.0f,0.0f));
-    glm::rotate(mtxRotZ,m_rotAngles.z,glm::vec3(0.0f,0.0f,1.0f));
+    mtxRotX = glm::rotate(mtxRotX,m_rotAngles.x,glm::vec3(1.0f,0.0f,0.0f));
+    mtxRotY = glm::rotate(mtxRotY,m_rotAngles.y,glm::vec3(0.0f,1.0f,0.0f));
+    mtxRotZ = glm::rotate(mtxRotZ,m_rotAngles.z,glm::vec3(0.0f,0.0f,1.0f));
     m_mtxRot = mtxRotX * mtxRotY * mtxRotZ;
+    m_worldDirty = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -197,13 +194,10 @@ void Object::TranslatePos(float x, float y, float z)
 {
     if (x != 0 || y != 0 || z != 0)
     {
-        //m_mtxTranslate = glm::translate(m_mtxTranslate, glm::vec3(x,y,-z));
         m_pos.x += x;
         m_pos.y += y;
         m_pos.z -= z;
-//    m_mtxTranslate[3][0] += x;
-//    m_mtxTranslate[3][1] += y;
-//    m_mtxTranslate[3][2] -= z;
+
         m_worldDirty = true;
     }
 }

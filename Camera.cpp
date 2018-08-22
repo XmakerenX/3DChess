@@ -5,12 +5,12 @@
 // Constructor
 //-----------------------------------------------------------------------------
 Camera::Camera()
-    :m_vecRight(1.0f, 0.0f, 0.0f),
+    :m_mtxView(1.0f),
+     m_mtxProj(1.0f),
+     m_vecPos(0.0f, 0.0f, 0.0f),
      m_vecUp(0.0f, 1.0f, 0.0f),
      m_vecLook(0.0f, 0.0f, 0.0f),
-     m_vecPos(0.0f, 0.0f, 0.0f),
-     m_mtxView(1.0f),
-     m_mtxProj(1.0f)
+     m_vecRight(1.0f, 0.0f, 0.0f)
 {
     m_fFOV = 60.0f;
     m_fNearClip = 1.0f;
@@ -30,12 +30,13 @@ Camera::Camera()
 // TODO: make a proper copy Constructor
 //-----------------------------------------------------------------------------
 Camera::Camera(const Camera * pCamera)
-    :m_vecRight(1.0f, 0.0f, 0.0f),
+    :m_mtxView(1.0f),
+     m_mtxProj(1.0f),
+     m_vecPos(0.0f, 0.0f, 0.0f),
      m_vecUp(0.0f, 1.0f, 0.0f),
      m_vecLook(0.0f, 0.0f, 0.0f),
-     m_vecPos(0.0f, 0.0f, 0.0f),
-     m_mtxView(1.0f),
-     m_mtxProj(1.0f)
+     m_vecRight(1.0f, 0.0f, 0.0f)
+     
 {
     m_fFOV = 60.0f;
     m_fNearClip = 1.0f;
@@ -61,26 +62,11 @@ Camera::~Camera()
 void Camera::SetLookAt(const glm::vec3 &vecLookat)
 {
     glm::mat4x4 matrix;
-    glm::vec3 up,up2;
-
-    up2 = m_vecUp;
-    up = glm::cross(vecLookat, m_vecRight);
-
-    if (up == glm::vec3(0.0f, 0.0f, 0.0f))
-        up = up2;
-
-    //matrix = glm::lookAt(m_vecPos, vecLookat, up);
     matrix = glm::lookAt(m_vecPos, vecLookat, m_vecUp);
-
-    //m_vecRight = glm::vec3(matrix[0][1], matrix[1][1], matrix[2][1]);
+    
     m_vecRight = glm::vec3(matrix[0][0], matrix[1][0], matrix[2][0]);
-    //m_vecRight = glm::vec3(matrix[1][0], matrix[1][1], matrix[1][2]);
-    // WTF ???
-    m_vecUp = up2;
     m_vecLook = glm::vec3(matrix[0][2], matrix[1][2], matrix[2][2]);
-
     m_vecUp = glm::vec3(matrix[0][1], matrix[1][1], matrix[2][1]);
-    //m_vecLook = glm::vec3(matrix[2][0], matrix[2][1], matrix[2][2]);
 
     m_bViewDirty = true;
     m_bFrustumDirty = true;
@@ -160,7 +146,6 @@ const glm::mat4x4& Camera::GetViewMatrix()
         // do it every 50 calls as by than error could be noticeable
         if (calls == 50)
         {
-            glm::vec3 temp = m_vecLook;
             m_vecLook  = glm::normalize(m_vecLook);
             m_vecRight = glm::cross(m_vecUp, m_vecLook);
             m_vecRight = glm::normalize(m_vecRight);
@@ -170,9 +155,6 @@ const glm::mat4x4& Camera::GetViewMatrix()
             calls = 0;
         }
 
-        //m_vecLook = glm::vec3(0.0f, 0.0f, 0.0f);
-        //m_vecUp = glm::vec3(0.0, 1.0f, 0.0f);
-        //m_mtxView =  glm::lookAt(m_vecPos, m_vecLook, m_vecUp);
         m_mtxView[0][0] = m_vecRight.x;
         m_mtxView[0][1] = m_vecUp.x;
         m_mtxView[0][2] = m_vecLook.x;
@@ -184,10 +166,10 @@ const glm::mat4x4& Camera::GetViewMatrix()
         m_mtxView[2][0] = m_vecRight.z;
         m_mtxView[2][1] = m_vecUp.z;
         m_mtxView[2][2] = m_vecLook.z;
-
-        m_mtxView[3][0] =- glm::dot(m_vecPos, m_vecRight);
-        m_mtxView[3][1] =- glm::dot(m_vecPos, m_vecUp);
-        m_mtxView[3][2] =- glm::dot(m_vecPos, m_vecLook);
+        
+        m_mtxView[3][0] = -glm::dot(m_vecPos, m_vecRight);
+        m_mtxView[3][1] = -glm::dot(m_vecPos, m_vecUp);
+        m_mtxView[3][2] = -glm::dot(m_vecPos, m_vecLook);
 
         calls++;
 

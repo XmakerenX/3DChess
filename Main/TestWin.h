@@ -2,6 +2,7 @@
 #define  _TESTWIN_H
 
 #include "../GameWin.h"
+#include "ChessScene.h"
 
 class TestWin : public GameWin
 {
