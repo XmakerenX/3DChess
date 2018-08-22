@@ -6,7 +6,8 @@
 //-----------------------------------------------------------------------------
 TestWin::TestWin()
 {
-    m_scene = new Scene();
+    //m_scene = new Scene();
+    m_scene = new ChessScene();
 }
 
 //-----------------------------------------------------------------------------
@@ -73,10 +74,10 @@ void TestWin::initGUI()
 //-----------------------------------------------------------------------------
 void TestWin::renderGUI()
 {
-    m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
-    Point textSize = font_->calcTextRect("[]a");
-    font_->renderToRect(m_sprites[1], "[]a", Rect(0,50, 0 + textSize.x, 50 + textSize.y), WHITE_COLOR);
-    m_sprites[0].AddTintedQuad(Rect(0,50,0 + textSize.x, 50 + textSize.y), glm::vec4(1.0f, 0.0, 0.0, 1.0f));
+//      m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
+//     Point textSize = font_->calcTextRect("[]a");
+//     font_->renderToRect(m_sprites[1], "[]a", Rect(0,50, 0 + textSize.x, 50 + textSize.y), WHITE_COLOR);
+//     m_sprites[0].AddTintedQuad(Rect(0,50,0 + textSize.x, 50 + textSize.y), glm::vec4(1.0f, 0.0, 0.0, 1.0f));
 }
 
 //-----------------------------------------------------------------------------
