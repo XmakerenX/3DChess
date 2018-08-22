@@ -58,7 +58,7 @@ public:
     ~Scene();
 
     void InitScene();
-    void InitObjects();
+    virtual void InitObjects();
     void InitCamera(int width, int height);
     void InitLights();
 
@@ -73,8 +73,14 @@ public:
     Object& GetObject(int objIndex);
 
 
-private:
+protected:
+    std::vector<Object> m_objects;
     AssetManager m_assetManager;
+    static const std::string meshShaderPath2;
+    Object* curObj;
+    
+private:
+    
 
     Shader* meshShader;
     // cache for unifrom variable location
@@ -93,8 +99,6 @@ private:
     GLuint ubLightIndex;
     GLuint ubLight;
 
-    std::vector<Object> m_objects;
-    Object* curObj;
     Attribute m_lastUsedAttrib;
 };
 

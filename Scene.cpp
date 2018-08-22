@@ -1,7 +1,6 @@
 #include "Scene.h"
 
-const char* meshShaderPath2 = "objectShader4";
-
+const std::string Scene::meshShaderPath2 = "objectShader4";
 //-----------------------------------------------------------------------------
 // Name : Scene (constructor)
 //-----------------------------------------------------------------------------
@@ -51,7 +50,7 @@ void Scene::InitCamera(int width, int height)
 {
     m_camera.SetFOV(60.0f);
     m_camera.SetViewPort(0.0, 0.0, width, height, 1.0f, 1000.0f);
-    m_camera.SetPostion(glm::vec3(0.0f, 20.0f, -70.0f));
+    m_camera.SetPostion(glm::vec3(0.0f, 20.0f, 70.0f));
     m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
@@ -85,14 +84,14 @@ void Scene::InitLights()
 void Scene::InitObjects()
 {
     Mesh* pMesh = m_assetManager.getMesh("porsche.obj");
-    //pMesh->CalcVertexNormals(90.0f);
+    
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(0.5f, 0.5f, 0.5f), // scale
                            pMesh,
                            meshShaderPath2);
-
+    
     pMesh = m_assetManager.getMesh("king.fbx");
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(18.5f, -0.5f, 0.0f), // position
@@ -139,7 +138,6 @@ void Scene::Darwing()
         SetAttribute(attribVector[i]);
         for (Object obj : m_objects)
         {
-            //obj.Draw(meshShader, i, projViewMat);
             obj.Draw(projectionLoc, matWorldLoc, matWorldInverseLoc, i, projViewMat);
         }
     }
@@ -161,7 +159,14 @@ void Scene::SetAttribute(Attribute &attrib)
 
     if (attrib.texIndex != m_lastUsedAttrib.texIndex)
     {
-        glBindTexture(GL_TEXTURE_2D, m_assetManager.getTexture(attrib.texIndex));
+        
+        if (attrib.texIndex == "")
+            glUniform1i(glGetUniformLocation(m_assetManager.getShader(attrib.shaderIndex)->Program, "textured"), 0);
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, m_assetManager.getTexture(attrib.texIndex));
+            glUniform1i(glGetUniformLocation(m_assetManager.getShader(attrib.shaderIndex)->Program, "textured"), 1);
+        }
     }
 
     if (attrib.matIndex != m_lastUsedAttrib.matIndex)
@@ -213,53 +218,44 @@ void Scene::processInput(double timeDelta, bool keysStatus[], float X, float Y)
     float x = 0,y = 0,z = 0;
     if (keysStatus[GK_D])
     {
-        //x += 0.001f;
-        x -= 10.0f;
+        x += 10.0f;
     }
 
     if (keysStatus[GK_A])
     {
-        //x -= 0.001f;
-        x += 10.0f;
+        x -= 10.0f;
     }
 
     if (keysStatus[GK_W])
     {
-        //y += 0.001f;
         y += 10.0f;
     }
 
     if (keysStatus[GK_S])
     {
-        //y -= 0.001f;
         y -= 10.0f;
     }
 
     if (keysStatus[GK_Z])
     {
-        //z += 0.001f;
         z += 10.0f;
     }
 
     if (keysStatus[GK_X])
     {
-        //z -= 0.001f;
         z -= 10.0f;
     }
 
-    curObj->TranslatePos(x * timeDelta,y * timeDelta,z * timeDelta);
-    //m_objects[1].TranslatePos(x * timeDelta,y * timeDelta,z * timeDelta);
+    curObj->TranslatePos(x * timeDelta, y * timeDelta, z * timeDelta);
 
     if (keysStatus[GK_Q])
     {
         curObj->Rotate(-(glm::pi<float>() / 4) * timeDelta, 0.0f, 0.0f);
-        //m_objects[1].Rotate(-(glm::pi<float>() / 4) * timeDelta, 0.0f, 0.0f);
     }
 
     if (keysStatus[GK_E])
     {
         curObj->Rotate(glm::pi<float>() / 4 * timeDelta, 0.0f, 0.0f);
-        //m_objects[1].Rotate(glm::pi<float>() / 4 * timeDelta, 0.0f, 0.0f);
     }
 
     if (X != 0.0f || Y != 0.0)

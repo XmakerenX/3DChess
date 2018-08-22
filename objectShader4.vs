@@ -10,11 +10,13 @@ uniform mat4 projection;
 
 out vec3 pos; 
 out vec3 norm;
+out vec2 texUV;
 
 void main()
 {
 	pos = position;
 	norm = normal;
+	texUV = texCords;
 	gl_Position = projection * vec4(position, 1.0);
 	
 	
