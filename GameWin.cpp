@@ -390,7 +390,6 @@ bool GameWin::initOpenGL(int width, int height)
     // Render states
     //------------------------------------
     setRenderStates();
-    //glEnable(GL_NORMALIZE);
 
     //------------------------------------
     // buffers creation
@@ -401,12 +400,8 @@ bool GameWin::initOpenGL(int width, int height)
     // Shader loading
     //------------------------------------
     // complie shaders
-    //textShader = new Shader("text.vs", "text.frag");
-    //textureShader = new Shader("texture.vs", "texture.frag");
     spriteShader = m_asset.getShader("sprite");
-    //spriteShader = new Shader("sprite.vs", "sprite.frag");
     spriteTextShader = m_asset.getShader("spriteText");
-    //spriteTextShader = new Shader("spriteText.vs", "spriteText.frag");
 
     //------------------------------------
     // Init Scene
@@ -416,7 +411,6 @@ bool GameWin::initOpenGL(int width, int height)
         m_scene->InitScene();
         m_scene->InitCamera(width, height);
     }
-    //selectedObj = &m_scene->GetObject(1);
     
     // init our font
     font_ = m_asset.getFont("NotoMono", 40);
@@ -434,7 +428,7 @@ bool GameWin::initOpenGL(int width, int height)
     if (err != GL_NO_ERROR)
     {
         std::cout <<"Init: ERROR bitches\n";
-        std::cout << gluErrorString(err);
+        std::cout << gluErrorString(err) << "\n";
     }
 
     return true;
@@ -718,9 +712,6 @@ void GameWin::drawing()
 
     if(m_scene)
         m_scene->Darwing();
-	
-    // Render debug text to the screen
-    //textShader->Use();
 
     std::stringstream ss;
     ss << timer.getFPS();
@@ -742,13 +733,10 @@ void GameWin::drawing()
 //     else
 //         ss << "Miss :(";
 
-    renderFPS(m_sprites[1], *font_);
-
-    //int textureName = m_asset.getTexture("gold.png");
-    int textureName = m_asset.getTexture("yor.bmp");
+    
 
     glDisable(GL_DEPTH_TEST);
-
+    renderFPS(m_sprites[1], *font_);
     renderGUI();
 
     m_sprites[0].Render(spriteShader);
@@ -805,13 +793,8 @@ void GameWin::reshape(int width, int height)
         if(m_scene)
             m_scene->reshape(m_winWidth,m_winHeight);
         else
-            //m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 1000.0f);
             glViewport(0.0f,0.0f, width, height);
 
-//         textShader->Use();
-//         glUniform2i( glGetUniformLocation(textShader->Program, "screenSize"), width / 2, height / 2);
-//         textureShader->Use();
-//         glUniform2i( glGetUniformLocation(textureShader->Program, "screenSize"), width / 2, height / 2);
         spriteShader->Use();
         glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
         spriteTextShader->Use();
@@ -834,7 +817,7 @@ void GameWin::ProcessInput(double timeDelta)
         X = (float)(currentCursorPos.x - oldCursorLoc.x) / 3.0f;
         Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
 
-        //setCursorPos(Point(oldCursorLoc));
+        setCursorPos(Point(oldCursorLoc));
         XFlush(m_display);
     }
     
@@ -938,8 +921,11 @@ int GameWin::BeginGame()
                 if (event.xbutton.button == Button1)
                 {
                     std::cout << "left button pressed\n";
+                        
                     oldCursorLoc.x = event.xbutton.x;
                     oldCursorLoc.y = event.xbutton.y;
+                    mouseDrag = true;
+                    XDefineCursor(m_display, m_win, emptyCursorPixmap);
 
                     double curTime = timer.getCurrentTime();
                     if (curTime - lastLeftClickTime < s_doubleClickTime)
@@ -988,7 +974,7 @@ int GameWin::BeginGame()
                 {
                     std::cout << "left button released\n";
                     mouseDrag = false;
-                    //XUndefineCursor(m_display, m_win);
+                    XUndefineCursor(m_display, m_win);
                     sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
@@ -1011,9 +997,9 @@ int GameWin::BeginGame()
         
         timer.frameAdvanced();
 
-//        int err = glGetError();
-//        if (err != GL_NO_ERROR)
-//            std::cout <<"MsgLoop: ERROR bitches\n";
+       int err = glGetError();
+       if (err != GL_NO_ERROR)
+           std::cout <<"MsgLoop: ERROR bitches\n";
 
         if (!timer.isCap())
         {
