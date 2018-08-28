@@ -121,6 +121,13 @@ struct Material
     glm::vec4 emissive;
     float power;        // Sharpness if specular highlight
 
+    Material()
+    {}
+    
+    Material(const glm::vec4& _diffuse, const glm::vec4& _ambient, const glm::vec4& _specular, const glm::vec4& _emissive, float _power)
+        :diffuse(_diffuse), ambient(_ambient), specular(_specular), emissive(_emissive), power(_power)
+    {}
+    
     inline bool operator==(const Material& mat)
     {
         return (diffuse == mat.diffuse && ambient == mat.ambient && specular == mat.specular &&
@@ -143,8 +150,9 @@ struct Attribute
 //-----------------------------------------------------------------------------
 // Common render consts
 //-----------------------------------------------------------------------------
-const Rect EMPTY_RECT = Rect(0,0,0,0);
-const glm::vec4 WHITE_COLOR = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+const Rect EMPTY_RECT(0,0,0,0);
+const glm::vec4 WHITE_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
+const Material WHITE_MATERIAL(WHITE_COLOR, WHITE_COLOR, WHITE_COLOR, WHITE_COLOR, 1.0f);
 const GLuint NO_TEXTURE = 0;
 
 #endif // _RENDERTYPES_H
