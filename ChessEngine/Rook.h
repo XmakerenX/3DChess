@@ -6,8 +6,7 @@
 class rook : public piece
 {
 public:
-    rook(void);
-    rook(int playerColor);
+    rook(int playerColor, BOARD_POINT _boardPoistion);
     ~rook(void);
     virtual bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
     int   getType();

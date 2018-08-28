@@ -6,15 +6,15 @@ PIECES bishop::type = BISHOP;
 //-----------------------------------------------------------------------------
 // Name : Bishop (constructor)
 //-----------------------------------------------------------------------------
-bishop::bishop(void)
-{
-}
+// bishop::bishop(void)
+// {
+// }
 
 //-----------------------------------------------------------------------------
 // Name : Bishop (constructor)
 //-----------------------------------------------------------------------------
-bishop::bishop(int playerColor)
-    :piece(playerColor)
+bishop::bishop(int playerColor, BOARD_POINT _boardPoistion)
+    :piece(playerColor, _boardPoistion)
 {
     dx[0] = -1;
     dx[1] =  2;

@@ -5,15 +5,15 @@ PIECES king::type = KING;
 //-----------------------------------------------------------------------------
 // Name : King (constructor)
 //-----------------------------------------------------------------------------
-king::king(void)
-{
-}
+// king::king(void)
+// {
+// }
 
 //-----------------------------------------------------------------------------
 // Name : King (constructor)
 //-----------------------------------------------------------------------------
-king::king(int playerColor)
-    :piece(playerColor)
+king::king(int playerColor, BOARD_POINT _boardPoistion)
+    :piece(playerColor, _boardPoistion)
 {
     dx[0]=-1;
     dx[1]=2;

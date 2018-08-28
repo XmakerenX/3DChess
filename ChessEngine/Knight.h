@@ -6,8 +6,7 @@
 class knight : public piece
 {
 public:
-    knight(void);
-    knight(int playerColor);
+    knight(int playerColor, BOARD_POINT _boardPoistion);
     ~knight(void);
     bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
     int   getType();

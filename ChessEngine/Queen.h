@@ -7,8 +7,7 @@
 class queen : public piece
 {
 public:
-    queen(void);
-    queen(int playerColor);
+    queen(int playerColor, BOARD_POINT _boardPoistion);
     bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
     ~queen(void);
     int getType();

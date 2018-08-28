@@ -3,14 +3,7 @@
 //-----------------------------------------------------------------------------
 // Name : Piece (constructor)
 //-----------------------------------------------------------------------------
-piece::piece(void)
-{
-}
-
-//-----------------------------------------------------------------------------
-// Name : Piece (constructor)
-//-----------------------------------------------------------------------------
-piece::piece(int playerColor)
+piece::piece(int playerColor, BOARD_POINT _boardPoistion) : boardPoistion(_boardPoistion)
 {
 	m_onStartPoint = true;
 	this->color = playerColor;
@@ -24,14 +17,6 @@ piece::~piece(void)
 
 }
 
-
-// void piece::setXY(int x,int y)
-// {
-// 	bitmap::setXY(x,y);
-// 	if (pawnB!=NULL)
-// 		this->pawnB->setXY(x+4,y+4);
-// }
-
 //-----------------------------------------------------------------------------
 // Name : setMoved 
 //-----------------------------------------------------------------------------
@@ -41,11 +26,27 @@ void piece::setMoved(bool newStatus)
 }
 
 //-----------------------------------------------------------------------------
+// Name : setBoardPosition 
+//-----------------------------------------------------------------------------
+void piece::setBoardPosition(BOARD_POINT newPosition)
+{
+    boardPoistion = newPosition;
+}
+
+//-----------------------------------------------------------------------------
 // Name : getColor 
 //-----------------------------------------------------------------------------
 int piece::getColor()
 {
     return color;
+}
+
+//-----------------------------------------------------------------------------
+// Name : getPosition 
+//-----------------------------------------------------------------------------
+BOARD_POINT piece::getPosition()
+{
+    return boardPoistion;
 }
 
 //-----------------------------------------------------------------------------
@@ -76,7 +77,7 @@ void piece::getDy(int inputArray[])
 
 
 //-----------------------------------------------------------------------------
-// Name : getDy 
+// Name : isPieceInWay 
 //-----------------------------------------------------------------------------
 bool piece::isPieceInWay(BOARD_POINT startSquare, BOARD_POINT targetSquare, DIR_VEC dirVec, piece * sBoard[boardY][boardX])
 {

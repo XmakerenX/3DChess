@@ -5,16 +5,16 @@ PIECES queen::type = QUEEN;
 //-----------------------------------------------------------------------------
 // Name : queen (constructor)
 //-----------------------------------------------------------------------------
-queen::queen(void)
-{
-
-}
+// queen::queen(void)
+// {
+// 
+// }
 
 //-----------------------------------------------------------------------------
 // Name : queen (constructor)
 //-----------------------------------------------------------------------------
-queen::queen(int playerColor)
-    :piece(playerColor)
+queen::queen(int playerColor, BOARD_POINT _boardPoistion)
+    :piece(playerColor, _boardPoistion)
 {
     dx[0] = -1;
     dx[1] = 2;

@@ -6,17 +6,13 @@
 class Pawn : public piece
 {
 public:
-	Pawn(void);
-	Pawn(int playerColor);
-	~Pawn(void);
-	bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
-	int   getType();
-	//float getYpos();
-
-	//static float Ypos;
+    Pawn(int playerColor, BOARD_POINT _boardPoistion);
+    ~Pawn(void);
+    bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
+    int   getType();
 
 private:
-	static PIECES type;
+    static PIECES type;
 };
  
 #endif // _PAWN_H_

@@ -5,15 +5,15 @@ PIECES knight::type = KNIGHT;
 //-----------------------------------------------------------------------------
 // Name : knight (constructor)
 //-----------------------------------------------------------------------------
-knight::knight(void)
-{
-}
+// knight::knight(void)
+// {
+// }
 
 //-----------------------------------------------------------------------------
 // Name : knight (constructor)
 //-----------------------------------------------------------------------------
-knight::knight(int playerColor)
-    :piece(playerColor)
+knight::knight(int playerColor, BOARD_POINT _boardPoistion)
+    :piece(playerColor, _boardPoistion)
 {
     dx[0]=-2;
     dx[1]=3;

@@ -6,8 +6,7 @@
 class bishop : public piece
 {
 public:
-    bishop(void);
-    bishop(int playerColor);
+    bishop(int playerColor, BOARD_POINT _boardPoistion);
     ~bishop(void);
     virtual bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
     int   getType();

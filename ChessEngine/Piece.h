@@ -11,8 +11,7 @@ public:
     //-------------------------------------------------------------------------
     // Constructors & Destructors for This Class.
     //-------------------------------------------------------------------------
-    piece(void);
-    piece(int playerColor);
+    piece(int playerColor, BOARD_POINT _boardPoistion);
     virtual ~piece(void);
 
     //-------------------------------------------------------------------------
@@ -20,7 +19,6 @@ public:
     //-------------------------------------------------------------------------
     virtual bool  validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX])=0; 
     virtual int   getType() = 0; //returns the piece type PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING
-    //virtual float getYpos() = 0; //returns the piece Y pos in relation to the board
 
     //-------------------------------------------------------------------------
     // misc Functions
@@ -32,16 +30,18 @@ public:
     // Set methods for this class.
     //-------------------------------------------------------------------------
     void setMoved(bool newStatus);
-    //void setXY(int x,int y);
+    void setBoardPosition(BOARD_POINT newPosition);
 
     //-------------------------------------------------------------------------
     // Get methods for this class
     //-------------------------------------------------------------------------
     int getColor();
+    BOARD_POINT getPosition();
     void getDx(int inputArray[]);
     void getDy(int inputArray[]);
 
 protected:
+    BOARD_POINT boardPoistion;
     int color;
     bool m_onStartPoint;
     int dx[2];

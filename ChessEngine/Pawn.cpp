@@ -5,15 +5,15 @@ PIECES Pawn::type = PAWN;
 //-----------------------------------------------------------------------------
 // Name : Pawn (constructor)
 //-----------------------------------------------------------------------------
-Pawn::Pawn(void)
-{
-}
+// Pawn::Pawn(void)
+// {
+// }
 
 //-----------------------------------------------------------------------------
 // Name : Pawn (constructor)
 //-----------------------------------------------------------------------------
-Pawn::Pawn(int playerColor)
-    :piece(playerColor)
+Pawn::Pawn(int playerColor, BOARD_POINT _boardPoistion)
+    :piece(playerColor, _boardPoistion)
 {
     //type=PAWN;
     dx[0]=-1;

@@ -5,15 +5,15 @@ PIECES rook::type = ROOK;
 //-----------------------------------------------------------------------------
 // Name : Rook (constructor)
 //-----------------------------------------------------------------------------
-rook::rook(void)
-{
-}
+// rook::rook(void)
+// {
+// }
 
 //-----------------------------------------------------------------------------
 // Name : Rook (constructor)
 //-----------------------------------------------------------------------------
-rook::rook(int playerColor)
-    :piece(playerColor)
+rook::rook(int playerColor, BOARD_POINT _boardPoistion)
+    :piece(playerColor, _boardPoistion)
 {
     dx[0] = -1;
     dx[1] =  2;
