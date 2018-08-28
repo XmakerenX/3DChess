@@ -13,6 +13,7 @@ set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-lfontconfig -lfreetype -l
 add_library(${CHESS_ENGINE_NAME} ${CHESS_SRC_LIST})
 add_library(${ENGINE_NAME} ${SRC_LIST})
 add_executable(${PROJECT_NAME} ${MAIN_SRC_LIST})
+target_link_libraries(${PROJECT_NAME} ${CHESS_ENGINE_NAME})
 target_link_libraries(${PROJECT_NAME} ${ENGINE_NAME})
 add_executable(${EDITOR_EXE_NAME} ${EDITOR_SRC_LIST})
 target_link_libraries(${EDITOR_EXE_NAME} ${ENGINE_NAME})
