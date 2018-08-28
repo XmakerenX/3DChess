@@ -5,7 +5,9 @@
 //-----------------------------------------------------------------------------
 ChessScene::ChessScene()
 {
-    
+    boardObject = nullptr;
+    frameSquareObject = nullptr;
+    m_blackAttribute = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -13,12 +15,24 @@ ChessScene::ChessScene()
 //-----------------------------------------------------------------------------
 void ChessScene::InitObjects()
 {
+    Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
+                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
+                   glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
+                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
+    m_blackAttribute = m_assetManager.getAttribute("", black, meshShaderPath2);
+    
+    gameBoard = new board();
+    gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
+    gameBoard->init();
+    
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("board.gen"),
                            meshShaderPath2);
+    
+    boardObject = &m_objects[m_objects.size() - 1];
 
     std::vector<unsigned int> frameSquareAttribute;
     frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", WHITE_MATERIAL, meshShaderPath2));
@@ -30,16 +44,10 @@ void ChessScene::InitObjects()
                            m_assetManager.getMesh("square.gen"),
                            meshShaderPath2);
     
-    m_objects[1].SetObjectAttributes(frameSquareAttribute);
-    
-    m_objects.emplace_back(m_assetManager,
-                           glm::vec3(5.0f, 0.001f, 5.0f), // position
-                           glm::vec3(0.0f, 0.0f, 0.0f), // rotation
-                           glm::vec3(8.0f, 8.0f, 8.0f), // scale
-                           m_assetManager.getMesh("models/pawn.fbx"),
-                           meshShaderPath2);
-    
-    curObj = &m_objects[1];
+    frameSquareObject = &m_objects[m_objects.size() - 1];
+    frameSquareObject->SetObjectAttributes(frameSquareAttribute);
+        
+    curObj = &m_objects[m_objects.size() - 1];
 }
 
 //-----------------------------------------------------------------------------
@@ -56,8 +64,9 @@ bool ChessScene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
             {
                 Point squarePicked = getPickedSquare(m_faceCount, m_meshIndex);
                 
-                m_objects[1].SetPos(glm::vec3(squarePicked.x * 10, 0.001f, squarePicked.y * 10));
-                m_objects[2].SetPos(glm::vec3(squarePicked.x * 10 + 5, 0.001f, squarePicked.y * 10 + 5));
+                if(frameSquareObject)
+                    frameSquareObject->SetPos(glm::vec3(squarePicked.x * 10, 0.001f, squarePicked.y * 10));
+                //m_objects[2].SetPos(glm::vec3(squarePicked.x * 10 + 5, 0.001f, squarePicked.y * 10 + 5));
             }
             else
             {
@@ -97,9 +106,9 @@ Object * ChessScene::PickObject(Point& cursor, int& faceCount, int &meshIndex)
 
     glm::vec3 rayOrigin(view[3][0], view[3][1], view [3][2]);
 
-    if (m_objects.size()  > 0 && !m_objects[0].IsObjectHidden())
+    if (boardObject  && !boardObject->IsObjectHidden())
     {
-        Object& obj = m_objects[0];
+        Object& obj = *boardObject;
         
         glm::mat4x4 worldInverse = glm::inverse(obj.GetWorldMatrix());
         glm::vec3 rayObjOrigin = worldInverse * glm::vec4(rayOrigin, 1.0f);
@@ -107,7 +116,6 @@ Object * ChessScene::PickObject(Point& cursor, int& faceCount, int &meshIndex)
 
         if (obj.GetMesh()->IntersectTriangle(rayObjOrigin, rayObjDir, faceCount, meshIndex))
         {
-            //curObj = &obj;
             return &obj;
         }
     }
@@ -121,6 +129,68 @@ Object * ChessScene::PickObject(Point& cursor, int& faceCount, int &meshIndex)
 void ChessScene::Drawing()
 {
     Scene::Drawing();
+}
+
+//-----------------------------------------------------------------------------
+// Name : onChessPieceCreated
+//-----------------------------------------------------------------------------
+void ChessScene::onChessPieceCreated(piece* pPiece)
+{
+    std::string meshPath;
+    
+    Point pieceBoardPoint = boardPointToPoint(pPiece->getPosition());
+    glm::vec3 piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 0.001f, pieceBoardPoint.y * 10 + 5);
+    
+    glm::vec3 pieceScale = glm::vec3(8.0f, 8.0f, 8.0f);
+    glm::vec3 pieceRotaion = glm::vec3(0.0f, 0.0f, 0.0f);
+    switch (pPiece->getType())
+    {
+        case PAWN:
+            meshPath = "models/pawn.fbx";
+            break;
+            
+        case BISHOP:
+            meshPath = "models/bishop.fbx";
+            if (pPiece->getColor() == BLACK)
+                pieceRotaion.y = glm::half_pi<float>();
+            else
+                pieceRotaion.y = -glm::half_pi<float>();
+            break;
+            
+        case KNIGHT:
+            meshPath = "models/knight.fbx";
+            if (pPiece->getColor() == BLACK)
+                pieceRotaion.y = glm::pi<float>();
+            break;
+            
+        case ROOK:
+            meshPath = "models/rook.fbx";
+            pieceScale = pieceScale * glm::vec3(0.269f, 0.422f, 0.269f);
+            piecePosition.y += 3.4f;
+            break;
+            
+        case QUEEN:
+            meshPath = "models/queen.fbx";
+            break;
+            
+        case KING:
+            meshPath = "models/king.fbx";
+            break;
+    }
+    
+    m_objects.emplace_back(m_assetManager,
+                           piecePosition, // position
+                           pieceRotaion, // rotation
+                           pieceScale, // scale
+                           m_assetManager.getMesh(meshPath),
+                           meshShaderPath2);
+    
+    if (pPiece->getColor() == BLACK)
+    {
+        std::vector<unsigned int> blackAttribute;
+        blackAttribute.push_back(m_blackAttribute);
+        m_objects[m_objects.size() - 1].SetObjectAttributes(blackAttribute);
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -143,15 +213,15 @@ Point ChessScene::getPickedSquare(int facePicked, int meshPickedIndex)
 //-----------------------------------------------------------------------------
 // Name : pointToBoardPoint
 //-----------------------------------------------------------------------------
-Point ChessScene::pointToBoardPoint(Point pt)
+BOARD_POINT ChessScene::pointToBoardPoint(Point pt)
 {
-    return Point(pt.y, nCellWide - 1 - pt .x);
+    return BOARD_POINT(pt.y, nCellWide - 1 - pt .x);
 }
 
 //-----------------------------------------------------------------------------
 // Name : boardPointToPoint
 //-----------------------------------------------------------------------------
-Point ChessScene::boardPointToPoint(Point pt)
+Point ChessScene::boardPointToPoint(BOARD_POINT pt)
 {
-    return Point(nCellWide - 1 - pt.y, pt.x);
+    return Point(nCellWide - 1 - pt.col, pt.row);
 }

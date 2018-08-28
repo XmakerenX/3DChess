@@ -2,6 +2,7 @@
 #define _CHESSSCENE_H_
 
 #include "../Scene.h"
+#include "../ChessEngine/Board.h"
 
 class ChessScene : public Scene
 {
@@ -14,11 +15,17 @@ public:
     virtual Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
     virtual void Drawing();
     
+    void onChessPieceCreated(piece* pPiece);
+    
     Point getPickedSquare(int facePicked, int meshPickedIndex);
-    static Point pointToBoardPoint(Point pt);
-    static Point boardPointToPoint(Point pt);
+    static BOARD_POINT pointToBoardPoint(Point pt);
+    static Point boardPointToPoint(BOARD_POINT pt);
     
 private:
+    board* gameBoard;
+    Object* boardObject;
+    Object* frameSquareObject;
+    GLuint m_blackAttribute;
     static const int nCellHigh = 8;
     static const int nCellWide = 8;
 
