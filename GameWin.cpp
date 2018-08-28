@@ -711,11 +711,11 @@ void GameWin::drawing()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(m_scene)
-        m_scene->Darwing();
+        m_scene->Drawing();
 
     std::stringstream ss;
-    ss << timer.getFPS();
-    ss << " ";
+    //ss << timer.getFPS();
+    //ss << " ";
 //     //glm::vec3 obj2Pos = m_scene.GetObject(1).GetPosition();
 //     glm::vec3 obj2Pos = selectedObj->GetPosition();
 //     ss << obj2Pos.x;
@@ -732,11 +732,38 @@ void GameWin::drawing()
 //         ss << "Hit!";
 //     else
 //         ss << "Miss :(";
-
+    if (m_scene != nullptr)
+    {
+        ss << m_scene->getMeshIndex();
+        ss << " ";
+        ss << m_scene->getFaceCount();
+        ss << " | ";
+        int faceCount = m_scene->getFaceCount();
+        int temp = (faceCount / 8);
+        int square = (faceCount / 2) - (((faceCount / 2) / 4) * 4 );
+        if ( (m_scene->getMeshIndex() == 0 && temp % 2 == 0) ||
+         (m_scene->getMeshIndex() == 1 && temp % 2 != 0))
+        {
+            ss << square * 2;
+            square = square * 2;
+        }
+        else
+        {
+            ss << square * 2 + 1;
+            square = square * 2 + 1;
+        }
+        ss << " ";
+        //int temp = (8 - 1 - (faceCount / 8));
+        ss << temp;
+        ss << " | ";
+        ss << temp << " " << 7 - square;
+    }
     
 
     glDisable(GL_DEPTH_TEST);
     renderFPS(m_sprites[1], *font_);
+    font_->renderToRect(m_sprites[1], ss.str(), Rect(0,65, 500, 200), 
+                        glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
     renderGUI();
 
     m_sprites[0].Render(spriteShader);
