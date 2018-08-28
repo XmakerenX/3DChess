@@ -1,35 +1,34 @@
 #include "Board.h"
 
 //-----------------------------------------------------------------------------
-// Name : board (CONSTRUCTOR)
-// TODO : check if this is not useless...
-//-----------------------------------------------------------------------------
-// board::board()
-// {
-// 
-// }
-
-//-----------------------------------------------------------------------------
 // Name : board (Constructor)
 //-----------------------------------------------------------------------------
 board::board()
+: startSquare(-1, -1), targetSqaure(0,0), attLoc(0,0)
 {
     for (unsigned int i = 0; i < boardX; i++)
         for (unsigned int j = 0; j < boardY; j++)
                 SBoard[i][j] = nullptr;
-
-    startSquare.col = -1;
-    startSquare.row = -1;
-    
-    targetSqaure.col = 0;
-    targetSqaure.row = 0;
 
     currentPawn = nullptr;
     prevPawn = nullptr;
 
     kings[BOTTOM] = nullptr;
     kings[UPPER] = nullptr;
+}
 
+//-----------------------------------------------------------------------------
+// Name : board (Destructor)
+//-----------------------------------------------------------------------------
+board::~board(void)
+{
+}
+
+//-----------------------------------------------------------------------------
+// Name : init ()
+//-----------------------------------------------------------------------------
+void board::init()
+{
     currentPlayer = 1;
     pieceCount = 0;
 
@@ -54,14 +53,6 @@ board::board()
     m_gameActive = true;
     m_unitPromotion = false;
     m_kingInThreat = false;
-
-}
-
-//-----------------------------------------------------------------------------
-// Name : board (Destructor)
-//-----------------------------------------------------------------------------
-board::~board(void)
-{
 }
 
 //-----------------------------------------------------------------------------
@@ -158,7 +149,7 @@ bool board::LoadBoardFromFile()
         inputFile >> type;
         inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-        SBoard[i][j] = createPiece(color, static_cast<PIECES>(type));
+        SBoard[i][j] = createPiece(color, static_cast<PIECES>(type), BOARD_POINT(j,i));
     } while (!inputFile.eof());
 
     inputFile.close();
@@ -198,17 +189,18 @@ bool board::validateMove(BOARD_POINT startLoc,BOARD_POINT newLoc)
                 {
                     if (castling(dx, dy))//check if castling is valid 
                     {
-                        BOARD_POINT newRookSquare;
                         int x = dx/abs(dx);
                         int y = startSquare.col;
 
                         x = startSquare.row - dx -x;
 
-                        newRookSquare.col = y;
-                        newRookSquare.row = x + 2 * (dx / abs(dx)) ;
+                        BOARD_POINT newRookSquare(x + 2 * (dx / abs(dx)), y);
+//                         newRookSquare.col = y;
+//                         newRookSquare.row = x + 2 * (dx / abs(dx)) ;
 
                         piece * rookPiece = SBoard[y][x]; 
                         SBoard[y][x + (2 * dx)] = rookPiece;
+                        rookPiece->setBoardPosition(BOARD_POINT(x + (2 * dx), y));
                         SBoard[y][x] = nullptr;
                     }
                     else
@@ -220,6 +212,7 @@ bool board::validateMove(BOARD_POINT startLoc,BOARD_POINT newLoc)
         }
 
         SBoard[newLoc.col][newLoc.row]      = currentPawn;
+        currentPawn->setBoardPosition(newLoc);
         SBoard[startLoc.col][startLoc.row]  = NULL;
         
         // if king is under threat the move is illegal
@@ -354,8 +347,10 @@ bool board::isKingInThreat(int player,bool getAllAttackers)
     {
         piece * pCurPiece = pawnTemp[i];
 
-        BOARD_POINT curPieceSquare = getPieceSquare(pCurPiece);
-        BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
+        BOARD_POINT curPieceSquare = pCurPiece->getPosition();
+        BOARD_POINT curKingSquare  = kings[kingSide]->getPosition();
+//         BOARD_POINT curPieceSquare = getPieceSquare(pCurPiece);
+//         BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
 
         if ( (curPieceSquare.row  > 8 || curPieceSquare.row < 0) || ( curPieceSquare.col > 8 || curPieceSquare.col < 0))
         {
@@ -385,7 +380,8 @@ bool board::isKingInThreat(int player,bool getAllAttackers)
     if (threat > 0)
     {
         m_kingInThreat = true;
-        BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
+        BOARD_POINT curKingSquare  = kings[kingSide]->getPosition();
+        //BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
         return true;
     }
     else
@@ -403,7 +399,9 @@ void board::reverseMove()
 {
     //reset changes 
     SBoard[targetSqaure.col][targetSqaure.row] = prevPawn;
+    prevPawn->setBoardPosition(targetSqaure);
     SBoard[startSquare.col][startSquare.row]   = currentPawn;
+    currentPawn->setBoardPosition(startSquare);
 }
 
 //-----------------------------------------------------------------------------
@@ -412,14 +410,14 @@ void board::reverseMove()
 bool board::isEndGame(int curretPlayer)
 {
     int side;
-    BOARD_POINT kingSquare;
 
     if (curretPlayer == WHITE)
         side = BOTTOM;
     else
         side = UPPER;
 
-    kingSquare = getPieceSquare(kings[side]);
+    BOARD_POINT kingSquare = kings[side]->getPosition();
+    //BOARD_POINT kingSquare = getPieceSquare(kings[side]);
 
     if (attackers == 1)
     {
@@ -439,15 +437,17 @@ bool board::isEndGame(int curretPlayer)
         {
             //getting the pawn that we checking for right now
             piece* curPawn=pawnTemp[i];
-            BOARD_POINT curPieceSquare,curAttPieceSquare;
+            //BOARD_POINT curPieceSquare,curAttPieceSquare;
 
-            curPieceSquare = getPieceSquare(curPawn);
+            BOARD_POINT curPieceSquare = curPawn->getPosition();
+            //BOARD_POINT curPieceSquare = getPieceSquare(curPawn);
             // getting the square it is current at
             startSquare = curPieceSquare;
 
             //getting the location of the attacker on the board
-            curAttPieceSquare.row = kingSquare.row + attLoc.row;
-            curAttPieceSquare.col = kingSquare.col + attLoc.col;
+            BOARD_POINT curAttPieceSquare(kingSquare.row + attLoc.row, kingSquare.col + attLoc.col);
+//             curAttPieceSquare.row = kingSquare.row + attLoc.row;
+//             curAttPieceSquare.col = kingSquare.col + attLoc.col;
 
             //calculating dx dy of curPawn from 
             int dx = curPieceSquare.row - curAttPieceSquare.row;
@@ -509,7 +509,8 @@ bool board::isEndGame(int curretPlayer)
 
                     piece* curPawn=pawnTemp[i];//getting the pawn that we checking for right now
 
-                    startSquare = getPieceSquare(curPawn); // getting the square he is current at
+                    //startSquare = getPieceSquare(curPawn); // getting the square he is current at
+                    startSquare = curPawn->getPosition(); // getting the square he is current at
 
                     int dx = startSquare.row - targetSqaure.row;//calculating dx dy of curPawn from 
                     int dy = startSquare.col - targetSqaure.col;//Attacker
@@ -546,9 +547,9 @@ bool board::isEndGame(int curretPlayer)
         {
             if (dx !=0 || dy != 0)
             {
-                BOARD_POINT kingFleeLoc; 
-                kingFleeLoc.row = kingSquare.row - dx;//getting current flee square x,y
-                kingFleeLoc.col = kingSquare.col - dy;
+                BOARD_POINT kingFleeLoc(kingSquare.row - dx, kingSquare.col - dy); 
+//                 kingFleeLoc.row = kingSquare.row - dx;//getting current flee square x,y
+//                 kingFleeLoc.col = kingSquare.col - dy;
 
                 if ( (kingFleeLoc.row < 8 && kingFleeLoc.row >=0) && (kingFleeLoc.col < 8 && kingFleeLoc.col >=0 ) )//checking that we are still in board range
                 {
@@ -580,6 +581,7 @@ bool board::validateKingThreat(int curretPlayer)
     currentPawn = SBoard[startSquare.col][startSquare.row];
 
     SBoard[targetSqaure.col][targetSqaure.row] = currentPawn;
+    currentPawn->setBoardPosition(targetSqaure);
     SBoard[startSquare.col][startSquare.row]   = NULL;
     
     if (!isKingInThreat(currentPlayer,false))
@@ -595,7 +597,7 @@ bool board::validateKingThreat(int curretPlayer)
         return true;
     }
 
-    prevPawn = nullptr;
+    //prevPawn = nullptr;
     return true;
 }
 
@@ -622,9 +624,9 @@ bool board::canPawnMove(BOARD_POINT pieceSqaure,int color,int curretPlayer)
         {
             if (dx != 0 || dy != 0)
             {
-                BOARD_POINT possibleMoveLoc; 
-                possibleMoveLoc.row = startSquare.row - dx;//getting current possible square x,y that the pawn can move to
-                possibleMoveLoc.col = startSquare.col - dy;
+                BOARD_POINT possibleMoveLoc(startSquare.row - dx, startSquare.col - dy); 
+//                 possibleMoveLoc.row = startSquare.row - dx;//getting current possible square x,y that the pawn can move to
+//                 possibleMoveLoc.col = startSquare.col - dy;
 
                 if ( (possibleMoveLoc.row < 8 && possibleMoveLoc.row >=0) && (possibleMoveLoc.col < 8 && possibleMoveLoc.col >=0 ) )//checking that we are still in board range
                 {
@@ -815,11 +817,12 @@ bool board::isDraw(int currentPlayer)
         side = UPPER;
 
     unsigned int i = 0;
-    std::vector<piece*> pawnTemp=pawnsVec[side];
+    std::vector<piece*> pawnTemp = pawnsVec[side];
 
     while (i < pawnsVec[side].size())
     {
-        BOARD_POINT curPieceSquare = getPieceSquare(pawnTemp[i]);
+        //BOARD_POINT curPieceSquare = getPieceSquare(pawnTemp[i]);
+        BOARD_POINT curPieceSquare = pawnTemp[i]->getPosition();
         if(canPawnMove(curPieceSquare,side,currentPlayer))
             return false;
         i++;
@@ -831,34 +834,34 @@ bool board::isDraw(int currentPlayer)
 //-----------------------------------------------------------------------------
 // Name : createPiece ()
 //-----------------------------------------------------------------------------
-piece* board::createPiece(int playerColor, PIECES pieceType)
+piece* board::createPiece(int playerColor, PIECES pieceType, BOARD_POINT piecePos)
 {
     piece* pCurPiece = nullptr;
     
     switch(pieceType)
     {
         case PAWN:
-            pCurPiece = new Pawn(playerColor);
+            pCurPiece = new Pawn(playerColor, piecePos);
             break;
             
         case KNIGHT:
-            pCurPiece = new knight(playerColor);
+            pCurPiece = new knight(playerColor, piecePos);
             break;
                 
         case BISHOP:
-            pCurPiece = new bishop(playerColor);
+            pCurPiece = new bishop(playerColor, piecePos);
             break;
                 
         case ROOK:
-            pCurPiece = new rook(playerColor);
+            pCurPiece = new rook(playerColor, piecePos);
             break;
                 
         case QUEEN:
-            pCurPiece = new queen(playerColor);
+            pCurPiece = new queen(playerColor, piecePos);
             break;
                 
         case KING:
-            pCurPiece = new king(playerColor);
+            pCurPiece = new king(playerColor, piecePos);
             break;
     }
 
@@ -881,26 +884,27 @@ piece* board::createPiece(int playerColor, PIECES pieceType)
 bool board::createStartingPiece(int i, int j, int playerColor)
 {
     piece* pNewPiece = nullptr;
+    BOARD_POINT piecePos(j,i);
     if (i == 1 || i == 6)
-        pNewPiece = createPiece(playerColor, PAWN);
+        pNewPiece = createPiece(playerColor, PAWN, piecePos);
 
     if (i == 0 || i == 7)
     {
         if (j == 0 || j == 7)
-            pNewPiece = createPiece(playerColor, ROOK);
+            pNewPiece = createPiece(playerColor, ROOK, piecePos);
 
         if (j == 1 || j == 6)
-            pNewPiece = createPiece(playerColor, KNIGHT);
+            pNewPiece = createPiece(playerColor, KNIGHT, piecePos);
 
         if (j == 2 || j == 5 )
-            pNewPiece = createPiece(playerColor, BISHOP);
+            pNewPiece = createPiece(playerColor, BISHOP, piecePos);
 
         if (j == 3)
-            pNewPiece = createPiece(playerColor, QUEEN);
+            pNewPiece = createPiece(playerColor, QUEEN, piecePos);
 
         if (j == 4)
         {
-            pNewPiece = createPiece(playerColor, KING);
+            pNewPiece = createPiece(playerColor, KING, piecePos);
             if (playerColor == BLACK)
                 kings[UPPER] =  (king*)pNewPiece;
             else
@@ -971,7 +975,8 @@ void board::endTurn()
             else
                 kingSide = UPPER;
 
-            BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
+            BOARD_POINT curKingSquare  = kings[kingSide]->getPosition();
+            //BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
             //setThreatSquare(curKingSquare);
         }
         else
@@ -982,7 +987,8 @@ void board::endTurn()
             else
                 kingSide = UPPER;
 
-            BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
+            BOARD_POINT curKingSquare  = kings[kingSide]->getPosition();
+            //BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
             //setThreatSquare(curKingSquare);
             m_endTurnSig(currentPlayer);
         }
@@ -1038,19 +1044,19 @@ void board::killPiece(piece * pPieceToKill, BOARD_POINT pieceSquare)
 //-----------------------------------------------------------------------------
 // Name : getPieceSquare ()
 //-----------------------------------------------------------------------------
-BOARD_POINT board::getPieceSquare(piece * pPiece)
-{
-    BOARD_POINT boardSquare;
-
-//     D3DXMATRIX objWorldMat = pPiece->m_mtxWorld;
-//     D3DXVECTOR3 objectPos = D3DXVECTOR3(objWorldMat._41,objWorldMat._42,objWorldMat._43);
+// BOARD_POINT board::getPieceSquare(piece * pPiece)
+// {
+//     BOARD_POINT boardSquare(0,0);
 // 
-//     // ( object posX - board posX ) / (stepX * sclaeX) = row coordinate of the square 
-//     boardSquare.row = (objectPos .x - m_pos.x) / (m_stepX * m_meshScale.x); 
-//     boardSquare.col = ( (m_pos.z - objectPos.z) / (m_stepZ * m_meshScale.z ) ) + (boardY - 1) + 0.5;
-
-    return boardSquare;
-}
+// //     D3DXMATRIX objWorldMat = pPiece->m_mtxWorld;
+// //     D3DXVECTOR3 objectPos = D3DXVECTOR3(objWorldMat._41,objWorldMat._42,objWorldMat._43);
+// // 
+// //     // ( object posX - board posX ) / (stepX * sclaeX) = row coordinate of the square 
+// //     boardSquare.row = (objectPos .x - m_pos.x) / (m_stepX * m_meshScale.x); 
+// //     boardSquare.col = ( (m_pos.z - objectPos.z) / (m_stepZ * m_meshScale.z ) ) + (boardY - 1) + 0.5;
+// 
+//     return boardSquare;
+// }
 
 //-----------------------------------------------------------------------------
 // Name : getBoardStatus ()
@@ -1180,9 +1186,9 @@ bool board::PromoteUnit(PIECES type)
             currentPawn = nullptr;
             piece* pNewPiece = nullptr;
             if (currentPlayer == WHITE)
-                pNewPiece = createPiece(WHITE, type);
+                pNewPiece = createPiece(WHITE, type, targetSqaure);
             else
-                pNewPiece = createPiece(BLACK, type);
+                pNewPiece = createPiece(BLACK, type, targetSqaure);
 
             if (pNewPiece)
                 SBoard[targetSqaure.col][targetSqaure.row] = pNewPiece;
@@ -1212,9 +1218,9 @@ bool board::castling(int dx , int dy)
 
     x = startSquare.row - dx -x;
 
-    BOARD_POINT newRookSquare;
-    newRookSquare.col = y;
-    newRookSquare.row = x + 2 * (dx / abs(dx)) ;
+    BOARD_POINT newRookSquare(x + 2 * (dx / abs(dx)), y);
+//     newRookSquare.col = y;
+//     newRookSquare.row = x + 2 * (dx / abs(dx));
 
     piece * rookPiece = SBoard[y][x]; 
     if (rookPiece != NULL)

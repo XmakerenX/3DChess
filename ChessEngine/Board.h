@@ -27,7 +27,7 @@ enum SIDES {UPPER, BOTTOM};
 class board
 {
 public:
-    typedef boost::signals2::signal<void (piece*)>   singal_pieceCreated;
+    typedef boost::signals2::signal<void (piece*)>       singal_pieceCreated;
     typedef boost::signals2::signal<void (std::string)>  singal_gameover;
     typedef boost::signals2::signal<void (int)>          signal_endTurn;
 
@@ -36,15 +36,17 @@ public:
     //-------------------------------------------------------------------------
     board();
     ~board(void);
-
-    piece*      createPiece(int playerColor, PIECES pieceType);
+    
+    void init();
+    
+    piece*      createPiece(int playerColor, PIECES pieceType, BOARD_POINT piecePos);
     bool        createStartingPiece(int i, int j, int playerColor);
 
     void        connectToPieceCreated   (const singal_pieceCreated::slot_type& subscriber);
     void        connectToGameOver       (const singal_gameover::slot_type& subscriber);
     void        conntectToEndTurn       (const signal_endTurn::slot_type& subscriber );
 
-    BOARD_POINT getPieceSquare(piece * pPiece);
+    //BOARD_POINT getPieceSquare(piece * pPiece);
     void        killPiece(piece * pPieceToKill, BOARD_POINT pieceSquare);
     void        endTurn();
     void        reverseMove();
