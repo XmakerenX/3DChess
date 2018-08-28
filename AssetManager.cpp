@@ -1,4 +1,5 @@
 #include "AssetManager.h"
+#include "MeshGenerator.h"
 #include <sstream>
 
 //-----------------------------------------------------------------------------
@@ -401,9 +402,11 @@ Mesh* AssetManager::getMesh(const std::string& meshPath)
         std::getline(s, suffix, '.');
         // load the texutre using the appropriate method
         if (suffix == "obj")
-			return loadObjMesh(meshPath);
+            return loadObjMesh(meshPath);
         if (suffix == "fbx")
             return loadFBXMesh(meshPath);
+        if (suffix == "gen")
+            return generateMesh(meshPath);
 
         std::cout << suffix << " is not a supported mesh type\n";
         return nullptr;
@@ -470,6 +473,28 @@ Mesh *AssetManager::loadFBXMesh(const std::string &meshPath)
     }
     else
         return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+// Name : generateMesh
+//-----------------------------------------------------------------------------
+Mesh*  AssetManager::generateMesh(const std::string& meshString)
+{
+    if (meshString == "board.gen")
+    {
+        m_meshCache.insert(std::pair<std::string, Mesh>(meshString, MeshGenerator::createBoardMesh(*this, glm::vec2(10.0f, 10.0f))));
+        
+        return &m_meshCache[meshString];
+    }
+    
+    if (meshString == "square.gen")
+    {
+        m_meshCache.insert(std::pair<std::string, Mesh>(meshString, MeshGenerator::createSquareMesh(*this, glm::vec2(10.0f, 10.0f))));
+        
+        return &m_meshCache[meshString];
+    }
+    
+    return nullptr;
 }
 
 //-----------------------------------------------------------------------------

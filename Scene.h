@@ -62,15 +62,19 @@ public:
     void InitCamera(int width, int height);
     void InitLights();
 
-    void Darwing();
+    virtual void Drawing();
     void SetAttribute(Attribute& attrib);
 
     void reshape(int width, int height);
     void processInput (double timeDelta, bool keysStatus[], float X, float Y);
     virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
 
-    Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
+    virtual Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
     Object& GetObject(int objIndex);
+    
+    int getFaceCount();
+    int getMeshIndex();
+    
 
 
 protected:
@@ -79,17 +83,16 @@ protected:
     static const std::string meshShaderPath2;
     Object* curObj;
     
-private:
+    FreeCam m_camera;
+    int m_faceCount;
+    int m_meshIndex;
     
-
     Shader* meshShader;
     // cache for unifrom variable location
     GLuint projectionLoc;
     GLuint matWorldLoc;
     GLuint matWorldInverseLoc;
     GLuint vecEyeLoc;
-
-    FreeCam m_camera;
 
     GLuint ubMaterialIndex;
     GLuint ubMaterial;

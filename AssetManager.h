@@ -57,6 +57,7 @@ private:
 
     Mesh*  loadObjMesh(const std::string& meshPath);
     Mesh*  loadFBXMesh(const std::string& meshPath);
+    Mesh*  generateMesh(const std::string& meshString);
 
     const unsigned long START_TEXTURE_SIZE = 100;
 

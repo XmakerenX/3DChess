@@ -9,23 +9,18 @@ public:
     ChessScene();
     
     virtual void InitObjects();
-    Mesh createBoardMesh(const glm::vec2& scale);
-    void createBoardSubMeshes(float stepX, float stepZ, std::vector<SubMesh>& boardSubMeshes);
-    void createBoardIndices(std::vector<VertexIndex>& squareIndices, VertexIndex curIndex, int nVertX);
     
-    void createFrameSubMeshes(float stepX, float stepZ, std::vector<SubMesh>& boardSubMeshes);
-    void createHorizontalFrameSquare(std::vector<Vertex>& frameSquaresVertices, std::vector<VertexIndex>& frameIndices, const glm::vec3& framePos, float stepX, float stepZ, int i);
-    void createVerticalFrameSquare(std::vector<Vertex>& frameSquaresVertices, std::vector<VertexIndex>& frameIndices, const glm::vec3& framePos, float stepX, float stepZ, int i);
-    void createCornersFrameSquare(std::vector<Vertex>& frameSquaresVertices, std::vector<VertexIndex>& frameIndices, const glm::vec3& framePos, float stepX, float stepZ);
+    virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
+    virtual Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
+    virtual void Drawing();
     
-    void createFrameSquare(glm::vec3 pos, float stepX, float stepZ, const glm::vec2 uvValues[4],int startValue,std::vector<Vertex>& frameSquaresVertices, std::vector<VertexIndex>& frameIndices);
+    Point getPickedSquare(int facePicked, int meshPickedIndex);
+    static Point pointToBoardPoint(Point pt);
+    static Point boardPointToPoint(Point pt);
     
 private:
-    Mesh m_boardMesh;
     static const int nCellHigh = 8;
     static const int nCellWide = 8;
-    static const glm::vec2 uvValues[4];
-    static const glm::vec2 reverseUvValues[4];
 
 };
 

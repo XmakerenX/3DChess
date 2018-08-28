@@ -9,6 +9,9 @@ Scene::Scene()
     nActiveLights = 0;
     ubLight = 0;
 
+    m_faceCount = -1;
+    m_meshIndex = -1;
+    
     curObj = nullptr;
 }
 
@@ -115,12 +118,13 @@ void Scene::InitObjects()
 //-----------------------------------------------------------------------------
 // Name : Darwing ()
 //-----------------------------------------------------------------------------
-void Scene::Darwing()
+void Scene::Drawing()
 {
     //clear m_lastUsedAttrib
     m_lastUsedAttrib.matIndex = -1;
-    m_lastUsedAttrib.shaderIndex = "";
-    m_lastUsedAttrib.texIndex = "";
+    // space used for the path as no valid path should include only a space
+    m_lastUsedAttrib.shaderIndex = " ";
+    m_lastUsedAttrib.texIndex = " ";
 
     // sets the camera position in the shader
     // TODO: this call should only happen if the camera had moved since previous frame
@@ -272,8 +276,10 @@ bool Scene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
     {
         case MouseEventType::RightButton:
         {
-            int faceCount, meshIndex;
-            PickObject(event.cursorPos, faceCount, meshIndex);
+            Object* temp = PickObject(event.cursorPos, m_faceCount, m_meshIndex);
+            if(temp != nullptr)
+                curObj = temp;
+            
             return true;
         }break;
         
@@ -332,4 +338,20 @@ Object* Scene::PickObject(Point &cursor, int& faceCount, int& meshIndex)
 Object& Scene::GetObject(int objIndex)
 {
     return m_objects[objIndex];
+}
+
+//-----------------------------------------------------------------------------
+// Name : getFaceCount ()
+//-----------------------------------------------------------------------------
+int Scene::getFaceCount()
+{
+    return m_faceCount;
+}
+
+//-----------------------------------------------------------------------------
+// Name : getMeshIndex ()
+//-----------------------------------------------------------------------------
+int Scene::getMeshIndex()
+{
+    return m_meshIndex;
 }
