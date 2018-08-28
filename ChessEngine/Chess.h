@@ -8,6 +8,18 @@ enum PIECES{PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING};
 
 struct BOARD_POINT  
 {
+    BOARD_POINT(unsigned int _row, unsigned int _col)
+    {
+        row = _row;
+        col = _col;
+    }
+    
+    BOARD_POINT(const BOARD_POINT& toCopy)
+    {
+        row = toCopy.row;
+        col = toCopy.col;
+    }
+    
     unsigned int row;   //j
     unsigned int col;   //i
 };
