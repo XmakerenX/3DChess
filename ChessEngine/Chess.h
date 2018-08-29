@@ -20,8 +20,8 @@ struct BOARD_POINT
         col = toCopy.col;
     }
     
-    unsigned int row;   //j
-    unsigned int col;   //i
+    int row;   //j
+    int col;   //i
 };
 
 struct DIR_VEC
