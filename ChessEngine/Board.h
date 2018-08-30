@@ -96,29 +96,29 @@ public:
 
 private:
     //the actual game board indicate what piece on what square
-    piece * SBoard[boardY][boardX];
+    piece * m_board[boardY][boardX];
 
     //the pawn that currently  being moved
-    piece * currentPawn;
+    piece * m_currentPawn;
     //used to save the piece on the target square in order to reverse if the move is not valid
-    piece * prevPawn;
+    piece * m_prevPawn;
 
     //the square that was pressed
-    BOARD_POINT  startSquare;
+    BOARD_POINT  m_startSquare;
     // the square that the piece should be moved to 
-    BOARD_POINT  targetSqaure;
+    BOARD_POINT  m_targetSqaure;
 
-    std::vector<piece*> pawnsVec[2];
-    std::vector<piece*> deadPawnsVec[2];
+    std::vector<piece*> m_pawnsVec[2];
+    std::vector<piece*> m_deadPawnsVec[2];
 
-    king * kings[2];
-    int attackers;
+    king * m_kings[2];
+    int m_nAttackers;
 
-    BOARD_POINT attLoc;
+    BOARD_POINT m_attLoc;
 
-    unsigned int pieceCount;
+    unsigned int m_pieceCount;
 
-    int currentPlayer;
+    int m_currentPlayer;
     bool m_gameActive;
     bool m_unitPromotion;
     bool m_kingInThreat;
