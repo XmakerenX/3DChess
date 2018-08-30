@@ -1,3 +1,6 @@
+#ifndef  _LISTBOXUI_CPP
+#define  _LISTBOXUI_CPP
+
 #include "ListBoxUI.h"
 #include "DialogUI.h"
 #include <algorithm>
@@ -624,3 +627,5 @@ void ListBoxUI<T>::SetScrollBarWidth(int nWidth)
 {
     m_ScrollBar.setSize(nWidth, m_ScrollBar.getHeight());
 }
+
+#endif  //_LISTBOXUI_CPP

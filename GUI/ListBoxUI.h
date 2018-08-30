@@ -1,5 +1,5 @@
-#ifndef  _ITEMBOXUI_H
-#define  _ITEMBOXUI_H
+#ifndef  _LISTBOXUI_H
+#define  _LISTBOXUI_H
 
 #include "ControlUI.h"
 #include "ScrollBarUI.h"
@@ -111,4 +111,4 @@ private:
 
 };
 
-#endif  //_ITEMBOXUI_H
+#endif  //_LISTBOXUI_H
