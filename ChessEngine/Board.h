@@ -28,6 +28,8 @@ class board
 {
 public:
     typedef boost::signals2::signal<void (piece*)>       singal_pieceCreated;
+    typedef boost::signals2::signal<void (piece*, BOARD_POINT, BOARD_POINT)> signal_pieceMoved;
+    typedef boost::signals2::signal<void (piece*)>       signal_pieceKilled;
     typedef boost::signals2::signal<void (std::string)>  singal_gameover;
     typedef boost::signals2::signal<void (int)>          signal_endTurn;
 
@@ -43,10 +45,11 @@ public:
     bool        createStartingPiece(int i, int j, int playerColor);
 
     void        connectToPieceCreated   (const singal_pieceCreated::slot_type& subscriber);
+    void        connectToPieceMoved     (const signal_pieceMoved::slot_type& subscriber);
+    void        connectToPieceKilled     (const signal_pieceKilled::slot_type& subscriber);
     void        connectToGameOver       (const singal_gameover::slot_type& subscriber);
     void        conntectToEndTurn       (const signal_endTurn::slot_type& subscriber );
 
-    //BOARD_POINT getPieceSquare(piece * pPiece);
     void        killPiece(piece * pPieceToKill, BOARD_POINT pieceSquare);
     void        endTurn();
     void        reverseMove();
@@ -122,6 +125,8 @@ private:
     std::string m_curStatus;
 
     boost::signals2::signal<void (piece*)>  m_pieceCreatedSig;
+    boost::signals2::signal<void (piece*, BOARD_POINT, BOARD_POINT)>  m_pieceMovedSig;
+    boost::signals2::signal<void (piece*)>  m_pieceKilledSig;
     boost::signals2::signal<void (std::string)> m_gameOverSig;
     boost::signals2::signal<void (int)>         m_endTurnSig;
     

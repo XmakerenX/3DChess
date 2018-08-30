@@ -16,6 +16,8 @@ public:
     virtual void Drawing();
     
     void onChessPieceCreated(piece* pPiece);
+    void onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint, BOARD_POINT pieceNewBoardPoint);
+    void onChessPieceKilled(piece* pPiece);
     
     Point getPickedSquare(int facePicked, int meshPickedIndex);
     static BOARD_POINT pointToBoardPoint(Point pt);
@@ -26,6 +28,7 @@ private:
     Object* boardObject;
     Object* frameSquareObject;
     GLuint m_blackAttribute;
+    int pieceObjects[8][8];
     static const int nCellHigh = 8;
     static const int nCellWide = 8;
 

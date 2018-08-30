@@ -75,6 +75,10 @@ public:
     int getFaceCount();
     int getMeshIndex();
     
+    std::string& getStatus()
+    {
+        return status;
+    }
 
 
 protected:
@@ -103,6 +107,8 @@ protected:
     GLuint ubLight;
 
     Attribute m_lastUsedAttrib;
+    
+    std::string status;
 };
 
 #endif  //_SCENE_H

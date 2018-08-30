@@ -179,6 +179,8 @@ bool board::validateMove(BOARD_POINT startLoc,BOARD_POINT newLoc)
         if (targetPiece != nullptr)
         {
             prevPawn = targetPiece;
+            // soft kill this piece by setting out of the bounds of the board
+            prevPawn->setBoardPosition(BOARD_POINT(10,10));
         }
         else
         {
@@ -195,12 +197,11 @@ bool board::validateMove(BOARD_POINT startLoc,BOARD_POINT newLoc)
                         x = startSquare.row - dx -x;
 
                         BOARD_POINT newRookSquare(x + 2 * (dx / abs(dx)), y);
-//                         newRookSquare.col = y;
-//                         newRookSquare.row = x + 2 * (dx / abs(dx)) ;
 
                         piece * rookPiece = SBoard[y][x]; 
-                        SBoard[y][x + (2 * dx)] = rookPiece;
-                        rookPiece->setBoardPosition(BOARD_POINT(x + (2 * dx), y));
+                        SBoard[newRookSquare.col][newRookSquare.row] = rookPiece;
+                        m_pieceMovedSig(rookPiece, rookPiece->getPosition() ,newRookSquare);
+                        rookPiece->setBoardPosition(newRookSquare);
                         SBoard[y][x] = nullptr;
                     }
                     else
@@ -211,9 +212,9 @@ bool board::validateMove(BOARD_POINT startLoc,BOARD_POINT newLoc)
             }
         }
 
-        SBoard[newLoc.col][newLoc.row]      = currentPawn;
+        SBoard[newLoc.col][newLoc.row] = currentPawn;
         currentPawn->setBoardPosition(newLoc);
-        SBoard[startLoc.col][startLoc.row]  = NULL;
+        SBoard[startLoc.col][startLoc.row]  = nullptr;
         
         // if king is under threat the move is illegal
         if(isKingInThreat(currentPlayer,false))
@@ -229,7 +230,7 @@ bool board::validateMove(BOARD_POINT startLoc,BOARD_POINT newLoc)
                 killPiece(prevPawn,newLoc);
 
             currentPawn->setMoved(true);
-            prevPawn = NULL;
+            prevPawn = nullptr;
             return true;
         }
     }
@@ -258,7 +259,8 @@ void board::processPress(BOARD_POINT pressedSqaure)
         m_curStatus = "the pressed square is " + out.str() + ","+out2.str();
 
         // check if the object is in the board bounds if not we have nothing to do with this object
-        if (pressedSqaure.row < boardX && pressedSqaure.col < boardY && startSquare.row < boardX && startSquare.col < boardY) 
+        if (pressedSqaure.row < boardX && pressedSqaure.col < boardY && pressedSqaure.row >= 0 && pressedSqaure.col >= 0 &&
+            startSquare.row < boardX && startSquare.col < boardY && startSquare.row >= 0 && startSquare.col >= 0) 
         {
             targetSqaure = pressedSqaure;
             // process press and check if the move is valid ?
@@ -285,6 +287,8 @@ void board::processPress(BOARD_POINT pressedSqaure)
                     if (targetSqaure.col == 0 || targetSqaure.col == 7)
                         m_unitPromotion = true;
                 }
+                    
+                m_pieceMovedSig(currentPawn, startSquare, pressedSqaure);
                     
                 //the move was valid now ends current player turn 
                 if (!m_unitPromotion)//checks if pawn need to be promoted if yes wait till the main program tell us user selection and then proceed to endTurn
@@ -349,9 +353,7 @@ bool board::isKingInThreat(int player,bool getAllAttackers)
 
         BOARD_POINT curPieceSquare = pCurPiece->getPosition();
         BOARD_POINT curKingSquare  = kings[kingSide]->getPosition();
-//         BOARD_POINT curPieceSquare = getPieceSquare(pCurPiece);
-//         BOARD_POINT curKingSquare  = getPieceSquare(kings[kingSide]);
-
+        
         if ( (curPieceSquare.row  > 8 || curPieceSquare.row < 0) || ( curPieceSquare.col > 8 || curPieceSquare.col < 0))
         {
             i++;
@@ -397,9 +399,10 @@ bool board::isKingInThreat(int player,bool getAllAttackers)
 //-----------------------------------------------------------------------------
 void board::reverseMove()
 {
-    //reset changes 
     SBoard[targetSqaure.col][targetSqaure.row] = prevPawn;
-    prevPawn->setBoardPosition(targetSqaure);
+    if (prevPawn)
+        prevPawn->setBoardPosition(targetSqaure);
+    
     SBoard[startSquare.col][startSquare.row]   = currentPawn;
     currentPawn->setBoardPosition(startSquare);
 }
@@ -440,14 +443,11 @@ bool board::isEndGame(int curretPlayer)
             //BOARD_POINT curPieceSquare,curAttPieceSquare;
 
             BOARD_POINT curPieceSquare = curPawn->getPosition();
-            //BOARD_POINT curPieceSquare = getPieceSquare(curPawn);
             // getting the square it is current at
             startSquare = curPieceSquare;
 
             //getting the location of the attacker on the board
             BOARD_POINT curAttPieceSquare(kingSquare.row + attLoc.row, kingSquare.col + attLoc.col);
-//             curAttPieceSquare.row = kingSquare.row + attLoc.row;
-//             curAttPieceSquare.col = kingSquare.col + attLoc.col;
 
             //calculating dx dy of curPawn from 
             int dx = curPieceSquare.row - curAttPieceSquare.row;
@@ -548,8 +548,6 @@ bool board::isEndGame(int curretPlayer)
             if (dx !=0 || dy != 0)
             {
                 BOARD_POINT kingFleeLoc(kingSquare.row - dx, kingSquare.col - dy); 
-//                 kingFleeLoc.row = kingSquare.row - dx;//getting current flee square x,y
-//                 kingFleeLoc.col = kingSquare.col - dy;
 
                 if ( (kingFleeLoc.row < 8 && kingFleeLoc.row >=0) && (kingFleeLoc.col < 8 && kingFleeLoc.col >=0 ) )//checking that we are still in board range
                 {
@@ -581,8 +579,9 @@ bool board::validateKingThreat(int curretPlayer)
     currentPawn = SBoard[startSquare.col][startSquare.row];
 
     SBoard[targetSqaure.col][targetSqaure.row] = currentPawn;
+    //m_pieceMovedSig(currentPawn, targetSqaure);
     currentPawn->setBoardPosition(targetSqaure);
-    SBoard[startSquare.col][startSquare.row]   = NULL;
+    SBoard[startSquare.col][startSquare.row]   = nullptr;
     
     if (!isKingInThreat(currentPlayer,false))
     {
@@ -597,7 +596,7 @@ bool board::validateKingThreat(int curretPlayer)
         return true;
     }
 
-    //prevPawn = nullptr;
+    prevPawn = nullptr;
     return true;
 }
 
@@ -625,10 +624,8 @@ bool board::canPawnMove(BOARD_POINT pieceSqaure,int color,int curretPlayer)
             if (dx != 0 || dy != 0)
             {
                 BOARD_POINT possibleMoveLoc(startSquare.row - dx, startSquare.col - dy); 
-//                 possibleMoveLoc.row = startSquare.row - dx;//getting current possible square x,y that the pawn can move to
-//                 possibleMoveLoc.col = startSquare.col - dy;
 
-                if ( (possibleMoveLoc.row < 8 && possibleMoveLoc.row >=0) && (possibleMoveLoc.col < 8 && possibleMoveLoc.col >=0 ) )//checking that we are still in board range
+                if ( (possibleMoveLoc.row < boardX && possibleMoveLoc.row >=0) && (possibleMoveLoc.col < boardY && possibleMoveLoc.col >=0 ) )//checking that we are still in board range
                 {
                     targetSqaure = possibleMoveLoc;//getting the  current possible square
                     if(currentPawn->validateNewPos(dx,dy,startSquare,targetSqaure,SBoard))
@@ -930,6 +927,22 @@ void board::connectToPieceCreated(const singal_pieceCreated::slot_type& subscrib
 }
 
 //-----------------------------------------------------------------------------
+// Name : connectToPieceMoved ()
+//-----------------------------------------------------------------------------
+void board::connectToPieceMoved(const signal_pieceMoved::slot_type& subscriber)
+{
+    m_pieceMovedSig.connect(subscriber);
+}
+
+//-----------------------------------------------------------------------------
+// Name : connectToPieceKilled ()
+//-----------------------------------------------------------------------------
+void board::connectToPieceKilled(const signal_pieceKilled::slot_type& subscriber)
+{
+    m_pieceKilledSig.connect(subscriber);
+}
+
+//-----------------------------------------------------------------------------
 // Name : connectToGameOver ()
 //-----------------------------------------------------------------------------
 void board::connectToGameOver(const singal_gameover::slot_type& subscriber)
@@ -1034,6 +1047,7 @@ void board::killPiece(piece * pPieceToKill, BOARD_POINT pieceSquare)
         {
             //adding to a dead pawns vector and than removing it from the active vec as we don't want to completely lose the pointer to the object
             //pPieceToKill->setObjectHidden(true);
+            m_pieceKilledSig(pPieceToKill);
             deadPawnsVec[side].push_back(pPieceToKill);
             curVector.erase(curVector.begin()+i);
             break;

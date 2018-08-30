@@ -100,8 +100,8 @@ GLXFBConfig GameWin::getBestFBConfig()
       GLX_DEPTH_SIZE      , 24,
       GLX_STENCIL_SIZE    , 8,
       GLX_DOUBLEBUFFER    , True,
-      //GLX_SAMPLE_BUFFERS  , 1,
-      //GLX_SAMPLES         , 4,
+      GLX_SAMPLE_BUFFERS  , 1,
+      GLX_SAMPLES         , 4,
       None
     };
     
@@ -764,6 +764,9 @@ void GameWin::drawing()
     renderFPS(m_sprites[1], *font_);
     font_->renderToRect(m_sprites[1], ss.str(), Rect(0,65, 500, 200), 
                         glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    
+    font_->renderToRect(m_sprites[1], m_scene->getStatus(), Rect(0, 130, 2000, 200), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    
     renderGUI();
 
     m_sprites[0].Render(spriteShader);

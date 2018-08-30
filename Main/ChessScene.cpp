@@ -8,6 +8,12 @@ ChessScene::ChessScene()
     boardObject = nullptr;
     frameSquareObject = nullptr;
     m_blackAttribute = -1;
+    
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+            pieceObjects[i][j] = -1;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -15,15 +21,7 @@ ChessScene::ChessScene()
 //-----------------------------------------------------------------------------
 void ChessScene::InitObjects()
 {
-    Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
-                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
-                   glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
-                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
-    m_blackAttribute = m_assetManager.getAttribute("", black, meshShaderPath2);
-    
-    gameBoard = new board();
-    gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
-    gameBoard->init();
+
     
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
@@ -44,10 +42,23 @@ void ChessScene::InitObjects()
                            m_assetManager.getMesh("square.gen"),
                            meshShaderPath2);
     
-    frameSquareObject = &m_objects[m_objects.size() - 1];
-    frameSquareObject->SetObjectAttributes(frameSquareAttribute);
+    //frameSquareObject = &m_objects[m_objects.size() - 1];
+    m_objects[m_objects.size() - 1].SetObjectAttributes(frameSquareAttribute);
         
     curObj = &m_objects[m_objects.size() - 1];
+    
+    Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
+                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
+                   glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
+                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
+    m_blackAttribute = m_assetManager.getAttribute("", black, meshShaderPath2);
+    
+    gameBoard = new board();
+    gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
+    gameBoard->connectToPieceMoved(boost::bind(&ChessScene::onChessPieceMoved, this, _1, _2, _3));
+    //gameBoard->connectToPieceKilled(boost::bind(&ChessScene::onChessPieceKilled, this, _1));
+    
+    gameBoard->init();
 }
 
 //-----------------------------------------------------------------------------
@@ -64,9 +75,8 @@ bool ChessScene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
             {
                 Point squarePicked = getPickedSquare(m_faceCount, m_meshIndex);
                 
-                if(frameSquareObject)
-                    frameSquareObject->SetPos(glm::vec3(squarePicked.x * 10, 0.001f, squarePicked.y * 10));
-                //m_objects[2].SetPos(glm::vec3(squarePicked.x * 10 + 5, 0.001f, squarePicked.y * 10 + 5));
+                //if(frameSquareObject)
+                    m_objects[1].SetPos(glm::vec3(squarePicked.x * 10, 0.001f, squarePicked.y * 10));
             }
             else
             {
@@ -76,7 +86,33 @@ bool ChessScene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
             
             return true;
         }break;
+               
+        case MouseEventType::LeftButton:
+        case MouseEventType::DoubleLeftButton:
+        {
+            if (event.down)
+            {
+                Object* temp = PickObject(event.cursorPos, m_faceCount, m_meshIndex);
+                if (temp != nullptr && m_meshIndex < 2)
+                {
+                    Point squarePicked = getPickedSquare(m_faceCount, m_meshIndex);
+                    if(frameSquareObject)
+                        frameSquareObject->SetPos(glm::vec3(squarePicked.x * 10, 0.001f, squarePicked.y * 10));
+                    
+                    gameBoard->processPress(pointToBoardPoint((squarePicked)));
+                    
+                    
+                }
+                else
+                {
+                    m_faceCount = -1;
+                    m_meshIndex = -1;
+                }
                 
+                return true;
+            }
+        }break;
+        
         default:
             return false;
     }
@@ -106,9 +142,9 @@ Object * ChessScene::PickObject(Point& cursor, int& faceCount, int &meshIndex)
 
     glm::vec3 rayOrigin(view[3][0], view[3][1], view [3][2]);
 
-    if (boardObject  && !boardObject->IsObjectHidden())
+    if (m_objects.size() > 0  && !m_objects[0].IsObjectHidden())
     {
-        Object& obj = *boardObject;
+        Object& obj = m_objects[0];
         
         glm::mat4x4 worldInverse = glm::inverse(obj.GetWorldMatrix());
         glm::vec3 rayObjOrigin = worldInverse * glm::vec4(rayOrigin, 1.0f);
@@ -129,6 +165,7 @@ Object * ChessScene::PickObject(Point& cursor, int& faceCount, int &meshIndex)
 void ChessScene::Drawing()
 {
     Scene::Drawing();
+    status = gameBoard->getBoardStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -185,12 +222,60 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
                            m_assetManager.getMesh(meshPath),
                            meshShaderPath2);
     
+    pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x] = m_objects.size() - 1;
+    
+    
     if (pPiece->getColor() == BLACK)
     {
         std::vector<unsigned int> blackAttribute;
         blackAttribute.push_back(m_blackAttribute);
         m_objects[m_objects.size() - 1].SetObjectAttributes(blackAttribute);
     }
+}
+
+//-----------------------------------------------------------------------------
+// Name : onChessPieceMoved
+//-----------------------------------------------------------------------------
+void ChessScene::onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint, BOARD_POINT pieceNewBoardPoint)
+{
+     Point pieceOldPoint = boardPointToPoint(pieceOldBoardPoint);
+     Point pieceNewPoint = boardPointToPoint(pieceNewBoardPoint);
+    glm::vec3 piecePosition = glm::vec3(pieceNewPoint.x * 10 + 5, 0.001f, pieceNewPoint.y * 10 + 5);
+    
+    if (pPiece->getType() == ROOK)
+        piecePosition.y += 3.4f;
+    
+    if (pieceObjects[pieceNewPoint.y][pieceNewPoint.x] != -1)
+    {
+        int blah = pieceObjects[pieceNewPoint.y][pieceNewPoint.x];
+        m_objects.erase(m_objects.begin() + blah);
+        pieceObjects[pieceNewPoint.y][pieceNewPoint.x] = -1;
+        
+        for (int i = 0; i < 8; i++)
+            for (int j = 0; j < 8; j++)
+                if (pieceObjects[i][j] > blah)
+                    pieceObjects[i][j] = pieceObjects[i][j] - 1;
+    }
+    
+    pieceObjects[pieceNewPoint.y][pieceNewPoint.x] = pieceObjects[pieceOldPoint.y][pieceOldPoint.x];
+    m_objects[pieceObjects[pieceNewPoint.y][pieceNewPoint.x]].SetPos(piecePosition);
+    pieceObjects[pieceOldPoint.y][pieceOldPoint.x] = -1;
+}
+
+//-----------------------------------------------------------------------------
+// Name : onChessPieceKilled
+//-----------------------------------------------------------------------------
+void ChessScene::onChessPieceKilled(piece* pPiece)
+{
+    Point pieceBoardPoint = boardPointToPoint(pPiece->getPosition());
+    int blah = pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x];
+    m_objects.erase(m_objects.begin() + blah);
+    pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x] = -1;
+    
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            if (pieceObjects[i][j] > blah)
+                pieceObjects[i][j] = pieceObjects[i][j] - 1;
 }
 
 //-----------------------------------------------------------------------------
