@@ -34,8 +34,6 @@ Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle
 
     if (meshMaterial.size() != 0)
     {
-        int minimum = std::min(meshMaterial.size(), meshTextures.size());
-        std::cout << minimum;
         for (GLuint attributeIndex  = 0; attributeIndex < std::min(meshMaterial.size(), meshTextures.size()); attributeIndex++)
         {
             objAtteributes.push_back(asset.getAttribute(meshTextures[attributeIndex], meshMaterial[attributeIndex], shaderPath));
