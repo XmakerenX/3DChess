@@ -122,10 +122,8 @@ const glm::mat4x4& Camera::GetProjMatrix()
     {
         float fAspect = (float)m_viewPort.width / (float)m_viewPort.height;
 
-        //m_mtxProj = glm::perspective(1.0f, glm::radians(fAspect), m_fNearClip, m_fFarClip);
-        //m_fFOV = 90.0f;
-        //m_mtxProj = glm::perspective(glm::radians(m_fFOV), fAspect, m_fNearClip, m_fFarClip);
-        m_mtxProj = glm::perspective(glm::radians(m_fFOV), fAspect, 1.0f, 1000.0f);
+        //m_mtxProj = glm::perspective(glm::radians(m_fFOV), fAspect, 1.0f, 5000.0f);
+        m_mtxProj = glm::perspective(glm::radians(m_fFOV), fAspect, m_fNearClip, m_fFarClip);
         m_bProjDirty = false;
     }
 
