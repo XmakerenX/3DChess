@@ -8,6 +8,10 @@ ChessScene::ChessScene()
     boardObject = nullptr;
     frameSquareObject = nullptr;
     m_blackAttribute = -1;
+    m_blueAttribute = -1;
+    m_redAttribute = -1;
+    m_yellowAttribute = -1;
+    m_lastIndex = 0;
     
     for (int i = 0; i < 8; i++)
     {
@@ -21,8 +25,6 @@ ChessScene::ChessScene()
 //-----------------------------------------------------------------------------
 void ChessScene::InitObjects()
 {
-
-    
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
@@ -42,7 +44,6 @@ void ChessScene::InitObjects()
                            m_assetManager.getMesh("square.gen"),
                            meshShaderPath2);
     
-    //frameSquareObject = &m_objects[m_objects.size() - 1];
     m_objects[m_objects.size() - 1].SetObjectAttributes(frameSquareAttribute);
         
     curObj = &m_objects[m_objects.size() - 1];
@@ -53,12 +54,32 @@ void ChessScene::InitObjects()
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
     m_blackAttribute = m_assetManager.getAttribute("", black, meshShaderPath2);
     
+    Material blue (glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
+                   glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
+                   glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
+                   glm::vec4(0.0f, 0.0f, 0.8f, 0.4f), 8.0f);
+    m_blueAttribute = m_assetManager.getAttribute("", blue, meshShaderPath2);
+    
+    Material red  (glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
+                   glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
+                   glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
+                   glm::vec4(0.8f, 0.0f, 0.0f, 0.4f), 8.0f);
+    m_redAttribute = m_assetManager.getAttribute("", red, meshShaderPath2);
+    
+    Material yellow (glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
+                   glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
+                   glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
+                   glm::vec4(0.8f, 0.8f, 0.0f, 0.4f), 8.0f);
+    m_yellowAttribute = m_assetManager.getAttribute("", yellow, meshShaderPath2);
+    
     gameBoard = new board();
     gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
     gameBoard->connectToPieceMoved(boost::bind(&ChessScene::onChessPieceMoved, this, _1, _2, _3));
     //gameBoard->connectToPieceKilled(boost::bind(&ChessScene::onChessPieceKilled, this, _1));
     
     gameBoard->init();
+    
+    m_lastIndex = m_objects.size();
 }
 
 //-----------------------------------------------------------------------------
@@ -100,8 +121,7 @@ bool ChessScene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
                         frameSquareObject->SetPos(glm::vec3(squarePicked.x * 10, 0.001f, squarePicked.y * 10));
                     
                     gameBoard->processPress(pointToBoardPoint((squarePicked)));
-                    
-                    
+                    highLightSquares();
                 }
                 else
                 {
@@ -255,6 +275,8 @@ void ChessScene::onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint
             for (int j = 0; j < 8; j++)
                 if (pieceObjects[i][j] > blah)
                     pieceObjects[i][j] = pieceObjects[i][j] - 1;
+                
+        m_lastIndex--;
     }
     
     pieceObjects[pieceNewPoint.y][pieceNewPoint.x] = pieceObjects[pieceOldPoint.y][pieceOldPoint.x];
@@ -276,6 +298,51 @@ void ChessScene::onChessPieceKilled(piece* pPiece)
         for (int j = 0; j < 8; j++)
             if (pieceObjects[i][j] > blah)
                 pieceObjects[i][j] = pieceObjects[i][j] - 1;
+}
+
+//-----------------------------------------------------------------------------
+// Name : highLightSquares
+//-----------------------------------------------------------------------------
+void ChessScene::highLightSquares()
+{
+    const std::vector<BOARD_POINT>& moveSquares = gameBoard->getMoveSquares();
+    const std::vector<BOARD_POINT>& attackSquares = gameBoard->getAttackSquares();
+                    
+    m_objects.erase(m_objects.begin() + m_lastIndex, m_objects.end());
+    m_lastIndex = m_objects.size();
+                    
+    const BOARD_POINT& selectedBoardSquare = gameBoard->getSelectedSquare();
+    if (selectedBoardSquare.row != -1 && selectedBoardSquare.col != -1)
+        hightlightBoardSquare(boardPointToPoint(selectedBoardSquare), m_yellowAttribute);
+                    
+    const BOARD_POINT& threatBoardSquare = gameBoard->getThreatSquare();
+    if (threatBoardSquare.row != -1 && threatBoardSquare.col != -1)
+        hightlightBoardSquare(boardPointToPoint(threatBoardSquare), m_redAttribute);
+                    
+    for (const BOARD_POINT& square : moveSquares)
+        hightlightBoardSquare(boardPointToPoint(square), m_blueAttribute);
+                    
+    for (const BOARD_POINT& square : attackSquares)
+        hightlightBoardSquare(boardPointToPoint(square), m_redAttribute);
+}
+
+//-----------------------------------------------------------------------------
+// Name : hightlightBoardSquare
+//-----------------------------------------------------------------------------
+void ChessScene::hightlightBoardSquare(Point squareToHightlight, GLuint attributeID)
+{
+    glm::vec3 squarePosition = glm::vec3(squareToHightlight.x * 10, 0.002f, squareToHightlight.y * 10);
+    
+    m_objects.emplace_back(m_assetManager,
+                           squarePosition, // position
+                           glm::vec3(0.0f, 0.0f, 0.0f), // rotation
+                           glm::vec3(1.0f, 1.0f, 1.0f), // scale
+                           m_assetManager.getMesh("square.gen"),
+                           meshShaderPath2);
+                            
+    std::vector<GLuint> m_squareAttribute;
+    m_squareAttribute.push_back(attributeID);
+    m_objects[m_objects.size() - 1].SetObjectAttributes(m_squareAttribute);
 }
 
 //-----------------------------------------------------------------------------

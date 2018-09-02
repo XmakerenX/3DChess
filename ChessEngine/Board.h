@@ -82,9 +82,9 @@ public:
     //-------------------------------------------------------------------------
     // Functions that detect if pawns can move or is it stuck in his place
     //-------------------------------------------------------------------------
-    bool canPawnMove	(BOARD_POINT pieceSqaure,int color,int curretPlayer);
-    void markPawnMoves	(BOARD_POINT pieceSqaure,int color,int curretPlayer);
-    void ScanPawnMoves	(BOARD_POINT pieceSqaure,int color,int curretPlayer, DIR_VEC dir);
+    bool canPawnMove    (BOARD_POINT pieceSqaure, int curretPlayer);
+    void markPawnMoves  (BOARD_POINT pieceSqaure);
+    void ScanPawnMoves  (BOARD_POINT pieceSqaure, int curretPlayer, DIR_VEC dir);
 
     //-------------------------------------------------------------------------
     // Get methods for this class
@@ -93,6 +93,11 @@ public:
     bool        isBoardActive  () const;
     bool        getKingThreat  () const;
     bool        isUnitPromotion() const;
+    
+    const BOARD_POINT& getSelectedSquare() const;
+    const BOARD_POINT& getThreatSquare() const;
+    const std::vector<BOARD_POINT>& getMoveSquares() const;
+    const std::vector<BOARD_POINT>& getAttackSquares() const;
 
 private:
     //the actual game board indicate what piece on what square
@@ -106,7 +111,8 @@ private:
     //the square that was pressed
     BOARD_POINT  m_startSquare;
     // the square that the piece should be moved to 
-    BOARD_POINT  m_targetSqaure;
+    BOARD_POINT  m_targetSquare;
+    BOARD_POINT  m_threatSquare;
 
     std::vector<piece*> m_pawnsVec[2];
     std::vector<piece*> m_deadPawnsVec[2];
@@ -124,6 +130,9 @@ private:
     bool m_kingInThreat;
     std::string m_curStatus;
 
+    std::vector<BOARD_POINT> m_moveSquares;
+    std::vector<BOARD_POINT> m_attackSquares;
+    
     boost::signals2::signal<void (piece*)>  m_pieceCreatedSig;
     boost::signals2::signal<void (piece*, BOARD_POINT, BOARD_POINT)>  m_pieceMovedSig;
     boost::signals2::signal<void (piece*)>  m_pieceKilledSig;
