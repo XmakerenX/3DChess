@@ -85,14 +85,18 @@ vec4 calcLight(int i, vec3 posW, vec3 norm, vec3 viewDir)
         intensity = 1;
     }
 
-    vec3 ambient  = (lights[i].lAmbient * mAmbient).rgb;
-    vec3 diffuse = (lights[i].lDiffuse * diff * mDiffuse).rgb;
-    vec3 specular = (lights[i].lSpecular * spec * mSpecular).rgb;
+//     vec3 ambient  = (lights[i].lAmbient * mAmbient).rgb;
+//     vec3 diffuse = (lights[i].lDiffuse * diff * mDiffuse).rgb;
+//     vec3 specular = (lights[i].lSpecular * spec * mSpecular).rgb;
+    vec4 ambient  = (lights[i].lAmbient * mAmbient);
+    vec4 diffuse = (lights[i].lDiffuse * diff * mDiffuse);
+    vec4 specular = (lights[i].lSpecular * spec * mSpecular);
             
     diffuse  *= intensity / attenuation;
     specular *= intensity / attenuation;
             
-    return vec4(ambient + diffuse + specular,1.0);
+    //return vec4(ambient + diffuse + specular,1.0);
+    return ambient + diffuse + specular;
 }
 
 void main()
