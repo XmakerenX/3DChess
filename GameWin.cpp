@@ -765,7 +765,8 @@ void GameWin::drawing()
     font_->renderToRect(m_sprites[1], ss.str(), Rect(0,65, 500, 200), 
                         glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
     
-    font_->renderToRect(m_sprites[1], m_scene->getStatus(), Rect(0, 130, 2000, 200), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    if(m_scene)
+        font_->renderToRect(m_sprites[1], m_scene->getStatus(), Rect(0, 130, 2000, 200), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
     
     renderGUI();
 
