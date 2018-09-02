@@ -494,6 +494,13 @@ Mesh*  AssetManager::generateMesh(const std::string& meshString)
         return &m_meshCache[meshString];
     }
     
+    if (meshString == "skybox.gen")
+    {
+        m_meshCache.insert(std::pair<std::string, Mesh>(meshString, MeshGenerator::createSkyBoxMesh()));
+        
+        return &m_meshCache[meshString];
+    }
+    
     return nullptr;
 }
 
