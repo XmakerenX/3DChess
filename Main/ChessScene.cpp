@@ -48,6 +48,23 @@ void ChessScene::InitObjects()
         
     curObj = &m_objects[m_objects.size() - 1];
     
+    m_objects.emplace_back(m_assetManager,
+                           m_camera.GetPosition(), // position
+                           glm::vec3(0.0f, 0.0f, 0.0f), // rotation
+                           glm::vec3(200.0f, 200.0f, 200.0f), // scale
+                           m_assetManager.getMesh("skybox.gen"),
+                           meshShaderPath2);
+        
+    std::vector<unsigned int> cubeAttribute;
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", WHITE_MATERIAL, meshShaderPath2));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posy.jpg", WHITE_MATERIAL, meshShaderPath2));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", WHITE_MATERIAL, meshShaderPath2));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", WHITE_MATERIAL, meshShaderPath2));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", WHITE_MATERIAL, meshShaderPath2));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", WHITE_MATERIAL, meshShaderPath2));
+    
+    m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
+    
     Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
                    glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
