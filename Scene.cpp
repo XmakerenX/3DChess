@@ -53,7 +53,7 @@ void Scene::InitScene()
 void Scene::InitCamera(int width, int height)
 {
     m_camera.SetFOV(60.0f);
-    m_camera.SetViewPort(0.0, 0.0, width, height, 1.0f, 1000.0f);
+    m_camera.SetViewPort(0.0, 0.0, width, height, 1.0f, 5000.0f);
     m_camera.SetPostion(glm::vec3(0.0f, 20.0f, 70.0f));
     m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 }
@@ -189,7 +189,7 @@ void Scene::SetAttribute(Attribute &attrib)
 //-----------------------------------------------------------------------------
 void Scene::reshape(int width, int height)
 {
-    m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 1000.0f);
+    m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 5000.0f);
 }
 
 //-----------------------------------------------------------------------------
