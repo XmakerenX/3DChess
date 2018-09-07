@@ -322,7 +322,7 @@ Point mkFont::clipTextToRect(const Rect& rc, std::string& textInRect, int maxTex
             break;
         }
     }
-    textWidth -= lastAdvance;
+    //textWidth -= lastAdvance;
 
     if (maxTextHeight > rc.getHeight())
     {
