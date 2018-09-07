@@ -28,45 +28,18 @@ TestWin::~TestWin()
 //-----------------------------------------------------------------------------
 void TestWin::initGUI()
 {
-    m_dialog.init(300,300, 18, "Caption!", "", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), m_asset);
-    m_dialog.setLocation(50, 100);
-    m_dialog.initDefControlElements(m_asset);
-    //m_dialog.initWoodControlElements(m_asset);
-    ButtonUI* pButton;
-    m_dialog.addButton(1, "button text", 20,20, 200, 25, 0, &pButton);
-    pButton->setEnabled(false);
-    m_dialog.addButton(2, "enabled button", 20, 60, 200, 25, 0);
-    m_dialog.addCheckBox(3, 100,100, 50, 50, 0);
-    m_dialog.addRadioButton(4, 30, 150, 25,25,0,1);
-    m_dialog.addRadioButton(5, 90, 150, 25,25,0,1);
-    ComboBoxUI* pCombo;
-    //m_dialog.addComboBox(6, "Box", 20, 200, 200, 40, 0, &pCombo);
-    m_dialog.addComboBox(6, "Box", 20, 200, 300, 60, 0, &pCombo);
-    pCombo->AddItem("Sunday", 1);
-    pCombo->AddItem("Monday", 2);
-    pCombo->AddItem("Tuesday", 3);
-    pCombo->AddItem("Wednesday", 4);
-    pCombo->AddItem("Thursday", 5);
-    pCombo->AddItem("Friday", 6);
-    pCombo->AddItem("Saturday", 7);
-
-    ListBoxUI<int>* pListbox;
-    m_dialog.addListBox(7, 350,200, 200,100, true, &pListbox);
-    pListbox->AddItem("Sunday", 1);
-    pListbox->AddItem("Monday", 2);
-    pListbox->AddItem("Tuesday", 3);
-    pListbox->AddItem("Wednesday", 4);
-    pListbox->AddItem("Thursday", 5);
-    pListbox->AddItem("Friday", 6);
-    pListbox->AddItem("Saturday", 7);
-
-    m_dialog.addSlider(8, 0, 0, 200, 40, 0, 100, 50);
-
-    m_dialog.addEditbox(9, "Test TgTy",180, 100, 100, 35, nullptr );
-
-    //m_dialog.addButton(10, "Center me", 20, 300, 400, 141, 0);
-
-    m_dialog.addEditbox(11, "Test TgTy",420, 300, 400, 100, nullptr );
+    m_dialog.init(200,320, 18, "Main Menu", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
+    m_dialog.setCaption(false);
+    m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
+    //m_dialog.initDefControlElements(m_asset);
+    m_dialog.initWoodControlElements(m_asset);
+    m_dialog.LoadDialogFromFile("MainMenu2.txt");
+        
+    StaticUI* gameTitle;
+    m_dialog.addStatic(50, "Chess", -100, -150, 380, 100, &gameTitle);
+    std::vector<ELEMENT_FONT> gameTitleFont;
+    gameTitleFont.emplace_back(FontInfo("RosewoodStd-Regular.otf", 64) , m_asset.getFont("RosewoodStd-Regular.otf", 64, true));
+    gameTitle->setControlFonts(gameTitleFont);
 }
 
 //-----------------------------------------------------------------------------
@@ -74,10 +47,7 @@ void TestWin::initGUI()
 //-----------------------------------------------------------------------------
 void TestWin::renderGUI()
 {
-//      m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
-//     Point textSize = font_->calcTextRect("[]a");
-//     font_->renderToRect(m_sprites[1], "[]a", Rect(0,50, 0 + textSize.x, 50 + textSize.y), WHITE_COLOR);
-//     m_sprites[0].AddTintedQuad(Rect(0,50,0 + textSize.x, 50 + textSize.y), glm::vec4(1.0f, 0.0, 0.0, 1.0f));
+      m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
 }
 
 //-----------------------------------------------------------------------------
@@ -103,4 +73,12 @@ void TestWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
 {
     GameWin::sendMouseEvent(event, modifierStates);
     m_dialog.handleMouseEvent(event, modifierStates);
+}
+
+//-----------------------------------------------------------------------------
+// Name : onSizeChanged
+//-----------------------------------------------------------------------------
+void TestWin::onSizeChanged()
+{
+    m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
 }

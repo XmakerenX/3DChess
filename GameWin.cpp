@@ -62,7 +62,6 @@ bool GameWin::initWindow()
         return false;
     }
 
-
     if ( s_clipboardDisplay == nullptr)
     {
         s_clipboardDisplay = XOpenDisplay(nullptr);
@@ -830,6 +829,8 @@ void GameWin::reshape(int width, int height)
         glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
         spriteTextShader->Use();
         glUniform2i( glGetUniformLocation(spriteTextShader->Program, "screenSize"), width / 2, height / 2);
+        
+        onSizeChanged();
     }
     else
         std::cout <<"reshape ignored\n";
@@ -1074,6 +1075,14 @@ void GameWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
     if (m_scene != nullptr)
         m_scene->handleMouseEvent(event, modifierStates);
     //m_dialog.handleMouseEvent(event, modifierStates);
+}
+
+//-----------------------------------------------------------------------------
+// Name : onSizeChanged ()
+//-----------------------------------------------------------------------------
+void GameWin::onSizeChanged()
+{
+    
 }
 
 //-----------------------------------------------------------------------------
