@@ -150,6 +150,13 @@ bool board::LoadBoardFromFile()
         inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         m_board[i][j] = createPiece(color, static_cast<PIECES>(type), BOARD_POINT(j,i));
+        if (type == KING)
+        {
+            if (color == BLACK)
+                m_kings[UPPER] = static_cast<king*>(m_board[i][j]);
+            else
+                m_kings[BOTTOM] = static_cast<king*>(m_board[i][j]);
+        }
     } while (!inputFile.eof());
 
     inputFile.close();
@@ -1113,9 +1120,11 @@ bool board::resetGame()
     for (unsigned int i = 0; i < boardX; i++)
         for (unsigned int j = 0; j < boardY; j++)
                 m_board[i][j] = nullptr;
-
-    m_targetSquare.row = 0;
-    m_targetSquare.col = 0;
+    
+    m_startSquare  = BOARD_POINT(-1, -1);
+    m_targetSquare = BOARD_POINT(0,0);
+    m_threatSquare = BOARD_POINT(-1, -1);
+    m_attLoc       = BOARD_POINT(0,0);
 
     m_currentPawn = nullptr;
     m_prevPawn    = nullptr;
