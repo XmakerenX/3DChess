@@ -40,6 +40,7 @@ GameWin::GameWin()
     lastLeftClickTime = 0;
     lastRightClickTime = 0;
     m_scene = nullptr;
+    m_sceneInput = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -853,7 +854,7 @@ void GameWin::ProcessInput(double timeDelta)
         XFlush(m_display);
     }
     
-    if(m_scene)
+    if(m_scene && m_sceneInput)
         m_scene->processInput(timeDelta, keysStatus, X, Y);
 }
 
@@ -1072,7 +1073,7 @@ void GameWin::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const Mod
 void GameWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     handleMouseEvent(event, modifierStates);
-    if (m_scene != nullptr)
+    if (m_scene != nullptr && m_sceneInput)
         m_scene->handleMouseEvent(event, modifierStates);
     //m_dialog.handleMouseEvent(event, modifierStates);
 }

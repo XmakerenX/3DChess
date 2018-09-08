@@ -113,6 +113,7 @@ protected:
     float m_vDpi;
 
     Scene* m_scene;
+    bool m_sceneInput;
 
     Shader* spriteShader;
     Shader* spriteTextShader;
