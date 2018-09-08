@@ -38,25 +38,25 @@ EditBoxUI::EditBoxUI(DialogUI* pParentDialog, int ID, std::string strText, int x
 
     m_buffer = strText;
 
-	m_nBorder = 5;  // Default border width
-	m_nSpacing = 4;  // Default spacing
+    m_nBorder = 5;  // Default border width
+    m_nSpacing = 4;  // Default spacing
     m_nVisibleChars = m_buffer.size();
-	m_nFirstVisible = 0;
-	m_nBackwardChars = 0;
+    m_nFirstVisible = 0;
+    m_nBackwardChars = 0;
 
-	m_bCaretOn = true;
+    m_bCaretOn = true;
     m_dfBlink = s_caretBlinkTime * 0.001;
     m_dfLastBlink = 0;
-	s_bHideCaret = false;
+    s_bHideCaret = false;
 
     m_TextColor = glm::vec4(0.07f, 0.07f, 0.07f, 1.0);
     m_SelTextColor = WHITE_COLOR;
     m_SelBkColor = glm::vec4(0.16f, 0.2f, 0.36f, 1.0);
     m_CaretColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	m_nCaret = m_nSelStart = 0;
-	m_bInsertMode = true;
+    m_nCaret = m_nSelStart = 0;
+    m_bInsertMode = true;
 
-	m_bMouseDrag = false;
+    m_bMouseDrag = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -69,34 +69,34 @@ EditBoxUI::EditBoxUI(std::istream& inputFile)
 
     m_dfBlink = s_caretBlinkTime * 0.001;
     m_dfLastBlink = 0;
-	s_bHideCaret = false;
-	m_nCaret = m_nSelStart = 0;
-	m_bInsertMode = true;
-	m_nFirstVisible = 0;
-	m_nBackwardChars = 0;
+    s_bHideCaret = false;
+    m_nCaret = m_nSelStart = 0;
+    m_bInsertMode = true;
+    m_nFirstVisible = 0;
+    m_nBackwardChars = 0;
 
-	m_bMouseDrag = false;
+    m_bMouseDrag = false;
 
-	std::string bufferText;
-	std::getline(inputFile, bufferText);
-	bufferText = bufferText.substr(0, bufferText.find('|') );
+    std::string bufferText;
+    std::getline(inputFile, bufferText);
+    bufferText = bufferText.substr(0, bufferText.find('|') );
     setText(bufferText.c_str() );
     m_nVisibleChars = m_buffer.size();
-	inputFile >> m_nBorder;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	inputFile >> m_nSpacing;
+    inputFile >> m_nBorder;
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile >> m_nSpacing;
     setSpacing(m_nSpacing);
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-	inputFile >> m_bCaretOn;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile >> m_bCaretOn;
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
     inputFile >> m_TextColor;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
     inputFile >> m_SelTextColor;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
     inputFile >> m_SelBkColor;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
     inputFile >> m_CaretColor;
-	inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 }
 
 //-----------------------------------------------------------------------------
