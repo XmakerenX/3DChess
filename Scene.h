@@ -55,7 +55,7 @@ class Scene
 
 public:
     Scene();
-    ~Scene();
+    virtual ~Scene();
 
     void InitScene();
     virtual void InitObjects();

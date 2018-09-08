@@ -21,19 +21,30 @@ ChessScene::ChessScene()
 }
 
 //-----------------------------------------------------------------------------
+// Name : ChessScene
+//-----------------------------------------------------------------------------
+ChessScene::~ChessScene()
+{
+    if(gameBoard != nullptr)
+        gameBoard->SaveBoardToFile();
+}
+
+//-----------------------------------------------------------------------------
 // Name : InitObjects
 //-----------------------------------------------------------------------------
 void ChessScene::InitObjects()
 {
+    // add board object
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("board.gen"),
                            meshShaderPath2);
+    m_lastIndex++;
     
     boardObject = &m_objects[m_objects.size() - 1];
-
+    // add frame object
     std::vector<unsigned int> frameSquareAttribute;
     frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", WHITE_MATERIAL, meshShaderPath2));
     
@@ -43,17 +54,19 @@ void ChessScene::InitObjects()
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("square.gen"),
                            meshShaderPath2);
+    m_lastIndex++;
     
     m_objects[m_objects.size() - 1].SetObjectAttributes(frameSquareAttribute);
         
     curObj = &m_objects[m_objects.size() - 1];
-    
+    // add skybox object
     m_objects.emplace_back(m_assetManager,
                            m_camera.GetPosition(), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(200.0f, 200.0f, 200.0f), // scale
                            m_assetManager.getMesh("skybox.gen"),
                            meshShaderPath2);
+    m_lastIndex++;
         
     std::vector<unsigned int> cubeAttribute;
     cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", WHITE_MATERIAL, meshShaderPath2));
@@ -61,10 +74,10 @@ void ChessScene::InitObjects()
     cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", WHITE_MATERIAL, meshShaderPath2));
     cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", WHITE_MATERIAL, meshShaderPath2));
     cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", WHITE_MATERIAL, meshShaderPath2));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", WHITE_MATERIAL, meshShaderPath2));
-    
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", WHITE_MATERIAL, meshShaderPath2));    
     m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
     
+    // get attribute needed for the board pawns and highlighted squares
     Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
                    glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
@@ -96,7 +109,41 @@ void ChessScene::InitObjects()
     
     gameBoard->init();
     
-    m_lastIndex = m_objects.size();
+    //m_lastIndex = m_objects.size();
+}
+
+//-----------------------------------------------------------------------------
+// Name : newGame
+//-----------------------------------------------------------------------------
+void ChessScene::newGame()
+{
+    m_objects.erase(m_objects.begin() + 3, m_objects.end());
+    
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+            pieceObjects[i][j] = -1;
+    }
+    
+    m_lastIndex = 3;
+    gameBoard->resetGame();
+}
+
+//-----------------------------------------------------------------------------
+// Name : loadGame
+//-----------------------------------------------------------------------------
+void ChessScene::loadGame()
+{
+    m_objects.erase(m_objects.begin() + 3, m_objects.end());
+    
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+            pieceObjects[i][j] = -1;
+    }
+    
+    m_lastIndex = 3;
+    gameBoard->LoadBoardFromFile();
 }
 
 //-----------------------------------------------------------------------------
@@ -258,6 +305,7 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
                            pieceScale, // scale
                            m_assetManager.getMesh(meshPath),
                            meshShaderPath2);
+    m_lastIndex++;
     
     pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x] = m_objects.size() - 1;
     

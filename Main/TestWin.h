@@ -9,6 +9,7 @@ class TestWin : public GameWin
 public:
     TestWin();
     ~TestWin();
+        
 protected:
     virtual void initGUI();
     virtual void renderGUI();
@@ -17,6 +18,10 @@ protected:
     virtual void sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates);
     virtual void sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual void onSizeChanged();
+        
+    void onNewGame(ButtonUI* newGameButton);
+    void onContinueGame(ButtonUI* continuButton);
+    void onExitPressed(ButtonUI* exitButton);
     
     DialogUI m_dialog;
 };

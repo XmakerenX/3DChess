@@ -8,8 +8,12 @@ class ChessScene : public Scene
 {
 public:
     ChessScene();
+    ~ChessScene();
     
     virtual void InitObjects();
+    
+    void newGame();
+    void loadGame();
     
     virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);

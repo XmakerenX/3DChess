@@ -1,5 +1,7 @@
 #include "TestWin.h"
 #include "../GUI/ListBoxUI.cpp"
+#include "MainMenu2Def.h"
+#include <fstream>
 
 //-----------------------------------------------------------------------------
 // Name : TestWin (constructor)
@@ -8,6 +10,7 @@ TestWin::TestWin()
 {
     //m_scene = new Scene();
     m_scene = new ChessScene();
+    m_sceneInput = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -40,6 +43,14 @@ void TestWin::initGUI()
     std::vector<ELEMENT_FONT> gameTitleFont;
     gameTitleFont.emplace_back(FontInfo("RosewoodStd-Regular.otf", 64) , m_asset.getFont("RosewoodStd-Regular.otf", 64, true));
     gameTitle->setControlFonts(gameTitleFont);
+    
+    m_dialog.getButton(IDC_NEWGAME)->connectToClick(boost::bind(&TestWin::onNewGame, this , _1));
+    m_dialog.getButton(IDC_Continue)->connectToClick(boost::bind(&TestWin::onContinueGame, this , _1));
+    m_dialog.getButton(IDC_EXIT)->connectToClick(boost::bind(&TestWin::onExitPressed, this , _1));
+    
+    std::ifstream saveFile("board.sav");
+    if (!saveFile.good())
+        m_dialog.getButton(IDC_Continue)->setEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -55,6 +66,12 @@ void TestWin::renderGUI()
 //-----------------------------------------------------------------------------
 void TestWin::sendKeyEvent(unsigned char key, bool down)
 {
+    if (key == 27 && down)
+    {
+        m_dialog.setVisible(!m_dialog.getVisible());
+        m_sceneInput = !m_dialog.getVisible();
+    }
+        
     m_dialog.handleKeyEvent(key, down);
 }
 
@@ -81,4 +98,32 @@ void TestWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
 void TestWin::onSizeChanged()
 {
     m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
+}
+
+//-----------------------------------------------------------------------------
+// Name : onNewGame
+//-----------------------------------------------------------------------------
+void TestWin::onNewGame(ButtonUI* newGameButton)
+{
+    m_dialog.setVisible(false);
+    m_sceneInput = true;
+    static_cast<ChessScene*>(m_scene)->newGame();
+}
+
+//-----------------------------------------------------------------------------
+// Name : onNewGame
+//-----------------------------------------------------------------------------
+void TestWin::onContinueGame(ButtonUI* continuButton)
+{
+    m_dialog.setVisible(false);
+    m_sceneInput = true;
+    static_cast<ChessScene*>(m_scene)->loadGame();
+}
+
+//-----------------------------------------------------------------------------
+// Name : onExitPressed
+//-----------------------------------------------------------------------------
+void TestWin::onExitPressed(ButtonUI* exitButton)
+{
+    gameRunning = false;
 }
