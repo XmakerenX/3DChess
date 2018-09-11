@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 // Name : ChessScene
 //-----------------------------------------------------------------------------
-ChessScene::ChessScene()
+ChessScene::ChessScene(DialogUI& promotionDialog) : m_promotionDialog(promotionDialog)
 {
     boardObject = nullptr;
     frameSquareObject = nullptr;
@@ -109,7 +109,10 @@ void ChessScene::InitObjects()
     
     gameBoard->init();
     
-    //m_lastIndex = m_objects.size();
+    m_promotionDialog.getButton(IDC_KNIGHT)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
+    m_promotionDialog.getButton(IDC_BISHOP)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
+    m_promotionDialog.getButton(IDC_ROOK)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
+    m_promotionDialog.getButton(IDC_QUEEN)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
 }
 
 //-----------------------------------------------------------------------------
@@ -186,6 +189,9 @@ bool ChessScene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
                     
                     gameBoard->processPress(pointToBoardPoint((squarePicked)));
                     highLightSquares();
+                    
+                    if (gameBoard->isUnitPromotion())
+                        m_promotionDialog.setVisible(true);
                 }
                 else
                 {
@@ -299,6 +305,9 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
             break;
     }
     
+    if (pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x] != -1)
+        deletePieceObject(pieceBoardPoint);
+    
     m_objects.emplace_back(m_assetManager,
                            piecePosition, // position
                            pieceRotaion, // rotation
@@ -331,18 +340,7 @@ void ChessScene::onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint
         piecePosition.y += 3.4f;
     
     if (pieceObjects[pieceNewPoint.y][pieceNewPoint.x] != -1)
-    {
-        int blah = pieceObjects[pieceNewPoint.y][pieceNewPoint.x];
-        m_objects.erase(m_objects.begin() + blah);
-        pieceObjects[pieceNewPoint.y][pieceNewPoint.x] = -1;
-        
-        for (int i = 0; i < 8; i++)
-            for (int j = 0; j < 8; j++)
-                if (pieceObjects[i][j] > blah)
-                    pieceObjects[i][j] = pieceObjects[i][j] - 1;
-                
-        m_lastIndex--;
-    }
+        deletePieceObject(pieceNewPoint);
     
     pieceObjects[pieceNewPoint.y][pieceNewPoint.x] = pieceObjects[pieceOldPoint.y][pieceOldPoint.x];
     m_objects[pieceObjects[pieceNewPoint.y][pieceNewPoint.x]].SetPos(piecePosition);
@@ -363,6 +361,40 @@ void ChessScene::onChessPieceKilled(piece* pPiece)
         for (int j = 0; j < 8; j++)
             if (pieceObjects[i][j] > blah)
                 pieceObjects[i][j] = pieceObjects[i][j] - 1;
+}
+
+//-----------------------------------------------------------------------------
+// Name : onPromotionSelected
+//-----------------------------------------------------------------------------
+void ChessScene::onPromotionSelected(ButtonUI* selectedPieceButton)
+{
+    m_objects.erase(m_objects.begin() + m_lastIndex, m_objects.end());
+    m_lastIndex = m_objects.size();
+    
+    switch(selectedPieceButton->getID())
+    {
+        case IDC_KNIGHT:
+            gameBoard->PromoteUnit(KNIGHT);
+            break;
+            
+        case IDC_BISHOP:
+            gameBoard->PromoteUnit(BISHOP);
+            break;
+            
+        case IDC_ROOK:
+            gameBoard->PromoteUnit(ROOK);
+            break;
+            
+        case IDC_QUEEN:
+            gameBoard->PromoteUnit(QUEEN);
+            break;
+            
+        default:
+            break;
+    }
+    
+    m_promotionDialog.setVisible(false);
+    highLightSquares();
 }
 
 //-----------------------------------------------------------------------------
@@ -425,6 +457,23 @@ Point ChessScene::getPickedSquare(int facePicked, int meshPickedIndex)
         row = row * 2 + 1;
     
     return Point(row, col);
+}
+
+//-----------------------------------------------------------------------------
+// Name : deletePieceObject
+//-----------------------------------------------------------------------------
+void ChessScene::deletePieceObject(Point pieceBoardPoint)
+{
+    int index = pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x];
+    m_objects.erase(m_objects.begin() + index);
+    pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x] = -1;
+        
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            if (pieceObjects[i][j] > index)
+                pieceObjects[i][j] = pieceObjects[i][j] - 1;
+                
+    m_lastIndex--;
 }
 
 //-----------------------------------------------------------------------------

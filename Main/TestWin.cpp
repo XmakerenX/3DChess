@@ -1,6 +1,7 @@
 #include "TestWin.h"
 #include "../GUI/ListBoxUI.cpp"
 #include "MainMenu2Def.h"
+#include "pawnsDef.h"
 #include <fstream>
 
 //-----------------------------------------------------------------------------
@@ -9,7 +10,7 @@
 TestWin::TestWin()
 {
     //m_scene = new Scene();
-    m_scene = new ChessScene();
+    m_scene = new ChessScene(m_promotionGUI);
     m_sceneInput = false;
 }
 
@@ -51,6 +52,34 @@ void TestWin::initGUI()
     std::ifstream saveFile("board.sav");
     if (!saveFile.good())
         m_dialog.getButton(IDC_Continue)->setEnabled(false);
+    
+    m_promotionGUI.init(500, 100, 18,"Select Pawn", "GUITextures/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
+    m_promotionGUI.setCaption(false);
+    m_promotionGUI.initWoodControlElements(m_asset);
+    m_promotionGUI.LoadDialogFromFile("pawns.txt");
+    m_promotionGUI.setLocation( (m_winWidth / 2) - (m_promotionGUI.getWidth() / 2), (m_winHeight / 2) - (m_promotionGUI.getHeight() / 2) );
+    m_promotionGUI.setVisible(false);
+    GLuint promotionTextureName = m_asset.getTexture("GUITextures/pawnsButtons.png");
+    
+    std::vector<ELEMENT_GFX> knightGFX;
+    knightGFX.emplace_back(promotionTextureName, Rect(0, 118, 145, 177));
+    knightGFX.emplace_back(promotionTextureName, Rect(0, 177, 145, 236));
+    m_promotionGUI.getButton(IDC_KNIGHT)->setControlGFX(knightGFX);
+    
+    std::vector<ELEMENT_GFX> bishopGFX;
+    bishopGFX.emplace_back(promotionTextureName, Rect(0, 0, 145, 59));
+    bishopGFX.emplace_back(promotionTextureName, Rect(0, 59, 145, 118));
+    m_promotionGUI.getButton(IDC_BISHOP)->setControlGFX(bishopGFX);
+    
+    std::vector<ELEMENT_GFX> rookGFX;
+    rookGFX.emplace_back(promotionTextureName, Rect(145, 0, 290, 59));
+    rookGFX.emplace_back(promotionTextureName, Rect(145, 59, 290, 118));
+    m_promotionGUI.getButton(IDC_ROOK)->setControlGFX(rookGFX);
+    
+    std::vector<ELEMENT_GFX> queenGFX;
+    queenGFX.emplace_back(promotionTextureName, Rect(290, 0, 435, 59));
+    queenGFX.emplace_back(promotionTextureName, Rect(290, 59, 435, 118));
+    m_promotionGUI.getButton(IDC_QUEEN)->setControlGFX(queenGFX);
 }
 
 //-----------------------------------------------------------------------------
@@ -59,6 +88,7 @@ void TestWin::initGUI()
 void TestWin::renderGUI()
 {
       m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
+      m_promotionGUI.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
 }
 
 //-----------------------------------------------------------------------------
@@ -73,6 +103,7 @@ void TestWin::sendKeyEvent(unsigned char key, bool down)
     }
         
     m_dialog.handleKeyEvent(key, down);
+    m_promotionGUI.handleKeyEvent(key, down);
 }
 
 //-----------------------------------------------------------------------------
@@ -81,6 +112,7 @@ void TestWin::sendKeyEvent(unsigned char key, bool down)
 void TestWin::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
 {
     m_dialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
+    m_promotionGUI.handleVirtualKeyEvent(virtualKey, down, modifierStates);
 }
 
 //-----------------------------------------------------------------------------
@@ -90,6 +122,7 @@ void TestWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
 {
     GameWin::sendMouseEvent(event, modifierStates);
     m_dialog.handleMouseEvent(event, modifierStates);
+    m_promotionGUI.handleMouseEvent(event, modifierStates);
 }
 
 //-----------------------------------------------------------------------------
@@ -98,6 +131,7 @@ void TestWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
 void TestWin::onSizeChanged()
 {
     m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
+    m_promotionGUI.setLocation( (m_winWidth / 2) - (m_promotionGUI.getWidth() / 2), (m_winHeight / 2) - (m_promotionGUI.getHeight() / 2) );
 }
 
 //-----------------------------------------------------------------------------

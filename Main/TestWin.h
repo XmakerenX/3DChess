@@ -24,6 +24,7 @@ protected:
     void onExitPressed(ButtonUI* exitButton);
     
     DialogUI m_dialog;
+    DialogUI m_promotionGUI;
 };
 
 #endif  //_TESTWIN_H
