@@ -403,6 +403,13 @@ bool GameWin::initOpenGL(int width, int height)
     spriteShader = m_asset.getShader("sprite");
     spriteTextShader = m_asset.getShader("spriteText");
 
+    m_sprites[0].Init();
+    m_sprites[1].Init();
+    m_topSprites[0].Init();
+    m_topSprites[1].Init();
+
+    initGUI();
+    
     //------------------------------------
     // Init Scene
     //------------------------------------
@@ -416,13 +423,6 @@ bool GameWin::initOpenGL(int width, int height)
     font_ = m_asset.getFont("NotoMono", 40);
     // make sure the viewport is updated
     reshape(width,height);
-
-    m_sprites[0].Init();
-    m_sprites[1].Init();
-    m_topSprites[0].Init();
-    m_topSprites[1].Init();
-
-    initGUI();
     
     err = glGetError();
     if (err != GL_NO_ERROR)
