@@ -33,6 +33,8 @@ void SubMesh::Draw()
     glBindVertexArray(this->VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
     glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+    
+    glBindVertexArray(0);
 }
 
 //-----------------------------------------------------------------------------

@@ -140,7 +140,7 @@ bool Sprite::Init()
 //-----------------------------------------------------------------------------
 bool Sprite::AddTintedQuad(const Rect &spriteRect, const glm::vec4 &tintColor)
 {
-    return AddQuad(std::move(spriteRect), tintColor, NO_TEXTURE, std::move(EMPTY_RECT), Point(m_fScaleWidth, m_fScaleHeight));
+    return AddQuad(spriteRect, tintColor, NO_TEXTURE, EMPTY_RECT, Point(m_fScaleWidth, m_fScaleHeight));
 }
 
 //-----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ bool Sprite::AddTintedQuad(const Rect &spriteRect, const glm::vec4 &tintColor)
 //-----------------------------------------------------------------------------
 bool Sprite::AddTexturedQuad(const Rect& spriteRect, GLuint textureName, const Rect& texRect)
 {
-    return AddQuad(std::move(spriteRect), WHITE_COLOR, textureName, std::move(texRect), Point(m_fScaleWidth, m_fScaleHeight));
+    return AddQuad(spriteRect, WHITE_COLOR, textureName, std::move(texRect), Point(m_fScaleWidth, m_fScaleHeight));
 }
 
 //-----------------------------------------------------------------------------
@@ -177,8 +177,6 @@ bool Sprite::AddQuad(const Rect& spriteRect, glm::vec4 tintColor, GLuint texture
 //-----------------------------------------------------------------------------
 bool Sprite::Render(Shader* shader)
 {
-    int err;
-
     shader->Use();
 
     for (StreamOfVertices& vertexStream : m_vertexStreams)
@@ -201,7 +199,7 @@ bool Sprite::Render(Shader* shader)
         glBindVertexArray(m_vertexArrayObject);
         glDrawElements(GL_TRIANGLES, vertexStream.indices.size() , GL_UNSIGNED_INT, 0);
 
-        //glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), this->vertices.data(), GL_STATIC_DRAW);
+        glBindVertexArray(0);
     }
 
     return true;
