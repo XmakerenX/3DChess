@@ -1,6 +1,6 @@
 #include "StaticUI.h"
 #include "DialogUI.h"
-
+#include <type_traits>
 //-----------------------------------------------------------------------------
 // Name : StaticUI (Constructor)
 //-----------------------------------------------------------------------------
@@ -12,6 +12,7 @@ StaticUI::StaticUI(DialogUI* pParentDialog, int ID, const std::string& strText, 
     m_strText = strText;
     //sets the color by Default to white
     m_textColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_textOrientation = mkFont::TextFormat::VerticalCenter;
 }
 
 //-----------------------------------------------------------------------------
@@ -32,6 +33,13 @@ StaticUI::StaticUI(std::istream& inputFile)
     inputFile >> m_textColor.b;
     inputFile >> m_textColor.a;
     inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    
+    int textOrientation;
+    inputFile >> textOrientation;
+    m_textOrientation = static_cast<mkFont::TextFormat>(textOrientation);
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    
+    //m_textOrientation = mkFont::TextFormat::VerticalCenter;
 }
 
 //-----------------------------------------------------------------------------
@@ -58,6 +66,14 @@ void StaticUI::setText(const std::string& text)
 }
 
 //-----------------------------------------------------------------------------
+// Name : setTextOrientation ()
+//-----------------------------------------------------------------------------
+void StaticUI::setTextOrientation(mkFont::TextFormat textOrientation)
+{
+    m_textOrientation = textOrientation;
+}
+
+//-----------------------------------------------------------------------------
 // Name : getText ()
 //-----------------------------------------------------------------------------
 const std::string StaticUI::getText() const
@@ -69,7 +85,7 @@ const std::string StaticUI::getText() const
 // Name : Render ()
 // Desc : Render the text store in the static to the screen
 //-----------------------------------------------------------------------------
-void StaticUI::Render(Sprite sprites[SPRITES_SIZE], Sprite textSprite[SPRITES_SIZE], double timeStamp)
+void StaticUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     if (m_bVisible)
     {
@@ -83,7 +99,7 @@ void StaticUI::Render(Sprite sprites[SPRITES_SIZE], Sprite textSprite[SPRITES_SI
         Point dialogPos = calcPositionOffset();
 
         if (m_elementsFonts.size() > 0)
-            renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
+            renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, m_textOrientation);
     }
 }
 
@@ -96,6 +112,7 @@ bool StaticUI::SaveToFile( std::ostream& SaveFile )
     SaveFile << m_strText << "| Control Text" << "\n";
     SaveFile << m_textColor.r << " "<< m_textColor.g << " "<< m_textColor.b << " " << m_textColor.a << "| Control Text Color"
         << "\n";
+    SaveFile << static_cast<std::underlying_type<mkFont::TextFormat>::type>(m_textOrientation) << "| Control text orientation\n";
 
     return true;
 }

@@ -11,6 +11,7 @@ ButtonUI::ButtonUI(DialogUI* pParentDialog, int ID, const std::string& strText, 
     m_nHotkey = nHotkey;
     m_bPressed = false;
     m_textColor = glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f );
+    m_textOrientation = mkFont::TextFormat::Center;
 }
 
 //-----------------------------------------------------------------------------
@@ -27,6 +28,7 @@ ButtonUI::ButtonUI(std::istream& inputFile)
     m_bPressed = false;
     setHotKey(nHotkey);
     inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
+    //m_textOrientation = mkFont::TextFormat::Center;
 }
 
 //-----------------------------------------------------------------------------
@@ -66,7 +68,7 @@ void ButtonUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SI
     renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
 
     if (m_elementsFonts.size() > 0)
-        renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, mkFont::TextFormat::Center);
+        renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, m_textOrientation);
 
 }
 
