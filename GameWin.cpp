@@ -17,6 +17,25 @@ Window GameWin::s_clipboardWindow = 0;
 std::string GameWin::s_clipboardString;
 const double GameWin::s_doubleClickTime = 0.5;
 
+std::ostream& operator<<(std::ostream& os, const Resolution res)
+{
+    os << res.width << " " << res.height;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Resolution res)
+{
+    is >> res.width;
+    is >> res.height;
+    return is;
+}
+
+double calculateXRefreshRate(const XRRModeInfo *info)
+{
+    return (info->hTotal && info->vTotal) ?
+        round(((double)info->dotClock / (double)(info->hTotal * info->vTotal))) : 0;
+}
+
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
@@ -41,6 +60,8 @@ GameWin::GameWin()
     lastRightClickTime = 0;
     m_scene = nullptr;
     m_sceneInput = true;
+    
+    m_primaryMonitorIndex = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -63,6 +84,9 @@ bool GameWin::initWindow()
         return false;
     }
 
+    Screen* pScreen = DefaultScreenOfDisplay(m_display);
+    std::cout << pScreen->width << "X" << pScreen->height << "\n";
+    
     if ( s_clipboardDisplay == nullptr)
     {
         s_clipboardDisplay = XOpenDisplay(nullptr);
@@ -100,8 +124,8 @@ GLXFBConfig GameWin::getBestFBConfig()
       GLX_DEPTH_SIZE      , 24,
       GLX_STENCIL_SIZE    , 8,
       GLX_DOUBLEBUFFER    , True,
-      GLX_SAMPLE_BUFFERS  , 1,
-      GLX_SAMPLES         , 4,
+      //GLX_SAMPLE_BUFFERS  , 1,
+      //GLX_SAMPLES         , 4,
       None
     };
     
@@ -142,8 +166,8 @@ GLXFBConfig GameWin::getBestFBConfig()
             glXGetFBConfigAttrib( m_display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
             glXGetFBConfigAttrib( m_display, fbc[i], GLX_SAMPLES       , &samples  );
       
-            //std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
-            // << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
+//             std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
+//              << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
       
             if ( (best_fbc < 0) || (samp_buf && (samples > best_num_samp)) )
                 best_fbc = i, best_num_samp = samples;
@@ -159,7 +183,100 @@ GLXFBConfig GameWin::getBestFBConfig()
     XFree( fbc );
     return bestFbc;
 }
+
+//-----------------------------------------------------------------------------
+// Name : getMonitorsInfo ()
+//-----------------------------------------------------------------------------
+void GameWin::getMonitorsInfo()
+{
+    int nMonitors;
+    //XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, m_win, true, &nMonitors);
+    XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, DefaultRootWindow(m_display), true, &nMonitors);
+    XRRScreenResources* screenRes = XRRGetScreenResources(m_display, DefaultRootWindow(m_display));
     
+    for (int monitorIndex = 0; monitorIndex < nMonitors; monitorIndex++)
+    {        
+        std::cout << "Monitor " << monitorIndex + 1<< " " << monitorInfo[monitorIndex].width << "X" << monitorInfo[monitorIndex].height << " " << monitorInfo[monitorIndex].noutput <<"\n";
+        if (monitorInfo[monitorIndex].primary)
+        {
+            m_primaryMonitorIndex = monitorIndex;
+            std::cout << "Monitor is primary\n";
+        }
+        
+        std::vector<MonitorInfo::Mode> modes;
+        std::vector<RROutput> outputs;
+        
+        for (int outputIndex = 0; outputIndex < monitorInfo[monitorIndex].noutput ; outputIndex++)
+            outputs.push_back(monitorInfo[monitorIndex].outputs[outputIndex]);
+        
+        if (monitorInfo[monitorIndex].noutput > 0)
+        {
+            if (monitorInfo[monitorIndex].noutput > 1)
+                std::cout << "Warning monitor " << monitorIndex << "has more than one output\n";
+            
+            std::vector<RRMode> monitorModes;
+            XRROutputInfo* outputInfo = XRRGetOutputInfo(m_display, screenRes, monitorInfo[monitorIndex].outputs[0]);
+                        
+            for (int k = 0; k < outputInfo->nmode; k++)
+                monitorModes.push_back(outputInfo->modes[k]);
+            
+            GLuint lastWidth = 0;
+            GLuint lastHeight = 0;
+            for (int outputModeID = 0; outputModeID < outputInfo->nmode; outputModeID++)
+            {
+                for (int screenModeID = 0; screenModeID < screenRes->nmode; screenModeID++)
+                {
+                    if (screenRes->modes[screenModeID].id == outputInfo->modes[outputModeID])
+                    {
+                        if (lastWidth == screenRes->modes[screenModeID].width && lastHeight == screenRes->modes[screenModeID].height)
+                            continue;
+                        
+                        modes.emplace_back(outputInfo->modes[outputModeID],
+                                           screenRes->modes[screenModeID].width,
+                                           screenRes->modes[screenModeID].height,
+                                           calculateXRefreshRate(&screenRes->modes[screenModeID]));
+                        std::cout << screenRes->modes[screenModeID].width << "X" << screenRes->modes[screenModeID].height
+                                  << " " << calculateXRefreshRate(&screenRes->modes[screenModeID]) << "Hz"  "\n";
+                                  
+                        lastWidth = screenRes->modes[screenModeID].width;
+                        lastHeight = screenRes->modes[screenModeID].height;
+                        break;
+                    }
+                }
+            }
+            std::cout << "\n";
+            
+            m_monitors.emplace_back(monitorIndex, 
+                                    Rect(monitorInfo[monitorIndex].x, monitorInfo[monitorIndex].y, monitorInfo[monitorIndex].x + monitorInfo[monitorIndex].width, monitorInfo[monitorIndex].y + monitorInfo[monitorIndex].height),
+                                    std::move(modes),
+                                    std::move(outputs));
+            
+            XRRFreeOutputInfo (outputInfo);
+        }
+    }
+    
+    XRRFreeMonitors(monitorInfo);
+    XRRFreeScreenResources(screenRes);
+}
+
+//-----------------------------------------------------------------------------
+// Name : getMonitorsModes ()
+//-----------------------------------------------------------------------------
+std::vector<std::vector<Mode1>> GameWin::getMonitorsModes() const
+{
+    std::vector<std::vector<Mode1>> monitorsModes;
+    for (MonitorInfo monitor : m_monitors)
+    {
+        std::vector<Mode1> monitorModes;
+        for (MonitorInfo::Mode mode : monitor.modes)
+            monitorModes.emplace_back(mode.width, mode.height);
+                
+        monitorsModes.push_back(std::move(monitorModes));
+    }
+        
+    return monitorsModes;
+}
+
 //-----------------------------------------------------------------------------
 // Name : createWindow ()
 //-----------------------------------------------------------------------------
@@ -172,7 +289,12 @@ bool GameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
     XVisualInfo *vi = glXGetVisualFromFBConfig( m_display, bestFbc );
     std::cout << "Chosen visual ID = 0x" << std::hex << vi->visualid << "\n";
     std::cout << std::dec;
-
+    
+    int samp_buf, samples;
+    glXGetFBConfigAttrib( m_display, bestFbc, GLX_SAMPLE_BUFFERS, &samp_buf );
+    glXGetFBConfigAttrib( m_display, bestFbc, GLX_SAMPLES       , &samples  );
+    std::cout << "Choosen sample buffers = " << samp_buf << " and samples = " << samples << "\n";
+    
     std::cout << "Creating colormap\n";
     XSetWindowAttributes swa;
     //Colormap cmap;
@@ -180,19 +302,37 @@ bool GameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
     swa.background_pixmap = None ;
     swa.border_pixel      = 0;
     swa.event_mask        = StructureNotifyMask | ExposureMask | KeyPressMask | KeyReleaseMask |
-                            ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+                            ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask;
+    //swa.override_redirect = true;
     
-    std::cout << "Creating window\n";
-    m_win = XCreateWindow( m_display, RootWindow( m_display, vi->screen ),
-                              0, 0, width, height, 0, vi->depth, InputOutput,
-                              vi->visual, 
-                              CWBorderPixel|CWColormap|CWEventMask, &swa );
-
-    int sizes;
-    XRRScreenSize* screenSize = XRRSizes(m_display, vi->screen, &sizes);
-
-    m_hDpi = screenSize->mwidth ? std::round((screenSize->width *10 * 25.4f) / screenSize->mwidth) : 0.0f;
-    m_vDpi = screenSize->mheight ? std::round((screenSize->height *10 * 25.4f) / screenSize->mheight) : 0.0f;
+    
+                            
+    std::cout << "Creating window\n";    
+    m_win = XCreateWindow( m_display,
+                           RootWindow( m_display, vi->screen ),
+                           0,
+                           0,
+                           width,
+                           height,
+                           0,
+                           vi->depth,
+                           InputOutput,
+                           vi->visual,
+                           CWBorderPixel|CWColormap|CWEventMask,
+                           &swa );
+    
+    getMonitorsInfo();
+    
+    XMapWindow(m_display, m_win);
+    
+    moveWindowToMonitor(m_primaryMonitorIndex);
+        
+//     std::cout << "screen sizes!!!!!!!!1\n";
+//     for (int i = 0; i < sizes; i++)
+//         std::cout << screenSize[i].width << "X" << screenSize[i].height << "\n";
+//     
+//     m_hDpi = screenSize->mwidth ? std::round((screenSize->width *10 * 25.4f) / screenSize->mwidth) : 0.0f;
+//     m_vDpi = screenSize->mheight ? std::round((screenSize->height *10 * 25.4f) / screenSize->mheight) : 0.0f;
 
     if ( !m_win )
     {
@@ -293,7 +433,114 @@ bool GameWin::createOpenGLContext(GLXFBConfig bestFbc)
     std::cout << "Making context current\n";
     glXMakeCurrent( m_display, m_win, ctx );
     
+    std::cout << glGetString(GL_VENDOR) << " " << glGetString(GL_RENDERER) << " " << glGetString(GL_VERSION) << "\n";
+        
     return true;
+}
+
+//-----------------------------------------------------------------------------
+// Name : setFullScreenMode ()
+//-----------------------------------------------------------------------------
+void GameWin::setFullScreenMode(bool fullscreen)
+{
+    Atom wm_state = XInternAtom(m_display, "_NET_WM_STATE", False);
+    Atom fullscreenAtom = XInternAtom(m_display, "_NET_WM_STATE_FULLSCREEN", False);
+
+    XEvent xev;
+    memset(&xev, 0, sizeof(xev));
+    xev.type = ClientMessage;
+    xev.xclient.window = m_win;
+    xev.xclient.message_type = wm_state;
+    xev.xclient.format = 32;
+    if (fullscreen)
+        xev.xclient.data.l[0] = 1;
+    else
+        xev.xclient.data.l[0] = 0;
+    xev.xclient.data.l[1] = fullscreenAtom;
+    xev.xclient.data.l[2] = 0;
+    
+    XMapWindow(m_display, m_win);
+
+    XSendEvent(m_display, DefaultRootWindow(m_display), False,
+                    SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+    
+    XSync(m_display, m_win);
+    XFlush(m_display);
+}
+
+//-----------------------------------------------------------------------------
+// Name : setMonitorResolution ()
+//-----------------------------------------------------------------------------
+bool GameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
+{
+    if (monitorIndex > m_monitors.size())
+        return false;
+    
+    RRMode modeID;
+    bool IDfound = false;
+
+    std::vector<Mode1> monitorModes;
+    for (MonitorInfo::Mode mode : m_monitors[monitorIndex].modes)
+    {
+        if (mode.width == newResolution.width && mode.height == newResolution.height)
+        {
+            modeID = mode.ID;
+            IDfound = true;
+            break;
+        }
+    }
+    
+    
+    if (IDfound)
+    {
+        XRRScreenResources* screenRes = XRRGetScreenResources(m_display, m_win);
+        
+        Status status = XRRSetCrtcConfig(m_display,
+                                         screenRes,
+                                         screenRes->crtcs[monitorIndex],
+                                         CurrentTime,
+                                         m_monitors[monitorIndex].positionRect.left,
+                                         m_monitors[monitorIndex].positionRect.top,
+                                         modeID,
+                                         1,
+                                         m_monitors[monitorIndex].outputs.data(),
+                                         m_monitors[monitorIndex].outputs.size());
+    
+        XRRFreeScreenResources(screenRes);
+        
+        if (!status)
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+}
+
+//-----------------------------------------------------------------------------
+// Name : setWindowPosition ()
+//-----------------------------------------------------------------------------
+void GameWin::setWindowPosition(int x, int y)
+{
+    XWindowChanges xWinChanges = {0};
+    xWinChanges.x = x;
+    xWinChanges.y = y;
+    XConfigureWindow(m_display, m_win, CWX|CWY, &xWinChanges);
+    XSync(m_display, m_win);
+    XFlush(m_display);
+}
+
+//-----------------------------------------------------------------------------
+// Name : moveWindowToMonitor ()
+//-----------------------------------------------------------------------------
+void GameWin::moveWindowToMonitor(int monitorIndex)
+{
+    Point windowPosition = getWindowPosition();
+    if (!m_monitors[monitorIndex].positionRect.isPointInRect(windowPosition))
+    {
+        setWindowPosition(m_monitors[monitorIndex].positionRect.left,
+                          m_monitors[monitorIndex].positionRect.top);
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -430,7 +677,7 @@ bool GameWin::initOpenGL(int width, int height)
         std::cout <<"Init: ERROR bitches\n";
         std::cout << gluErrorString(err) << "\n";
     }
-
+    
     return true;
 }
 
@@ -807,7 +1054,7 @@ void GameWin::renderGUI()
 //-----------------------------------------------------------------------------
 void GameWin::renderFPS(Sprite& textSprite, mkFont& font)
 {
-    font.renderToRect(textSprite, std::to_string(timer.getFPS()), Rect(0,0, 65,60), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    font.renderToRect(textSprite, std::to_string(timer.getFPS()), Rect(0,0, 200,60), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 }
 
 //-----------------------------------------------------------------------------
@@ -818,6 +1065,7 @@ void GameWin::reshape(int width, int height)
     if(m_winWidth != width || m_winHeight != height)
     {
         std::cout <<"reshape called\n";
+        std::cout << "New window size is " << width << "X" << height << "\n";
         m_winWidth = width;
         m_winHeight = height;
 
@@ -826,10 +1074,17 @@ void GameWin::reshape(int width, int height)
         else
             glViewport(0.0f,0.0f, width, height);
 
-        spriteShader->Use();
-        glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
-        spriteTextShader->Use();
-        glUniform2i( glGetUniformLocation(spriteTextShader->Program, "screenSize"), width / 2, height / 2);
+        if (spriteShader != nullptr)
+        {
+            spriteShader->Use();
+            glUniform2i( glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
+        }
+        
+        if (spriteTextShader != nullptr)
+        {
+            spriteTextShader->Use();
+            glUniform2i( glGetUniformLocation(spriteTextShader->Program, "screenSize"), width / 2, height / 2);
+        }
         
         onSizeChanged();
     }
@@ -907,8 +1162,17 @@ int GameWin::BeginGame()
 
                 XGetWindowAttributes(m_display, m_win, &gwa);
                 reshape(gwa.width, gwa.height);
+                
+                //XRaiseWindow(m_display, m_win);
+                //XSetInputFocus(m_display, m_win, RevertToPointerRoot, CurrentTime);
             }break;
 
+            case FocusIn:
+            {
+                //XRaiseWindow(m_display, m_win);
+                //XSetInputFocus(m_display, m_win, RevertToPointerRoot, CurrentTime);
+            }break;
+            
             case KeyPress:
             case KeyRelease:
             {
@@ -1013,11 +1277,12 @@ int GameWin::BeginGame()
 
                 if (event.xbutton.button == Button3)
                 {
+                    std::cout << "right button released\n";
                     sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
                 }
 
             }break;
-
+                        
             // got quit message, quitting the game loop
             case ClientMessage:
                 std::cout << "Shutting down now!!!\n";
@@ -1114,4 +1379,32 @@ bool GameWin::Shutdown()
         
     return true;
     
+}
+
+//-----------------------------------------------------------------------------
+// Name : getWindowPosition ()
+//-----------------------------------------------------------------------------
+Point GameWin::getWindowPosition()
+{
+        XWindowAttributes windowAttributes;
+    int x,y;
+    Window child;
+    XTranslateCoordinates( m_display, m_win, DefaultRootWindow(m_display), 0, 0, &x, &y, &child );
+    XGetWindowAttributes(m_display, DefaultRootWindow(m_display), &windowAttributes);
+    
+    return Point(x - windowAttributes.x, y - windowAttributes.y);
+}
+
+//-----------------------------------------------------------------------------
+// Name : getWindowCurrentMonitor ()
+//-----------------------------------------------------------------------------
+GLuint GameWin::getWindowCurrentMonitor()
+{    
+    for (GLuint i = 0; i < m_monitors.size(); i++)
+    {
+        if (m_monitors[i].positionRect.isPointInRect(getWindowPosition()))
+            return i;
+    }
+    
+    return 0;
 }

@@ -6,7 +6,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-//#include <GL/glcorearb.h>
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -29,6 +29,62 @@
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
+struct Resolution
+{
+    Resolution(GLuint _width, GLuint _height)
+    :width(_width), height(_height)
+    {}
+    
+    GLuint width;
+    GLuint height;
+};
+
+std::ostream& operator<<(std::ostream& os, const Resolution res);
+std::istream& operator>>(std::istream& is, Resolution res);
+
+struct Mode1
+{
+    Mode1(GLuint _width, GLuint _height)
+    :width(_width), height(_height)
+    {}
+    
+    GLuint width;
+    GLuint height;
+};
+
+struct MonitorInfo
+{
+    struct Mode
+    {
+        Mode(RRMode _ID, GLuint _width, GLuint _height, GLuint _frequency)
+        : ID(_ID), width(_width), height(_height), frequency(_frequency)
+        {}
+        RRMode ID;
+        GLuint width;
+        GLuint height;
+        GLuint frequency;
+    };
+    
+    MonitorInfo(int _index , const Rect& _positionRect, const std::vector<Mode>& _modes, const std::vector<RROutput>& _outputs)
+    :modes(_modes), outputs(_outputs)
+    {
+        index = _index;
+        positionRect = _positionRect;
+    }
+    
+    MonitorInfo(int _index , const Rect _positionRect, std::vector<Mode>&& _modes, std::vector<RROutput>&& _outputs)
+    :modes(_modes), outputs(_outputs)
+    {
+        index = _index;
+        positionRect = _positionRect;
+    }
+    
+    int index;
+    Rect positionRect;
+    std::vector<Mode> modes;
+    std::vector<RROutput> outputs;
+};
+
 class GameWin
 {
 public:
@@ -40,7 +96,11 @@ public:
     GLXFBConfig getBestFBConfig();
     bool createWindow(int width, int height ,GLXFBConfig bestFbc);
     bool createOpenGLContext(GLXFBConfig bestFbc);
-        
+    void setFullScreenMode(bool fullscreen);    
+    bool setMonitorResolution(int monitorIndex, Resolution newResolution);
+    void setWindowPosition(int x, int y);
+    void moveWindowToMonitor(int monitorIndex);
+    
     void setRenderStates();
     
     void drawing        ();
@@ -55,15 +115,22 @@ public:
     int  BeginGame      ();
     bool Shutdown       ();
     
+    Point getWindowPosition();
+    GLuint getWindowCurrentMonitor();
+    
     static bool isExtensionSupported    (const char *extList, const char *extension);
     static int  ctxErrorHandler         (Display *dpy, XErrorEvent *ev);
 
     static void copyToClipboard(const std::string& text);
     static std::string PasteClipboard();
     
+    std::vector<std::vector<Mode1>> getMonitorsModes() const;
+    
 protected:
     static void sendClipboardLoop(Window clipboardWindow);
     static void sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength);
+    
+    void getMonitorsInfo();
     
     virtual void initGUI();
     virtual void renderGUI();
@@ -125,10 +192,12 @@ protected:
     AssetManager m_asset;
     mkFont* font_;
     Sprite m_sprites[2];
-    //Sprite m_sprite;
-    //Sprite m_textSprite;
+    
+    
+    std::vector<MonitorInfo> m_monitors;
+    GLuint m_primaryMonitorIndex;
+    
     Sprite m_topSprites[2];
-    //DialogUI m_dialog;
 };
 
 #endif  //_GAMEWIN_H

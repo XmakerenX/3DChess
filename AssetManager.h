@@ -14,10 +14,9 @@
 #include<GL/glew.h>
 #include <glm/glm.hpp>
 
+#include "FbxLoader.h"
 #include<png.h>
 #include<jpeglib.h>
-
-#include "FbxLoader.h"
 
 #include "RenderTypes.h"
 #include "Shader.h"
@@ -64,7 +63,6 @@ private:
     std::unordered_map<std::string,GLuint>   m_textureCache;
     std::unordered_map<std::string, Mesh>    m_meshCache;
     std::unordered_map<std::string, Shader*> m_shaderCache;
-    //std::unordered_map< std::pair<std::string, GLuint>, mkFont> m_fontCache;
     std::unordered_map< std::string, mkFont> m_fontCache;
     std::vector<Material> m_materials;
     std::vector<Attribute> m_attributes;
