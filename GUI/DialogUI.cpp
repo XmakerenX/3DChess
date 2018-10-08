@@ -1,5 +1,9 @@
+#ifndef  _DIALOGUI_CPP
+#define  _DIALOGUI_CPP
+
 #include "DialogUI.h"
 #include "ListBoxUI.cpp"
+#include "ComboBoxUI.cpp"
 #include <iostream>
 #include <limits>
 
@@ -177,15 +181,6 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
         return false;
 
     //-------------------------------------
-    // Init Itembox elements
-    //-------------------------------------
-//    const std::vector<Rect> itemBoxTexturesRects = {Rect( 13, 123, 241, 160),      // Main texture rect
-//                                                     Rect( 16, 166, 240, 183)}; // Selection texture rect
-
-//    if (!initControlGFX(assetManger, ControlUI::ITEMBOX, "tex.png", itemBoxTexturesRects, elementFontVec))
-//        return false;
-
-    //-------------------------------------
     // Init Slider elements
     //-------------------------------------
     const std::vector<Rect> sliderTexturesRects = {Rect( 1, 187, 93, 228),       // Track texture rect
@@ -228,11 +223,11 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     // sets the Static default font
     // this font is also used for all other controls ... for now..
     // create the controls font
-    mkFont* controlsFont = assetManager.getFont("Times New Roman", 16);
+    mkFont* controlsFont = assetManager.getFont("Times New Roman", 12);
     if (!controlsFont)
         return false;;
 
-    ELEMENT_FONT elementFont2(FontInfo("Times New Roman",16), controlsFont);
+    ELEMENT_FONT elementFont2(FontInfo("Times New Roman",12), controlsFont);
     elementFontVec.push_back(elementFont2);
     elementGFXvec.clear();
 
@@ -246,41 +241,41 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     //-------------------------------------
     // loads our wood GUI texture
     const std::vector<Rect> buttonTexturesRects = {Rect(0, 0, 84, 34), Rect(0, 34, 84, 68)};
-    if (!initControlGFX(assetManager, ControlUI::BUTTON, "woodGUI2.png", buttonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::BUTTON, "woodGUI.png", buttonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init CheckBox elements
     //-------------------------------------
     const std::vector<Rect> checkboxTexturesRects = {Rect(0, 115, 15, 130 ), Rect(60, 112, 76, 130 )};
-    if (!initControlGFX(assetManager, ControlUI::CHECKBOX, "woodGUI2.png", checkboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::CHECKBOX, "woodGUI.png", checkboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init RadioButton elements
     //-------------------------------------
     const std::vector<Rect> radioButtonTexturesRects = {Rect(1, 145, 19, 163), Rect(61, 145, 79, 163)};
-    if (!initControlGFX(assetManager, ControlUI::RADIOBUTTON, "woodGUI2.png", radioButtonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::RADIOBUTTON, "woodGUI.png", radioButtonTexturesRects, elementFontVec))
         return false;
-
+                                                    
     //-------------------------------------
     // Init ComboBox elements
     //-------------------------------------
     const std::vector<Rect> comboboxTexturesRects = {Rect(97, 0, 323, 34),   // Main textrue rect
                                                      Rect(323, 0, 367, 34), // Button textrue rect
-                                                     Rect(102, 116, 461, 301), // Drop down textrue rect
-                                                     Rect(99, 304, 463, 326)};// selection textrue rect
+                                                     Rect(93, 108, 320, 145), // Drop down textrue rect
+                                                     Rect(93, 150, 320, 172)};// selection textrue rect
 
-    if (!initControlGFX(assetManager, ControlUI::COMBOBOX, "woodGUI2.png", comboboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::COMBOBOX, "woodGUI.png", comboboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init ListBox elements
-    //-------------------------------------
-    const std::vector<Rect> listTexturesRects = {Rect( 102, 116, 461, 331),      // Main texture rect
-                                                     Rect( 359, 215, 586, 323)}; // Selection texture rect
+    //-------------------------------------                                                   
+    const std::vector<Rect> listTexturesRects = {Rect( 93, 108, 320, 145),      // Main texture rect
+                                                     Rect( 93, 150, 320, 172)}; // Selection texture rect
 
-    if (!initControlGFX(assetManager, ControlUI::LISTBOX, "woodGUI2.png", listTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::LISTBOX, "woodGUI.png", listTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -289,7 +284,7 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     const std::vector<Rect> sliderTexturesRects = {Rect( 102, 84, 243, 90),       // Track texture rect
                                                      Rect( 243, 81, 259, 100)}; // Button texture rect
 
-    if (!initControlGFX(assetManager, ControlUI::SLIDER, "woodGUI2.png", sliderTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::SLIDER, "woodGUI.png", sliderTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -305,20 +300,18 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
                                                    Rect( 100, 66, 354, 68 ),     // lower border
                                                    Rect( 354, 65, 357, 68 )};   // lower right border
 
-    if (!initControlGFX(assetManager, ControlUI::EDITBOX, "woodGUI2.png", editboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::EDITBOX, "woodGUI.png", editboxTexturesRects, elementFontVec))
         return false;
-
+                                                                                                       
     //-------------------------------------
     // Init ScrollBar elements
     //-------------------------------------
-    int nScrollBarStartX = 196;
-    int nScrollBarStartY = 191;
-    const std::vector<Rect> scrollBarTexturesRects = {Rect(nScrollBarStartX + 0, nScrollBarStartY + 21, nScrollBarStartX + 22, nScrollBarStartY + 32),   // Track textrue rect
-                                                     Rect(nScrollBarStartX + 0, nScrollBarStartY + 1, nScrollBarStartX + 22, nScrollBarStartY + 21 ),  // Up Arrow textrue rect
-                                                     Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53), // Down Arrow textrue rect
-                                                    Rect(220, 192, 238, 234)};                                                                        // Button textrue rect
+    const std::vector<Rect> scrollBarTexturesRects = {Rect(329, 127, 350, 139),  // Track textrue rect
+                                                      Rect(329, 107, 350, 126),  // Up Arrow textrue rect
+                                                      Rect(329, 140, 350, 159),  // Down Arrow textrue rect
+                                                      Rect(220, 192, 238, 234)}; // Button textrue rect 
 
-    if (!initControlGFX(assetManager, ControlUI::SCROLLBAR, "woodGUI2.png", scrollBarTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::SCROLLBAR, "woodGUI.png", scrollBarTexturesRects, elementFontVec))
         return false;
 
     return true;
@@ -425,22 +418,21 @@ bool DialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
     if (!m_bVisible)
         return false;
 
-    Point& cursorPos = event.cursorPos;
+    Point cursorPos = Point(event.cursorPos.x - m_x, event.cursorPos.y - m_y - getCaptionHeight());    
     bool& down = event.down;
     //let controls handle the mouse event first
     // If a control is in focus and it's enabled, then give
     // it the first chance at handling the message.
     if( m_pControlFocus && m_pControlFocus->getEnabled() )
     {
-
-        if( m_pControlFocus->handleMouseEvent(MouseEvent(event.type, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight),
+        if( m_pControlFocus->handleMouseEvent(MouseEvent(event.type, cursorPos,
                                                          event.down, event.timeStamp, event.nLinesToScroll), modifierStates))
             return true;
     }
 
     for (GLuint i = 0; i < m_Controls.size(); i++)
     {
-        if( m_Controls[i]->handleMouseEvent(MouseEvent(event.type, Point(cursorPos.x - m_x, cursorPos.y - m_y - m_nCaptionHeight),
+        if( m_Controls[i]->handleMouseEvent(MouseEvent(event.type, cursorPos,
                                                          event.down, event.timeStamp, event.nLinesToScroll), modifierStates))
         {
             return true;
@@ -482,9 +474,6 @@ bool DialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
 
     case MouseEventType::DoubleRightButton:
     {
-        cursorPos.x -= m_x;
-        cursorPos.y -= m_y + getCaptionHeight();
-
         ControlUI* pControl = getControlAtPoint(cursorPos);
         if( pControl != nullptr && pControl->getEnabled() )
         {
@@ -496,9 +485,6 @@ bool DialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
     {
         if (down)
         {
-            cursorPos.x -= getLocation().x;
-            cursorPos.y -= getLocation().y + getCaptionHeight();
-
             m_pControlFocus = getControlAtPoint(cursorPos);
 
             if (m_pControlFocus != nullptr)
@@ -512,7 +498,7 @@ bool DialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
     case MouseEventType::MouseMoved:
     {
         // check if we need to highlight a control as the mouse is over it
-        OnMouseMove(cursorPos);
+        OnMouseMove(event.cursorPos);
         // return false to allow others to proceess this event
         return false;
     }break;
@@ -705,9 +691,10 @@ bool DialogUI::addRadioButton(int ID, int x, int y, int width, int height, GLuin
 // Name : addComboBox()
 // Desc : add a control of type Combobox to the dialog
 //-----------------------------------------------------------------------------
-bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated/* = NULL*/ , std::string strID /*= ""*/)
+template<class T>
+bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI<T>** ppComboxCreated/* = NULL*/ , std::string strID /*= ""*/)
 {
-    ComboBoxUI* pComboBox = new ComboBoxUI(this, ID, strText, x, y, width, height, nHotkey);
+    ComboBoxUI<T>* pComboBox = new ComboBoxUI<T>(this, ID, strText, x, y, width, height, nHotkey);
 
     initControl(pComboBox);
 
@@ -873,9 +860,10 @@ bool DialogUI::addRadioButtonFromFile(std::istream& InputFIle, RadioButtonUI** p
 // Name : addComboBoxFromFile()
 // Desc : loads from file a control of type ComboBox to the dialog
 //-----------------------------------------------------------------------------
-bool DialogUI::addComboBoxFromFile(std::istream& InputFIle, ComboBoxUI** ppComboxCreated /* = NULL */)
+template<class T>
+bool DialogUI::addComboBoxFromFile(std::istream& InputFIle, ComboBoxUI<T>** ppComboxCreated /* = NULL */)
 {
-    ComboBoxUI* pComboBox = new ComboBoxUI(InputFIle);
+    ComboBoxUI<T>* pComboBox = new ComboBoxUI<T>(InputFIle);
 
     initControl(pComboBox);
 
@@ -1277,7 +1265,7 @@ GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
 
        case ControlUI::COMBOBOX:
            {
-               addComboBoxFromFile(inputFile);
+               addComboBoxFromFile<int>(inputFile);
            }break;
 
        case ControlUI::EDITBOX:
@@ -1420,9 +1408,10 @@ RadioButtonUI * DialogUI::getRadioButton ( int ID )
 //-----------------------------------------------------------------------------
 // Name : GetComboBox
 //-----------------------------------------------------------------------------
-ComboBoxUI * DialogUI::getComboBox( int ID )
+template<class T>
+ComboBoxUI<T> * DialogUI::getComboBox( int ID )
 {
-    return static_cast< ComboBoxUI* > (getControl(ID, ControlUI::COMBOBOX));
+    return static_cast<ComboBoxUI<T>*> (getControl(ID, ControlUI::COMBOBOX));
 }
 
 //-----------------------------------------------------------------------------
@@ -1478,3 +1467,5 @@ bool DialogUI::getVisible()
 {
     return m_bVisible;
 }
+
+#endif  //_DIALOGUI_CPP

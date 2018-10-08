@@ -6,10 +6,11 @@
 #include "ListBoxUI.h"
 #include <string>
 
+template<class T>
 class ComboBoxUI : public ButtonUI
 {
 public:
-    typedef boost::signals2::signal<void (ComboBoxUI*)>  signal_comboBox;
+    typedef boost::signals2::signal<void (ComboBoxUI<T>*)>  signal_comboBox;
 
     //-------------------------------------------------------------------------
     // Constructors & Destructors for This Class.
@@ -30,7 +31,7 @@ public:
     virtual bool    Released            (Point pt);
     virtual bool    Scrolled            (int nScrollAmount);
 
-    void            ConnectToSelectChg  (const signal_comboBox::slot_type& subscriber);
+    void            ConnectToSelectChg  (const typename signal_comboBox::slot_type& subscriber);
 
     //-------------------------------------------------------------------------
     //functions that handle control Rendering
@@ -42,7 +43,7 @@ public:
     virtual void    OnFocusOut          ();
 
     virtual bool    SaveToFile          (std::ostream& SaveFile);
-            void    CopyItemsFrom       (ComboBoxUI *sourceComboBox);
+            void    CopyItemsFrom       (ComboBoxUI<T>* sourceComboBox);
 
 
     virtual bool    ContainsPoint       (Point pt);
@@ -53,7 +54,7 @@ public:
     //-------------------------------------------------------------------------
     //functions that handle checkBox specific properties
     //-------------------------------------------------------------------------
-    bool            AddItem             (std::string strText, int data);
+    bool            AddItem             (std::string strText, T data);
     void            RemoveItem          (GLuint index);
     void            RemoveAllItems      ();
     int             FindItem            (std::string strText, GLuint iStart = 0);
@@ -68,11 +69,11 @@ public:
 
     int             GetSelectedIndex    () const;
 
-    int*            GetSelectedData     ();
-    Item<int> *     GetSelectedItem     ();
+    T*            GetSelectedData     ();
+    Item<T> *     GetSelectedItem     ();
 
     GLuint          GetNumItems         ();
-    Item<int>  *    GetItem             (GLuint index);
+    Item<T>  *    GetItem             (GLuint index);
 
     bool            SetSelectedByIndex  (GLuint index);
     bool            SetSelectedByText   (std::string strText);
@@ -81,7 +82,7 @@ public:
 protected:
     int m_iFocused;
     bool m_bOpened;
-    ListBoxUI<int> m_dropDown;
+    ListBoxUI<T> m_dropDown;
 
     Rect m_rcText;
     Rect m_rcButton;
@@ -94,4 +95,4 @@ private:
    signal_comboBox m_selectionChangedSig;
 };
 
-#endif  //_CCOMBOBOXUI_H
+#endif  //_COMBOBOXUI_H

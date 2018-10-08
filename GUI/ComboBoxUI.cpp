@@ -1,3 +1,6 @@
+#ifndef  _COMBOBOXUI_CPP
+#define  _COMBOBOXUI_CPP
+
 #include "ComboBoxUI.h"
 #include "DialogUI.h"
 #include "ListBoxUI.cpp"
@@ -6,7 +9,8 @@
 //-----------------------------------------------------------------------------
 // Name : ComboBoxUI(constructor)
 //-----------------------------------------------------------------------------
-ComboBoxUI::ComboBoxUI(DialogUI* pParentDialog, int ID, std::string strText, int x, int y, GLuint width, GLuint height, GLuint nHotkey)
+template<class T>
+ComboBoxUI<T>::ComboBoxUI(DialogUI* pParentDialog, int ID, std::string strText, int x, int y, GLuint width, GLuint height, GLuint nHotkey)
     :ButtonUI(pParentDialog, ID, strText, x, y, width, height, nHotkey),
     m_dropDown(pParentDialog, ID, x, y + height, width - height, 100, false)
 {
@@ -20,7 +24,8 @@ ComboBoxUI::ComboBoxUI(DialogUI* pParentDialog, int ID, std::string strText, int
 //-----------------------------------------------------------------------------
 // Name : ComboBoxUI(constructor from InputFile)
 //-----------------------------------------------------------------------------
-ComboBoxUI::ComboBoxUI(std::istream& inputFile)
+template<class T>
+ComboBoxUI<T>::ComboBoxUI(std::istream& inputFile)
     :ButtonUI(inputFile), m_dropDown(inputFile)
 {
     m_type = ControlUI::COMBOBOX;
@@ -39,7 +44,8 @@ ComboBoxUI::ComboBoxUI(std::istream& inputFile)
 //-----------------------------------------------------------------------------
 // Name : CComboBoxUI(destructor)
 //-----------------------------------------------------------------------------
-ComboBoxUI::~ComboBoxUI(void)
+template<class T>
+ComboBoxUI<T>::~ComboBoxUI(void)
 {
 }
 
@@ -47,7 +53,8 @@ ComboBoxUI::~ComboBoxUI(void)
 // Name : onInit()
 // Desc : initialize the scrollbar element
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::onInit()
+template<class T>
+bool ComboBoxUI<T>::onInit()
 {
     return m_pParentDialog->initControl(&m_dropDown);
 }
@@ -55,7 +62,8 @@ bool ComboBoxUI::onInit()
 //-----------------------------------------------------------------------------
 // Name : setHotKey ()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::OnHotkey()
+template<class T>
+void ComboBoxUI<T>::OnHotkey()
 {
     ;
 }
@@ -64,7 +72,8 @@ void ComboBoxUI::OnHotkey()
 // Name : handleMouseEvent()
 // Desc : Handles mouse input for the Combo box
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+template<class T>
+bool ComboBoxUI<T>::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     if (!m_bEnabled || !m_bVisible)
         return false;
@@ -110,7 +119,8 @@ bool ComboBoxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
 //-----------------------------------------------------------------------------
 // Name : Pressed()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
+template<class T>
+bool ComboBoxUI<T>::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
     if( ContainsPoint(pt))
     {
@@ -139,9 +149,10 @@ bool ComboBoxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, dou
 //-----------------------------------------------------------------------------
 // Name : Released()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::Released(Point pt)
+template<class T>
+bool ComboBoxUI<T>::Released(Point pt)
 {
-    if (m_dropDown.ContainsPoint(pt) && m_dropDown.GetSelectedIndices().size() > 0)
+    if (m_bOpened && m_dropDown.ContainsPoint(pt) && m_dropDown.GetSelectedIndices().size() > 0)
     {
         m_iFocused = m_dropDown.GetSelectedIndices().back();
         m_bOpened = false;
@@ -168,7 +179,8 @@ bool ComboBoxUI::Released(Point pt)
 //-----------------------------------------------------------------------------
 // Name : Scrolled()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::Scrolled( int nScrollAmount)
+template<class T>
+bool ComboBoxUI<T>::Scrolled( int nScrollAmount)
 {
     const std::vector<int>& selectedIndices =  m_dropDown.GetSelectedIndices();
     if (selectedIndices.size() > 0)
@@ -210,7 +222,8 @@ bool ComboBoxUI::Scrolled( int nScrollAmount)
 //-----------------------------------------------------------------------------
 // Name : ConnectToSelectChg()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::ConnectToSelectChg( const signal_comboBox::slot_type& subscriber)
+template<class T>
+void ComboBoxUI<T>::ConnectToSelectChg( const typename signal_comboBox::slot_type& subscriber)
 {
     m_selectionChangedSig.connect(subscriber);
 }
@@ -218,7 +231,8 @@ void ComboBoxUI::ConnectToSelectChg( const signal_comboBox::slot_type& subscribe
 //-----------------------------------------------------------------------------
 // Name : Render()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
+template<class T>
+void ComboBoxUI<T>::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {    
     // check that there is actual fonts
     if (!m_bVisible ||  m_elementsFonts.size() == 0)
@@ -229,7 +243,8 @@ void ComboBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_
     //if Combobox is open render the scrollbar
     if (m_bOpened)
     {
-        m_dropDown.Render(topSprites, topSprites, timeStamp);
+        //m_dropDown.Render(topSprites, topSprites, timeStamp);
+        m_dropDown.Render(topSprites, sprites, timeStamp);
     }
 
     // Render the main combobox elements
@@ -267,7 +282,8 @@ void ComboBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_
 //-----------------------------------------------------------------------------
 // Name : UpdateRects()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::UpdateRects()
+template<class T>
+void ComboBoxUI<T>::UpdateRects()
 {
     ButtonUI::UpdateRects();
 
@@ -285,7 +301,8 @@ void ComboBoxUI::UpdateRects()
 // Name : AddItem()
 // Desc : add an item to the combobox
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::AddItem( std::string strText, int data )
+template<class T>
+bool ComboBoxUI<T>::AddItem( std::string strText, T data )
 {
     bool ret = m_dropDown.AddItem(strText, data);
     if (m_dropDown.GetNumItems() == 1)
@@ -302,7 +319,8 @@ bool ComboBoxUI::AddItem( std::string strText, int data )
 // Name : RemoveItem()
 // Desc : remove an item at the given index
 //-----------------------------------------------------------------------------
-void ComboBoxUI::RemoveItem( GLuint index )
+template<class T>
+void ComboBoxUI<T>::RemoveItem( GLuint index )
 {
     m_dropDown.RemoveItem(index);
     if (m_dropDown.GetSelectedIndices().size() == 0)
@@ -317,7 +335,8 @@ void ComboBoxUI::RemoveItem( GLuint index )
 // Name : RemoveAllItems()
 // Desc : removes all the items from the combobox
 //-----------------------------------------------------------------------------
-void ComboBoxUI::RemoveAllItems()
+template<class T>
+void ComboBoxUI<T>::RemoveAllItems()
 {
     m_dropDown.RemoveAllItems();
     m_iFocused = -1;
@@ -328,7 +347,8 @@ void ComboBoxUI::RemoveAllItems()
 // Desc : finds an item that match the given text and returns the item index
 // Note : iStart can be given if there is need to start the check from a certain index
 //-----------------------------------------------------------------------------
-int ComboBoxUI::FindItem( std::string strText, GLuint iStart/* = 0 */)
+template<class T>
+int ComboBoxUI<T>::FindItem( std::string strText, GLuint iStart/* = 0 */)
 {
     return m_dropDown.FindItem(strText, iStart);
 }
@@ -338,7 +358,8 @@ int ComboBoxUI::FindItem( std::string strText, GLuint iStart/* = 0 */)
 // Desc : check is there is a Item that match the given text
 // Note : iStart can be given if there is need to start the check from a certain index
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::ContainsItem(std::string strText, GLuint iStart /*= 0 */)
+template<class T>
+bool ComboBoxUI<T>::ContainsItem(std::string strText, GLuint iStart /*= 0 */)
 {
     return m_dropDown.ContainsItem(strText, iStart);
 }
@@ -348,7 +369,8 @@ bool ComboBoxUI::ContainsItem(std::string strText, GLuint iStart /*= 0 */)
 // Desc : returns the item data
 // Note : the search for the item is being done based on the item text
 //-----------------------------------------------------------------------------
-void* ComboBoxUI::GetItemData( std::string strText )
+template<class T>
+void* ComboBoxUI<T>::GetItemData( std::string strText )
 {
     return (void*)m_dropDown.GetItemData(strText);
 }
@@ -358,7 +380,8 @@ void* ComboBoxUI::GetItemData( std::string strText )
 // Desc : returns the item data
 // Note : the search for the item is being done based on the item index
 //-----------------------------------------------------------------------------
-void* ComboBoxUI::GetItemData( int nIndex )
+template<class T>
+void* ComboBoxUI<T>::GetItemData( int nIndex )
 {
     return m_dropDown.GetItemData(nIndex);
 }
@@ -366,7 +389,8 @@ void* ComboBoxUI::GetItemData( int nIndex )
 //-----------------------------------------------------------------------------
 // Name : SetDropHeight()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::SetDropHeight( GLuint nHeight )
+template<class T>
+void ComboBoxUI<T>::SetDropHeight( GLuint nHeight )
 {
     m_dropDown.setSize(m_dropDown.getWidth(), nHeight);
 }
@@ -374,7 +398,8 @@ void ComboBoxUI::SetDropHeight( GLuint nHeight )
 //-----------------------------------------------------------------------------
 // Name : GetScrollBarWidth()
 //-----------------------------------------------------------------------------
-int ComboBoxUI::GetScrollBarWidth() const
+template<class T>
+int ComboBoxUI<T>::GetScrollBarWidth() const
 {
     return m_dropDown.GetScrollBarWidth();
 }
@@ -382,7 +407,8 @@ int ComboBoxUI::GetScrollBarWidth() const
 //-----------------------------------------------------------------------------
 // Name : SetScrollBarWidth()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::SetScrollBarWidth( int nWidth )
+template<class T>
+void ComboBoxUI<T>::SetScrollBarWidth( int nWidth )
 {
     m_dropDown.SetScrollBarWidth(nWidth);
     UpdateRects();
@@ -391,7 +417,8 @@ void ComboBoxUI::SetScrollBarWidth( int nWidth )
 //-----------------------------------------------------------------------------
 // Name : GetSelectedIndex()
 //-----------------------------------------------------------------------------
-int ComboBoxUI::GetSelectedIndex() const
+template<class T>
+int ComboBoxUI<T>::GetSelectedIndex() const
 {
     const std::vector<int> selIndices = m_dropDown.GetSelectedIndices();
     if (selIndices.size() > 0)
@@ -404,7 +431,8 @@ int ComboBoxUI::GetSelectedIndex() const
 // Name : GetSelectedData()
 // Desc : returns the data of the current selected Item
 //-----------------------------------------------------------------------------
-int* ComboBoxUI::GetSelectedData()
+template<class T>
+T* ComboBoxUI<T>::GetSelectedData()
 {
     if (m_iFocused != -1)
         return m_dropDown.GetItemData(m_iFocused);
@@ -416,24 +444,20 @@ int* ComboBoxUI::GetSelectedData()
 // Name : GetSelectedItem()
 // Desc : returns the current selected Item
 //-----------------------------------------------------------------------------
-Item<int>* ComboBoxUI::GetSelectedItem()
+template<class T>
+Item<T>* ComboBoxUI<T>::GetSelectedItem()
 {
     if (m_iFocused != -1)
         return m_dropDown.GetItem(m_iFocused);
     else
         return nullptr;
-    
-//     const std::vector<int> selIndices = m_dropDown.GetSelectedIndices();
-//     if (selIndices.size() > 0)
-//         return m_dropDown.GetItem(selIndices.back());
-//     else
-//         return nullptr;
 }
 
 //-----------------------------------------------------------------------------
 // Name : GetNumItems()
 //-----------------------------------------------------------------------------
-GLuint ComboBoxUI::GetNumItems()
+template<class T>
+GLuint ComboBoxUI<T>::GetNumItems()
 {
     return m_dropDown.GetNumItems();
 }
@@ -441,7 +465,8 @@ GLuint ComboBoxUI::GetNumItems()
 //-----------------------------------------------------------------------------
 // Name : GetItem()
 //-----------------------------------------------------------------------------
-Item<int>* ComboBoxUI::GetItem( GLuint index )
+template<class T>
+Item<T>* ComboBoxUI<T>::GetItem( GLuint index )
 {
     return m_dropDown.GetItem(index);
 }
@@ -449,7 +474,8 @@ Item<int>* ComboBoxUI::GetItem( GLuint index )
 //-----------------------------------------------------------------------------
 // Name : SetSelectedByIndex()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::SetSelectedByIndex( GLuint index )
+template<class T>
+bool ComboBoxUI<T>::SetSelectedByIndex( GLuint index )
 {
     const std::vector<int>& selectedIndices =  m_dropDown.GetSelectedIndices();
     if (selectedIndices.size() > 0)
@@ -468,7 +494,8 @@ bool ComboBoxUI::SetSelectedByIndex( GLuint index )
 //-----------------------------------------------------------------------------
 // Name : SetSelectedByText()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::SetSelectedByText( std::string strText )
+template<class T>
+bool ComboBoxUI<T>::SetSelectedByText( std::string strText )
 {
     const std::vector<int>& selectedIndices =  m_dropDown.GetSelectedIndices();
     if (selectedIndices.size() > 0)
@@ -488,7 +515,8 @@ bool ComboBoxUI::SetSelectedByText( std::string strText )
 //-----------------------------------------------------------------------------
 // Name : SetSelectedByData()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::SetSelectedByData( void* pData )
+template<class T>
+bool ComboBoxUI<T>::SetSelectedByData( void* pData )
 {
 //    for( GLuint i = 0; i < m_Items.size(); i++ )
 //    {
@@ -508,7 +536,8 @@ bool ComboBoxUI::SetSelectedByData( void* pData )
 //-----------------------------------------------------------------------------
 // Name : CanHaveFocus()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::CanHaveFocus()
+template<class T>
+bool ComboBoxUI<T>::CanHaveFocus()
 {
     return ( m_bVisible && m_bEnabled );
 }
@@ -516,7 +545,8 @@ bool ComboBoxUI::CanHaveFocus()
 //-----------------------------------------------------------------------------
 // Name : OnFocusOut()
 //-----------------------------------------------------------------------------
-void ComboBoxUI::OnFocusOut()
+template<class T>
+void ComboBoxUI<T>::OnFocusOut()
 {
     ButtonUI::OnFocusOut();
     m_bOpened = false;
@@ -525,7 +555,8 @@ void ComboBoxUI::OnFocusOut()
 //-----------------------------------------------------------------------------
 // Name : SaveToFile()
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::SaveToFile(std::ostream& SaveFile)
+template<class T>
+bool ComboBoxUI<T>::SaveToFile(std::ostream& SaveFile)
 {
     ButtonUI::SaveToFile(SaveFile);
     m_dropDown.SaveToFile(SaveFile);
@@ -536,7 +567,8 @@ bool ComboBoxUI::SaveToFile(std::ostream& SaveFile)
 //-----------------------------------------------------------------------------
 // Name : CopyItemsFrom
 //-----------------------------------------------------------------------------
-void ComboBoxUI::CopyItemsFrom(ComboBoxUI* sourceComboBox)
+template<class T>
+void ComboBoxUI<T>::CopyItemsFrom(ComboBoxUI* sourceComboBox)
 {
     // clears the items vector
     RemoveAllItems();
@@ -550,7 +582,8 @@ void ComboBoxUI::CopyItemsFrom(ComboBoxUI* sourceComboBox)
 //-----------------------------------------------------------------------------
 // Name : ContainsPoint
 //-----------------------------------------------------------------------------
-bool ComboBoxUI::ContainsPoint(Point pt)
+template<class T>
+bool ComboBoxUI<T>::ContainsPoint(Point pt)
 {
     if (m_rcBoundingBox.isPointInRect(pt))
         return true;
@@ -564,7 +597,8 @@ bool ComboBoxUI::ContainsPoint(Point pt)
 //-----------------------------------------------------------------------------
 // Name : onMouseEnter
 //-----------------------------------------------------------------------------
-void ComboBoxUI::onMouseEnter()
+template<class T>
+void ComboBoxUI<T>::onMouseEnter()
 {
     m_bMouseOver = true;
     m_dropDown.onMouseEnter();
@@ -573,8 +607,11 @@ void ComboBoxUI::onMouseEnter()
 //-----------------------------------------------------------------------------
 // Name : onMouseLeave
 //-----------------------------------------------------------------------------
-void ComboBoxUI::onMouseLeave()
+template<class T>
+void ComboBoxUI<T>::onMouseLeave()
 {
     m_bMouseOver = false;
     m_dropDown.onMouseLeave();
 }
+
+#endif  //_COMBOBOXUI_CPP

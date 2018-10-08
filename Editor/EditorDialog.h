@@ -79,7 +79,7 @@ public:
         void             RelocateControlClicked         (ButtonUI* pRecloateControlButton);
         void             DeleteControlClicked           (ButtonUI* pDeleteButton);
         void             OptionsControlClicked          (ButtonUI* pOptionsButton);
-        void             ComboboxSelChg                 (ComboBoxUI* pCombobox);
+        void             ComboboxSelChg                 (ComboBoxUI<int>* pCombobox);
 
         void             SetStaticGUI                   (bool ControlSelected = false);
         void             SetRadioButtonGUI              (bool ControlSelected = false);

@@ -1,5 +1,5 @@
 #include "EditorDialog.h"
-#include "../GUI/ListBoxUI.cpp"
+#include "../GUI/DialogUI.cpp"
 
 //-----------------------------------------------------------------------------
 // Name : EditorDialogUI (constructor)
@@ -56,10 +56,7 @@ bool EditDialogUI::handleVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, co
 // Name : handleMouseEvent ()
 //-----------------------------------------------------------------------------
 bool EditDialogUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
-{
-    if (event.type == MouseEventType::RightButton)
-        std::cout << "stop here now!!\n";
-    
+{    
     if (m_GenDialog.handleMouseEvent(event, modifierStates))
         return true;
 
@@ -182,8 +179,8 @@ void EditDialogUI::CreateDialogUI(AssetManager& assetManager)
     //-----------------------------------------------------------------------------
     addStatic(IDC_CONTROLTYPESTATIC, "Control Type", 125, 0, 200, 24);
 
-    ComboBoxUI* pComboBox;
-    addComboBox(IDC_COMBOX, "", 125, 25, 200, 24, 0, &pComboBox);
+    ComboBoxUI<int>* pComboBox;
+    addComboBox<int>(IDC_COMBOX, "", 125, 25, 200, 24, 0, &pComboBox);
     pComboBox->AddItem("Static",      ControlUI::STATIC );
     pComboBox->AddItem("Button",      ControlUI::BUTTON);
     pComboBox->AddItem("CheckBox",    ControlUI::CHECKBOX);
@@ -261,12 +258,12 @@ void EditDialogUI::CreateDialogUI(AssetManager& assetManager)
     //-----------------------------------------------------------------------------
     // Combobox menu initialization
     //-----------------------------------------------------------------------------
-    ComboBoxUI* pComboboxNewItems = nullptr;
+    ComboBoxUI<int>* pComboboxNewItems = nullptr;
     ButtonUI* pComboAddItems = nullptr;
     ButtonUI* pComboRemoveItems = nullptr;
 
 
-    addComboBox(IDC_COMBOXITEMS,"", 125, 190, 200, 95, 0, &pComboboxNewItems);
+    addComboBox<int>(IDC_COMBOXITEMS,"", 125, 190, 200, 95, 0, &pComboboxNewItems);
     addButton(IDC_COMBOBOXITEMSADD, "Add Item", 125, 424, 85, 34, 0, &pComboAddItems);
     addButton(IDC_COMBOBOXITEMSREMOVE, "Remove Item", 220, 424, 105, 34, 0, &pComboRemoveItems);
 
@@ -359,7 +356,7 @@ void EditDialogUI::CreateDialogUI(AssetManager& assetManager)
 //-----------------------------------------------------------------------------
 void EditDialogUI::GenControlRightClicked(ControlUI* pRightClickedControl)
 {
-    getComboBox(IDC_COMBOX)->SetSelectedByIndex(pRightClickedControl->getType());
+    getComboBox<int>(IDC_COMBOX)->SetSelectedByIndex(pRightClickedControl->getType());
 
     long long controlWidth = pRightClickedControl->getWidth();
     long long controlHeight = pRightClickedControl->getHeight();
@@ -417,7 +414,7 @@ void EditDialogUI::GenControlRightClicked(ControlUI* pRightClickedControl)
     
     case ControlUI::COMBOBOX:
     {
-        getComboBox(IDC_COMBOXITEMS)->CopyItemsFrom(static_cast<ComboBoxUI*>(pRightClickedControl) );
+        getComboBox<int>(IDC_COMBOXITEMS)->CopyItemsFrom(static_cast<ComboBoxUI<int>*>(pRightClickedControl) );
         getEditBox(IDCLISTOXEDITBOX)->setText("");
 
         SetComboBoxGUI(true);
@@ -439,7 +436,7 @@ void EditDialogUI::CreateControlClicked(ButtonUI* createControl)
     std::string pControlText;
     std::string pControlIDText;
 
-    int selectedItem = *(getComboBox(IDC_COMBOX)->GetSelectedData());
+    int selectedItem = *(getComboBox<int>(IDC_COMBOX)->GetSelectedData());
     GLuint  controlWidth =  std::stoi( getEditBox(IDC_WIDTHEDITBOX)->getText());
     GLuint  controlHeight = std::stoi( getEditBox(IDC_HEIGHTEDITBOX)->getText());
 
@@ -473,18 +470,18 @@ void EditDialogUI::CreateControlClicked(ButtonUI* createControl)
 
         case ControlUI::COMBOBOX:
         {
-            m_GenDialog.addComboBox(m_curControlID + 1, pControlText, cursorPoint.x,
+            m_GenDialog.addComboBox<int>(m_curControlID + 1, pControlText, cursorPoint.x,
             cursorPoint.y, controlWidth, controlHeight, 0, nullptr, pControlIDText);
 
-            GLuint comboboxSize = getComboBox(IDC_COMBOXITEMS)->GetNumItems();
+            GLuint comboboxSize = getComboBox<int>(IDC_COMBOXITEMS)->GetNumItems();
 
             for (GLuint itemIndex = 0; itemIndex < comboboxSize; itemIndex++)
             {
-                Item<int>* pCurItem = getComboBox(IDC_COMBOXITEMS)->GetItem(itemIndex);
-                m_GenDialog.getComboBox(m_curControlID + 1)->AddItem(pCurItem->strText, pCurItem->data);
+                Item<int>* pCurItem = getComboBox<int>(IDC_COMBOXITEMS)->GetItem(itemIndex);
+                m_GenDialog.getComboBox<int>(m_curControlID + 1)->AddItem(pCurItem->strText, pCurItem->data);
             }
 
-            getComboBox(IDC_COMBOXITEMS)->RemoveAllItems();
+            getComboBox<int>(IDC_COMBOXITEMS)->RemoveAllItems();
 
             m_controlInCreation = true;
         }break;
@@ -561,7 +558,7 @@ void EditDialogUI::RemoveListBoxItemClikced(ButtonUI* pRecloateControlButton)
 void EditDialogUI::AddComboBoxItemClicked(ButtonUI* pAddComboBoxItemButton)
 {
     std::string itemText = getEditBox(IDCLISTOXEDITBOX)->getText();
-    getComboBox(IDC_COMBOXITEMS)->AddItem(itemText, 0);
+    getComboBox<int>(IDC_COMBOXITEMS)->AddItem(itemText, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -569,8 +566,8 @@ void EditDialogUI::AddComboBoxItemClicked(ButtonUI* pAddComboBoxItemButton)
 //-----------------------------------------------------------------------------
 void EditDialogUI::RemoveComboBoxItemClicked(ButtonUI* pRemoveComboBoxItemButton)
 {
-    GLuint itemIndex = getComboBox(IDC_COMBOXITEMS)->GetSelectedIndex();
-    getComboBox(IDC_COMBOXITEMS)->RemoveItem(itemIndex);
+    GLuint itemIndex = getComboBox<int>(IDC_COMBOXITEMS)->GetSelectedIndex();
+    getComboBox<int>(IDC_COMBOXITEMS)->RemoveItem(itemIndex);
 }
 
 //-----------------------------------------------------------------------------
@@ -587,7 +584,7 @@ void EditDialogUI::SetChangesButtonClicked(ButtonUI* pSetChangesButton)
     m_pCurSelectedControl->setLocation(controlX, controlY);
     m_pCurSelectedControl->setSize(controlWidth, controlHeight);
 
-    int selectedItem = *(getComboBox(IDC_COMBOX)->GetSelectedData());
+    int selectedItem = *(getComboBox<int>(IDC_COMBOX)->GetSelectedData());
 
     switch(selectedItem)
     {
@@ -624,7 +621,7 @@ void EditDialogUI::SetChangesButtonClicked(ButtonUI* pSetChangesButton)
 
         case ControlUI::COMBOBOX:
         {
-            static_cast<ComboBoxUI*>(m_pCurSelectedControl)->CopyItemsFrom( getComboBox(IDC_COMBOXITEMS) );
+            static_cast<ComboBoxUI<int>*>(m_pCurSelectedControl)->CopyItemsFrom( getComboBox<int>(IDC_COMBOXITEMS) );
         }break;
         
     }
@@ -704,7 +701,7 @@ void EditDialogUI::OptionsControlClicked(ButtonUI* pOptionsButton)
 //-----------------------------------------------------------------------------
 // Name : ComboboxSelChg ()
 //-----------------------------------------------------------------------------
-void EditDialogUI::ComboboxSelChg(ComboBoxUI* pCombobox)
+void EditDialogUI::ComboboxSelChg(ComboBoxUI<int>* pCombobox)
 {
     Item<int>* pSelectedItem =  pCombobox->GetSelectedItem();
 
@@ -760,7 +757,7 @@ void EditDialogUI::SetStaticGUI(bool ControlSelected /* = false */)
     getButton(IDC_LISTBOXITEMSADD)->setVisible(false);
     getButton(IDC_LISTBOXITEMSREMOVE)->setVisible(false);
 
-    getComboBox(IDC_COMBOXITEMS)->setVisible(false);
+    getComboBox<int>(IDC_COMBOXITEMS)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSADD)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSREMOVE)->setVisible(false);
 
@@ -798,7 +795,7 @@ void EditDialogUI::SetRadioButtonGUI(bool ControlSelected /* = false */)
     getButton(IDC_LISTBOXITEMSADD)->setVisible(false);
     getButton(IDC_LISTBOXITEMSREMOVE)->setVisible(false);
 
-    getComboBox(IDC_COMBOXITEMS)->setVisible(false);
+    getComboBox<int>(IDC_COMBOXITEMS)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSADD)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSREMOVE)->setVisible(false);
 
@@ -838,7 +835,7 @@ void EditDialogUI::SetSliderGUI(bool ControlSelected /* = false */)
     getButton(IDC_LISTBOXITEMSADD)->setVisible(false);
     getButton(IDC_LISTBOXITEMSREMOVE)->setVisible(false);
 
-    getComboBox(IDC_COMBOXITEMS)->setVisible(false);
+    getComboBox<int>(IDC_COMBOXITEMS)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSADD)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSREMOVE)->setVisible(false);
 
@@ -880,7 +877,7 @@ void EditDialogUI::SetListBoxGUI(bool ControlSelected /* = false */)
     getEditBox(IDC_SLIDERMINEDITBOX)->setVisible(false);
     getEditBox(IDC_SLIDERMAXEDITBOX)->setVisible(false);
 
-    getComboBox(IDC_COMBOXITEMS)->setVisible(false);
+    getComboBox<int>(IDC_COMBOXITEMS)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSADD)->setVisible(false);
     getButton(IDC_COMBOBOXITEMSREMOVE)->setVisible(false);
 
@@ -929,7 +926,7 @@ void EditDialogUI::SetComboBoxGUI(bool ControlSelected /* = false */)
     getStatic(IDC_LISTBOXSTATIC)->setVisible(true);
     getStatic(IDC_LISTBOXSTATIC)->setText("Combobox Item text");
     getEditBox(IDCLISTOXEDITBOX)->setVisible(true);
-    getComboBox(IDC_COMBOXITEMS)->setVisible(true);
+    getComboBox<int>(IDC_COMBOXITEMS)->setVisible(true);
     getButton(IDC_COMBOBOXITEMSADD)->setVisible(true);
     getButton(IDC_COMBOBOXITEMSREMOVE)->setVisible(true);
 

@@ -86,20 +86,82 @@ public:
     void                UpdateControlDefText    (const std::string& strDefText, int controlID);
     void                UpdateControlDefText    (std::string&& strDefText, int controlID);
 
-    bool                addStatic               (int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated = nullptr, std::string strID = "");
-    bool                addButton               (int ID, const std::string& strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI **ppButtonCreated = nullptr, std::string strID = "");
-    bool                addCheckBox             (int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated = nullptr, std::string strID = "");
-    bool                addRadioButton          (int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated = nullptr, std::string strID = "");
-    bool                addComboBox             (int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI** ppComboxCreated = nullptr, std::string strID = "");
-    bool                addListBox              (int ID, int x, int y, int width, int height, bool multiSelection = false, ListBoxUI<int>** ppListBoxCreated = nullptr, std::string strID = "");
-    bool                addSlider               (int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated = nullptr, std::string strID = "");
-    bool                addEditbox              (int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated = nullptr, std::string strID = "");
+    bool                addStatic               (int ID,
+                                                 const std::string& strText,
+                                                 int x,
+                                                 int y,
+                                                 int width,
+                                                 int height,
+                                                 StaticUI** ppStaticCreated = nullptr,
+                                                 std::string strID = "");
+    bool                addButton               (int ID,
+                                                 const std::string& strText,
+                                                 int x,
+                                                 int y,
+                                                 int width,
+                                                 int height,
+                                                 GLuint nHotkey,
+                                                 ButtonUI **ppButtonCreated = nullptr,
+                                                 std::string strID = "");
+    bool                addCheckBox             (int ID,
+                                                 int x,
+                                                 int y,
+                                                 int width,
+                                                 int height,
+                                                 GLuint nHotkey,
+                                                 CheckboxUI** ppCheckBoxCreated = nullptr,
+                                                 std::string strID = "");
+    bool                addRadioButton          (int ID,
+                                                 int x,
+                                                 int y,
+                                                 int width,
+                                                 int height,
+                                                 GLuint nHotkey,
+                                                 GLuint nButtonGroup,
+                                                 RadioButtonUI** ppRadioButtonCreated = nullptr,
+                                                 std::string strID = "");
+    template<class T>
+    bool                addComboBox             (int ID,
+                                                 std::string strText,
+                                                 int x,
+                                                 int y,
+                                                 int width
+                                                 , int height,
+                                                 GLuint nHotkey,
+                                                 ComboBoxUI<T>** ppComboxCreated = nullptr,
+                                                 std::string strID = "");
+    bool                addListBox              (int ID,
+                                                 int x,
+                                                 int y, int width,
+                                                 int height,
+                                                 bool multiSelection = false,
+                                                 ListBoxUI<int>** ppListBoxCreated = nullptr,
+                                                 std::string strID = "");
+    bool                addSlider               (int ID,
+                                                 int x,
+                                                 int y,
+                                                 int width,
+                                                 int height,
+                                                 int min,
+                                                 int max,
+                                                 int nValue,
+                                                 SliderUI** ppSliderCreated = nullptr
+                                                 , std::string strID = "");
+    bool                addEditbox              (int ID,
+                                                 const std::string& strText,
+                                                 int x,
+                                                 int y,
+                                                 int width,
+                                                 int height,
+                                                 EditBoxUI** ppEditBoxCreated = nullptr,
+                                                 std::string strID = "");
 
     bool                addStaticFromFile       (std::istream& InputFIle, StaticUI** ppStaticCreated = nullptr);
     bool                addButtonFromFile       (std::istream& InputFIle, ButtonUI** ppButtonCreated = nullptr);
     bool                addCheckBoxFromFile     (std::istream& InputFIle, CheckboxUI** ppCheckBoxCreated = nullptr);
     bool                addRadioButtonFromFile  (std::istream& InputFIle, RadioButtonUI** ppRadioButtonCreated = nullptr);
-    bool                addComboBoxFromFile     (std::istream& InputFIle, ComboBoxUI** ppComboxCreated = nullptr);
+    template<class T>
+    bool                addComboBoxFromFile     (std::istream& InputFIle, ComboBoxUI<T>** ppComboxCreated = nullptr);
     bool                addListBoxFromFile      (std::istream& InputFIle, ListBoxUI<int>** ppListBoxCreated = nullptr);
     bool                addSliderFromFile       (std::istream& InputFIle, SliderUI** ppSliderCreated = nullptr);
     bool                addEditBoxFromFile      (std::istream& InputFIle, EditBoxUI** ppEditBoxCreated = nullptr);
@@ -113,7 +175,8 @@ public:
     ButtonUI        *   getButton               (int ID);
     CheckboxUI      *   getCheckBox             (int ID);
     RadioButtonUI   *   getRadioButton          (int ID);
-    ComboBoxUI      *   getComboBox             (int ID);
+    template<class T>
+    ComboBoxUI<T>   *   getComboBox             (int ID);
     ListBoxUI<int>  *   getListBox              (int ID);
     SliderUI        *   getSlider               (int ID);
     EditBoxUI       *   getEditBox              (int ID);
