@@ -21,7 +21,9 @@ Scene::Scene()
 //-----------------------------------------------------------------------------
 Scene::~Scene()
 {
-    glDeleteBuffers(1, &ubMaterial);
+    if (ubMaterial != 0)
+        glDeleteBuffers(1, &ubMaterial);
+    
     if (ubLight != 0)
         glDeleteBuffers(1, &ubLight);
 }
