@@ -1,4 +1,4 @@
-#include "TestWin.h"
+#include "ChessWindow.h"
 #include "../GUI/ListBoxUI.cpp"
 #include "../GUI/ComboBoxUI.cpp"
 #include "MainMenuDef.h"
@@ -8,7 +8,7 @@
 //-----------------------------------------------------------------------------
 // Name : TestWin (constructor)
 //-----------------------------------------------------------------------------
-TestWin::TestWin()
+ChessWindow::ChessWindow()
 :m_optionDialog(*this)
 {
     m_scene = new ChessScene(m_promotionGUI);
@@ -18,7 +18,7 @@ TestWin::TestWin()
 //-----------------------------------------------------------------------------
 // Name : TestWin (destructor)
 //-----------------------------------------------------------------------------
-TestWin::~TestWin()
+ChessWindow::~ChessWindow()
 {
     if (m_scene != nullptr)
     {
@@ -31,7 +31,7 @@ TestWin::~TestWin()
 //-----------------------------------------------------------------------------
 // Name : initGUI
 //-----------------------------------------------------------------------------
-void TestWin::initGUI()
+void ChessWindow::initGUI()
 {
     initMainMenu();
     initOptionsMenu();
@@ -41,7 +41,7 @@ void TestWin::initGUI()
 //-----------------------------------------------------------------------------
 // Name : initMainMenu
 //-----------------------------------------------------------------------------
-void TestWin::initMainMenu()
+void ChessWindow::initMainMenu()
 {
     m_dialog.init(200,320, 18, "Main Menu", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
     m_dialog.setCaption(false);
@@ -57,11 +57,11 @@ void TestWin::initMainMenu()
     gameTitle->setControlFonts(gameTitleFont);
     gameTitle->setTextOrientation(mkFont::TextFormat::Center);
     
-    m_dialog.getButton(IDC_NEWGAME)->connectToClick(boost::bind(&TestWin::onNewGame, this , _1));
-    m_dialog.getButton(IDC_Continue)->connectToClick(boost::bind(&TestWin::onContinueGame, this , _1));
-    m_dialog.getButton(IDC_OPTIONS)->connectToClick(boost::bind(&TestWin::onOptions, this , _1));
-    m_dialog.getButton(IDC_CREDITS)->connectToClick(boost::bind(&TestWin::onCredits, this , _1));
-    m_dialog.getButton(IDC_EXIT)->connectToClick(boost::bind(&TestWin::onExitPressed, this , _1));
+    m_dialog.getButton(IDC_NEWGAME)->connectToClick(boost::bind(&ChessWindow::onNewGame, this , _1));
+    m_dialog.getButton(IDC_Continue)->connectToClick(boost::bind(&ChessWindow::onContinueGame, this , _1));
+    m_dialog.getButton(IDC_OPTIONS)->connectToClick(boost::bind(&ChessWindow::onOptions, this , _1));
+    m_dialog.getButton(IDC_CREDITS)->connectToClick(boost::bind(&ChessWindow::onCredits, this , _1));
+    m_dialog.getButton(IDC_EXIT)->connectToClick(boost::bind(&ChessWindow::onExitPressed, this , _1));
     
     std::ifstream saveFile("board.sav");
     if (!saveFile.good())
@@ -71,21 +71,21 @@ void TestWin::initMainMenu()
 //-----------------------------------------------------------------------------
 // Name : initOptionsMenu
 //-----------------------------------------------------------------------------
-void TestWin::initOptionsMenu()
+void ChessWindow::initOptionsMenu()
 {
     m_optionDialog.init(100, 100, 18, "Options", "GUITextures/woodBack.png", glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
     m_optionDialog.setLocation( (m_winWidth / 2) - (m_optionDialog.getWidth() / 2), (m_winHeight / 2) - (m_optionDialog.getHeight() / 2) );
     m_optionDialog.setVisible(false);
     m_optionDialog.setCaption(false);
     
-    m_optionDialog.getButton(IDC_CANCELBUTTON)->connectToClick(boost::bind(&TestWin::onOptionMenuCancel, this, _1));
-    m_optionDialog.getButton(IDC_OKBUTTON)->connectToClick(boost::bind(&TestWin::onOptionMenuOK, this, _1));
+    m_optionDialog.getButton(IDC_CANCELBUTTON)->connectToClick(boost::bind(&ChessWindow::onOptionMenuCancel, this, _1));
+    m_optionDialog.getButton(IDC_OKBUTTON)->connectToClick(boost::bind(&ChessWindow::onOptionMenuOK, this, _1));
 }
 
 //-----------------------------------------------------------------------------
 // Name : initPromotionMenu
 //-----------------------------------------------------------------------------
-void TestWin::initPromotionMenu()
+void ChessWindow::initPromotionMenu()
 {
     m_promotionGUI.init(500, 100, 18,"Select Pawn", "GUITextures/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
     m_promotionGUI.setCaption(false);
@@ -119,7 +119,7 @@ void TestWin::initPromotionMenu()
 //-----------------------------------------------------------------------------
 // Name : renderGUI
 //-----------------------------------------------------------------------------
-void TestWin::renderGUI()
+void ChessWindow::renderGUI()
 {
       m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
       m_optionDialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
@@ -129,7 +129,7 @@ void TestWin::renderGUI()
 //-----------------------------------------------------------------------------
 // Name : sendKeyEvent
 //-----------------------------------------------------------------------------
-void TestWin::sendKeyEvent(unsigned char key, bool down)
+void ChessWindow::sendKeyEvent(unsigned char key, bool down)
 {
     if (key == 27 && down)
     {
@@ -148,7 +148,7 @@ void TestWin::sendKeyEvent(unsigned char key, bool down)
 //-----------------------------------------------------------------------------
 // Name : sendVirtualKeyEvent
 //-----------------------------------------------------------------------------
-void TestWin::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
+void ChessWindow::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
 {
     m_dialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
     m_optionDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
@@ -158,7 +158,7 @@ void TestWin::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const Mod
 //-----------------------------------------------------------------------------
 // Name : sendMouseEvent
 //-----------------------------------------------------------------------------
-void TestWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+void ChessWindow::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     GameWin::sendMouseEvent(event, modifierStates);
     m_dialog.handleMouseEvent(event, modifierStates);
@@ -169,7 +169,7 @@ void TestWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
 //-----------------------------------------------------------------------------
 // Name : onSizeChanged
 //-----------------------------------------------------------------------------
-void TestWin::onSizeChanged()
+void ChessWindow::onSizeChanged()
 {
     m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
     m_promotionGUI.setLocation( (m_winWidth / 2) - (m_promotionGUI.getWidth() / 2), (m_winHeight / 2) - (m_promotionGUI.getHeight() / 2) );
@@ -179,7 +179,7 @@ void TestWin::onSizeChanged()
 //-----------------------------------------------------------------------------
 // Name : onNewGame
 //-----------------------------------------------------------------------------
-void TestWin::onNewGame(ButtonUI* newGameButton)
+void ChessWindow::onNewGame(ButtonUI* newGameButton)
 {
     m_dialog.setVisible(false);
     m_sceneInput = true;
@@ -189,7 +189,7 @@ void TestWin::onNewGame(ButtonUI* newGameButton)
 //-----------------------------------------------------------------------------
 // Name : onContinueGame
 //-----------------------------------------------------------------------------
-void TestWin::onContinueGame(ButtonUI* continuButton)
+void ChessWindow::onContinueGame(ButtonUI* continuButton)
 {
     m_dialog.setVisible(false);
     m_sceneInput = true;
@@ -199,7 +199,7 @@ void TestWin::onContinueGame(ButtonUI* continuButton)
 //-----------------------------------------------------------------------------
 // Name : onOptions
 //-----------------------------------------------------------------------------
-void TestWin::onOptions(ButtonUI* optionsButton)
+void ChessWindow::onOptions(ButtonUI* optionsButton)
 {
 //     static bool f = false;
 //     f = !f;
@@ -211,7 +211,7 @@ void TestWin::onOptions(ButtonUI* optionsButton)
 //-----------------------------------------------------------------------------
 // Name : onCredits
 //-----------------------------------------------------------------------------
-void TestWin::onCredits(ButtonUI* creditsButton)
+void ChessWindow::onCredits(ButtonUI* creditsButton)
 {
     Point windowPos = getWindowPosition();
     std::cout << "Window Position is " << windowPos.x << "," << windowPos.y << "\n";
@@ -220,7 +220,7 @@ void TestWin::onCredits(ButtonUI* creditsButton)
 //-----------------------------------------------------------------------------
 // Name : onExitPressed
 //-----------------------------------------------------------------------------
-void TestWin::onExitPressed(ButtonUI* exitButton)
+void ChessWindow::onExitPressed(ButtonUI* exitButton)
 {
     gameRunning = false;
 }
@@ -228,7 +228,7 @@ void TestWin::onExitPressed(ButtonUI* exitButton)
 //-----------------------------------------------------------------------------
 // Name : onOptionMenuCancel
 //-----------------------------------------------------------------------------
-void TestWin::onOptionMenuCancel(ButtonUI* cancelButton)
+void ChessWindow::onOptionMenuCancel(ButtonUI* cancelButton)
 {
     m_optionDialog.setVisible(false);
     m_dialog.setVisible(true);
@@ -237,7 +237,7 @@ void TestWin::onOptionMenuCancel(ButtonUI* cancelButton)
 //-----------------------------------------------------------------------------
 // Name : onOptionMenuOK
 //-----------------------------------------------------------------------------
-void TestWin::onOptionMenuOK(ButtonUI* okButton)
+void ChessWindow::onOptionMenuOK(ButtonUI* okButton)
 {
     m_optionDialog.setVisible(false);
     m_dialog.setVisible(true);

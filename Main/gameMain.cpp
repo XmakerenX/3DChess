@@ -1,13 +1,13 @@
 #include <iostream>
 #include <string>
 #include <fontconfig/fontconfig.h>
-#include "TestWin.h"
+#include "ChessWindow.h"
 //#include "GUIEditorWin.h"
 
 int main(int argc, char* argv[])
 {
     //GameWin gamewin;
-    TestWin gamewin;
+    ChessWindow gamewin;
     //GUIEditorWin gamewin;
     std::string fontName = "NotoMono";
     std::string path;
