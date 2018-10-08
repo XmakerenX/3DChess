@@ -19,7 +19,11 @@ int main(int argc, char* argv[])
     gamewin.initWindow();
     std::cout << "starting init OpenGL\n";
     //gamewin.initOpenGL(800,600);
-    gamewin.initOpenGL(1024,768);
+    if (!gamewin.initOpenGL(1024,768))
+    {
+        std::cout << "Error occured, Quiting..\n";
+        return 1;
+    }
     std::cout << "--------------------------------\n";
 
     std::cout << "Beginning game\n";
