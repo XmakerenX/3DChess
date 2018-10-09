@@ -136,6 +136,10 @@ void ChessWindow::sendKeyEvent(unsigned char key, bool down)
         if (!m_optionDialog.getVisible() && !m_promotionGUI.getVisible())
         {
             m_dialog.setVisible(!m_dialog.getVisible());
+            if (m_dialog.getVisible())
+                static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::Infinite);
+            else
+                static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::ReturnToWhite);
             m_sceneInput = !m_dialog.getVisible();
         }
     }
@@ -184,6 +188,7 @@ void ChessWindow::onNewGame(ButtonUI* newGameButton)
     m_dialog.setVisible(false);
     m_sceneInput = true;
     static_cast<ChessScene*>(m_scene)->newGame();
+    static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::ReturnToWhite);
 }
 
 //-----------------------------------------------------------------------------
@@ -194,6 +199,7 @@ void ChessWindow::onContinueGame(ButtonUI* continuButton)
     m_dialog.setVisible(false);
     m_sceneInput = true;
     static_cast<ChessScene*>(m_scene)->loadGame();
+    static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::ReturnToWhite);
 }
 
 //-----------------------------------------------------------------------------
@@ -201,9 +207,6 @@ void ChessWindow::onContinueGame(ButtonUI* continuButton)
 //-----------------------------------------------------------------------------
 void ChessWindow::onOptions(ButtonUI* optionsButton)
 {
-//     static bool f = false;
-//     f = !f;
-//     setFullScreenMode(f);
     m_dialog.setVisible(false);
     m_optionDialog.setVisible(true);
 }
@@ -252,10 +255,14 @@ void ChessWindow::onOptionMenuOK(ButtonUI* okButton)
     if (fullscreen)
     {
         Resolution* newRes = m_optionDialog.getComboBox<Resolution>(IDC_RESOLUTIONCOM)->GetSelectedData();
-        //setMonitorResolution(monitorIndex, *newRes);
+        setMonitorResolution(monitorIndex, *newRes);
         setFullScreenMode(true);
     }
     
-    
+    int rotationEnabled = *(m_optionDialog.getComboBox<int>(IDC_ROTATIONCOM)->GetSelectedData());
+    if (rotationEnabled == 1)
+        static_cast<ChessScene*>(m_scene)->setCameraRotaion(true);
+    else
+        static_cast<ChessScene*>(m_scene)->setCameraRotaion(false);
     
 }

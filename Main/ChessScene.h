@@ -9,9 +9,12 @@
 class ChessScene : public Scene
 {
 public:
+    enum class RotationMode{Infinite, ReturnToWhite, ReturnToBlack, RotateCW, RotateCCW, Stoped};
+    
     ChessScene(DialogUI& promotionDialog);
     ~ChessScene();
     
+    virtual void InitScene(int width, int height, const glm::vec3& cameraPos, const glm::vec3& cameraLookat);
     virtual void InitObjects();
     
     void newGame();
@@ -19,7 +22,10 @@ public:
     
     virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
-    virtual void Drawing();
+    virtual void Drawing(float frameTimeDelta);
+    
+    void setCameraRotationMode(RotationMode newMode);
+    void setCameraRotaion(bool enabled);
     
     void onChessPieceCreated(piece* pPiece);
     void onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint, BOARD_POINT pieceNewBoardPoint);
@@ -36,6 +42,12 @@ public:
     static Point boardPointToPoint(BOARD_POINT pt);
     
 private:
+    void RotateCamera(float frameTimeDelta);
+    bool m_cameraRotation;
+    RotationMode m_rotationMode;
+    float m_rotationAngle;
+    float m_endAngle;
+    
     board* gameBoard;
     Object* boardObject;
     Object* frameSquareObject;

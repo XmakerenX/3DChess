@@ -247,7 +247,10 @@ void GameWin::getMonitorsInfo()
             std::cout << "\n";
             
             m_monitors.emplace_back(monitorIndex, 
-                                    Rect(monitorInfo[monitorIndex].x, monitorInfo[monitorIndex].y, monitorInfo[monitorIndex].x + monitorInfo[monitorIndex].width, monitorInfo[monitorIndex].y + monitorInfo[monitorIndex].height),
+                                    Rect(monitorInfo[monitorIndex].x,
+                                         monitorInfo[monitorIndex].y,
+                                         monitorInfo[monitorIndex].x + monitorInfo[monitorIndex].width,
+                                         monitorInfo[monitorIndex].y + monitorInfo[monitorIndex].height),
                                     std::move(modes),
                                     std::move(outputs));
             
@@ -661,10 +664,7 @@ bool GameWin::initOpenGL(int width, int height)
     // Init Scene
     //------------------------------------
     if (m_scene)
-    {
-        m_scene->InitScene();
-        m_scene->InitCamera(width, height);
-    }
+        m_scene->InitScene(width, height);
     
     // init our font
     font_ = m_asset.getFont("NotoMono", 40);
@@ -958,27 +958,9 @@ void GameWin::drawing()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(m_scene)
-        m_scene->Drawing();
+        m_scene->Drawing(timer.getTimeElapsed());
 
     std::stringstream ss;
-    //ss << timer.getFPS();
-    //ss << " ";
-//     //glm::vec3 obj2Pos = m_scene.GetObject(1).GetPosition();
-//     glm::vec3 obj2Pos = selectedObj->GetPosition();
-//     ss << obj2Pos.x;
-//     ss << " ";
-//     ss << obj2Pos.y;
-//     ss << " ";
-//     ss << obj2Pos.z;
-//     ss << " ";
-//     ss << faceCount;
-//     ss << " ";
-//     ss << meshIndex;
-//     ss << " ";
-//     if (hit)
-//         ss << "Hit!";
-//     else
-//         ss << "Miss :(";
     if (m_scene != nullptr)
     {
         ss << m_scene->getMeshIndex();

@@ -5,6 +5,11 @@
 //-----------------------------------------------------------------------------
 ChessScene::ChessScene(DialogUI& promotionDialog) : m_promotionDialog(promotionDialog)
 {
+    m_rotationMode = RotationMode::Infinite;
+    m_rotationAngle = 0;
+    m_endAngle = 0;
+    m_cameraRotation = true;
+    
     boardObject = nullptr;
     frameSquareObject = nullptr;
     m_blackAttribute = -1;
@@ -27,6 +32,14 @@ ChessScene::~ChessScene()
 {
     if(gameBoard != nullptr)
         gameBoard->SaveBoardToFile();
+}
+
+//-----------------------------------------------------------------------------
+// Name : InitScene
+//-----------------------------------------------------------------------------
+void ChessScene::InitScene(int width, int height, const glm::vec3& cameraPos, const glm::vec3& cameraLookat)
+{
+    Scene::InitScene(width, height, glm::vec3(-40, 54.5, 40.0), glm::vec3(40.0f, 0.0f, 40.0f));
 }
 
 //-----------------------------------------------------------------------------
@@ -250,12 +263,137 @@ Object * ChessScene::PickObject(Point& cursor, int& faceCount, int &meshIndex)
 }
 
 //-----------------------------------------------------------------------------
+// Name : RotateCamera
+//-----------------------------------------------------------------------------
+void ChessScene::RotateCamera(float frameTimeDelta)
+{
+    if (m_rotationMode != RotationMode::Stoped)
+    {
+        float eyeX = -80*glm::cos(m_rotationAngle) - glm::sin(m_rotationAngle);
+        float eyeZ = -80*sin(m_rotationAngle) - cos(m_rotationAngle);
+        //float eyeX = -80*glm::cos(angle);
+        //float eyeZ = -80*sin(angle);
+        eyeX += 40;
+        eyeZ += 40;            
+        glm::vec3 temp = m_camera.GetPosition();
+        
+        m_camera.SetPostion(glm::vec3(eyeX, temp.y ,eyeZ));
+        m_camera.SetLookAt(glm::vec3(40.0f, 0.0f, 40.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    
+    switch(m_rotationMode)
+    {
+        case RotationMode::Infinite:
+        {       
+            m_rotationAngle += 0.01746 * 20 * frameTimeDelta;
+            if (m_rotationAngle > (glm::pi<float>() * 2))
+              m_rotationAngle -= glm::pi<float>() * 2;           
+        }break;
+        
+        case RotationMode::ReturnToWhite:
+        {
+            // return to angle 0 through the fastest direction
+            if (m_rotationAngle < glm::pi<float>())
+            {
+                m_rotationMode = RotationMode::RotateCCW;
+                m_endAngle = 0;                
+            }
+            else
+            {
+                m_rotationMode = RotationMode::RotateCW;
+                m_endAngle = glm::pi<float>() * 2;
+            }
+        }break;
+        
+        case RotationMode::ReturnToBlack:
+        {
+            // return to angle pi through the fastest direction
+            if (m_rotationAngle < glm::pi<float>())
+            {           
+                m_rotationMode = RotationMode::RotateCW;
+                m_endAngle = glm::pi<float>();
+            }
+            else
+            {   
+                m_rotationMode = RotationMode::RotateCCW;
+                m_endAngle = glm::pi<float>();
+            }
+        }break;
+        
+        case RotationMode::RotateCW:
+        {
+            if (m_rotationAngle < m_endAngle)
+                m_rotationAngle += 0.01746 * 100 * frameTimeDelta;
+            else
+                m_rotationMode = RotationMode::Stoped;
+        }break;
+        
+        case RotationMode::RotateCCW:
+        {
+            if (m_rotationAngle > m_endAngle)
+                m_rotationAngle -= 0.01746 * 100 * frameTimeDelta;
+            else
+                m_rotationMode = RotationMode::Stoped;
+        }break;
+        
+        case RotationMode::Stoped:
+        {
+            if (m_endAngle == (glm::pi<float>() * 2))
+                m_endAngle = 0;
+                m_rotationAngle = m_endAngle;
+        }break;
+    }
+}
+
+//-----------------------------------------------------------------------------
 // Name : Darwing
 //-----------------------------------------------------------------------------
-void ChessScene::Drawing()
+void ChessScene::Drawing(float frameTimeDelta)
 {
-    Scene::Drawing();
+    RotateCamera(frameTimeDelta);
+    Scene::Drawing(frameTimeDelta);
+    
     status = gameBoard->getBoardStatus();
+    glm::vec3 cameraPos = m_camera.GetPosition();
+    std::stringstream ss;
+    ss << cameraPos.x << " " << cameraPos.y << " " << cameraPos.z;
+    status = ss.str();
+}
+
+//-----------------------------------------------------------------------------
+// Name : setCameraRotationMode
+//-----------------------------------------------------------------------------
+void ChessScene::setCameraRotationMode(RotationMode newMode)
+{
+    if (!m_cameraRotation)
+        return;
+    
+    if (newMode == RotationMode::ReturnToWhite)
+    {
+        if (gameBoard->getCurrentPlayer() == WHITE)
+            m_rotationMode = RotationMode::ReturnToWhite;
+        else
+            m_rotationMode = RotationMode::ReturnToBlack;
+    }
+    else
+        m_rotationMode = newMode;
+}
+
+//-----------------------------------------------------------------------------
+// Name : onChessPieceCreated
+//-----------------------------------------------------------------------------
+void ChessScene::setCameraRotaion(bool enabled)
+{
+    if (enabled)
+    {
+        m_cameraRotation = true;
+        m_rotationMode = RotationMode::Infinite;
+    }
+    else
+    {
+        m_cameraRotation = false;
+        m_rotationMode = RotationMode::ReturnToWhite;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -345,6 +483,9 @@ void ChessScene::onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint
     pieceObjects[pieceNewPoint.y][pieceNewPoint.x] = pieceObjects[pieceOldPoint.y][pieceOldPoint.x];
     m_objects[pieceObjects[pieceNewPoint.y][pieceNewPoint.x]].SetPos(piecePosition);
     pieceObjects[pieceOldPoint.y][pieceOldPoint.x] = -1;
+    
+    if (!gameBoard->isUnitPromotion())
+        setCameraRotationMode(RotationMode::ReturnToWhite);
 }
 
 //-----------------------------------------------------------------------------
@@ -394,6 +535,7 @@ void ChessScene::onPromotionSelected(ButtonUI* selectedPieceButton)
     }
     
     m_promotionDialog.setVisible(false);
+    setCameraRotationMode(RotationMode::ReturnToWhite);
     highLightSquares();
 }
 
