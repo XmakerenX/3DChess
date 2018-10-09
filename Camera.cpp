@@ -70,8 +70,17 @@ void Camera::SetLookAt(const glm::vec3 &vecLookat)
 
     m_bViewDirty = true;
     m_bFrustumDirty = true;
-
 }
+
+//-----------------------------------------------------------------------------
+// Name : SetLookAt
+//-----------------------------------------------------------------------------
+void Camera::SetLookAt(const glm::vec3& vecLookat, const glm::vec3& vecUp)
+{
+    m_vecUp = vecUp;
+    SetLookAt(vecLookat);
+}
+
 //-----------------------------------------------------------------------------
 // Name : UpdateRenderView
 //-----------------------------------------------------------------------------

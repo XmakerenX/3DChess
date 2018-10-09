@@ -31,7 +31,7 @@ Scene::~Scene()
 //-----------------------------------------------------------------------------
 // Name : InitScene ()
 //-----------------------------------------------------------------------------
-void Scene::InitScene()
+void Scene::InitScene(int width, int height, const glm::vec3& cameraPosition/* = glm::vec3(0.0f, 20.0f, 70.0f)*/, const glm::vec3& cameraLookat/* = glm::vec3(0.0f, 0.0f, 0.0f)*/)
 {
     meshShader =  m_assetManager.getShader(meshShaderPath2);
 
@@ -47,17 +47,18 @@ void Scene::InitScene()
 
     InitLights();
     InitObjects();
+    InitCamera(width ,height, cameraPosition, cameraLookat);
 }
 
 //-----------------------------------------------------------------------------
 // Name : InitCamera()
 //-----------------------------------------------------------------------------
-void Scene::InitCamera(int width, int height)
+void Scene::InitCamera(int width, int height, const glm::vec3& position, const glm::vec3& lookat)
 {
     m_camera.SetFOV(60.0f);
     m_camera.SetViewPort(0.0, 0.0, width, height, 1.0f, 5000.0f);
-    m_camera.SetPostion(glm::vec3(0.0f, 20.0f, 70.0f));
-    m_camera.SetLookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_camera.SetPostion(position);
+    m_camera.SetLookAt(lookat);
 }
 
 //-----------------------------------------------------------------------------
@@ -122,7 +123,7 @@ void Scene::InitObjects()
 //-----------------------------------------------------------------------------
 // Name : Darwing ()
 //-----------------------------------------------------------------------------
-void Scene::Drawing()
+void Scene::Drawing(float frameTimeDelta)
 {
     //clear m_lastUsedAttrib
     m_lastUsedAttrib.matIndex = -1;

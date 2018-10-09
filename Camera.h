@@ -72,6 +72,7 @@ public:
     void SetViewPort(long left, long top, long width, long height,
                      float nearClip, float farclip);
     void SetLookAt  (const glm::vec3& vecLookat);
+    void SetLookAt  (const glm::vec3& vecLookat, const glm::vec3& vecUp);
 
     void UpdateRenderView               ();
     void UpdateRenderProj               ();

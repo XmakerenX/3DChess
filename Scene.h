@@ -57,12 +57,12 @@ public:
     Scene();
     virtual ~Scene();
 
-    void InitScene();
+    virtual void InitScene(int width, int height, const glm::vec3& cameraPosition = glm::vec3(0.0f, 20.0f, 70.0f), const glm::vec3& cameraLookat = glm::vec3(0.0f, 0.0f, 0.0f));
     virtual void InitObjects();
-    void InitCamera(int width, int height);
+    void InitCamera(int width, int height, const glm::vec3& position, const glm::vec3& lookat);
     void InitLights();
 
-    virtual void Drawing();
+    virtual void Drawing(float frameTimeDelta);
     void SetAttribute(Attribute& attrib);
 
     void reshape(int width, int height);
