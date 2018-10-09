@@ -89,10 +89,11 @@ public:
     //-------------------------------------------------------------------------
     // Get methods for this class
     //-------------------------------------------------------------------------
-    std::string getBoardStatus () const;
-    bool        isBoardActive  () const;
-    bool        getKingThreat  () const;
-    bool        isUnitPromotion() const;
+    int         getCurrentPlayer() const;
+    std::string getBoardStatus  () const;
+    bool        isBoardActive   () const;
+    bool        getKingThreat   () const;
+    bool        isUnitPromotion () const;
     
     const BOARD_POINT& getSelectedSquare() const;
     const BOARD_POINT& getThreatSquare() const;

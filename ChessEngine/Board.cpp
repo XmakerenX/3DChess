@@ -292,12 +292,15 @@ void board::processPress(BOARD_POINT pressedSqaure)
                     if ( m_targetSquare.col == 0 || m_targetSquare.col == 7)
                         m_unitPromotion = true;
                 }
-                    
-                m_pieceMovedSig( m_currentPawn, m_startSquare, pressedSqaure);
-                    
+                
+                piece* currentPawnTemp = m_currentPawn;
+                BOARD_POINT startSquare = m_startSquare;
+                
                 //the move was valid now ends current player turn 
                 if (!m_unitPromotion)//checks if pawn need to be promoted if yes wait till the main program tell us user selection and then proceed to endTurn
                     endTurn();
+                
+                m_pieceMovedSig( currentPawnTemp, startSquare, pressedSqaure);
 
                 m_curStatus +="\n move was valid";
             }
@@ -1046,6 +1049,14 @@ void board::killPiece(piece * pPieceToKill, BOARD_POINT pieceSquare)
             break;
         }
     }
+}
+
+//-----------------------------------------------------------------------------
+// Name : getCurrentPlayer ()
+//-----------------------------------------------------------------------------
+int board::getCurrentPlayer() const
+{
+    return m_currentPlayer;
 }
 
 //-----------------------------------------------------------------------------
