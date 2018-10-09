@@ -327,6 +327,11 @@ bool GameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
     getMonitorsInfo();
     
     XMapWindow(m_display, m_win);
+    // add window hint to disable compositing
+    Atom bypassCompositor = XInternAtom(m_display, "_NET_WM_BYPASS_COMPOSITOR", False);
+    int hint = 1;
+    XChangeProperty(m_display, m_win, bypassCompositor,
+                    XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&hint, 1);
     
     moveWindowToMonitor(m_primaryMonitorIndex);
         
@@ -464,9 +469,12 @@ void GameWin::setFullScreenMode(bool fullscreen)
     
     XMapWindow(m_display, m_win);
 
-    XSendEvent(m_display, DefaultRootWindow(m_display), False,
-                    SubstructureRedirectMask | SubstructureNotifyMask, &xev);
-    
+    XSendEvent(m_display,
+               DefaultRootWindow(m_display),
+               False,
+               SubstructureRedirectMask | SubstructureNotifyMask,
+               &xev);
+     
     XSync(m_display, m_win);
     XFlush(m_display);
 }
