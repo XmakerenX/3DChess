@@ -26,6 +26,7 @@ private:
     static const int nCellWide = 8;
     static const glm::vec2 uvValues[4];
     static const glm::vec2 reverseUvValues[4];
+    static const glm::vec2 reverseVerticalUvValues[4];
 };
 
 #endif  //_MESHGENERATOR_H

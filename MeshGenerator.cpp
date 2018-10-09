@@ -1,10 +1,20 @@
 #include "MeshGenerator.h" 
 
-const glm::vec2 MeshGenerator::uvValues[4] = {glm::vec2(1,0), glm::vec2(1,1),
-                                           glm::vec2(0,0), glm::vec2(0,1)};
+const glm::vec2 MeshGenerator::uvValues[4] = {glm::vec2(1,0),
+                                              glm::vec2(1,1),
+                                              glm::vec2(0,0),
+                                              glm::vec2(0,1)};
                                            
-const glm::vec2 MeshGenerator::reverseUvValues[4] = {glm::vec2(0,1), glm::vec2(0,0),
-                                           glm::vec2(1,1), glm::vec2(1,0)};
+const glm::vec2 MeshGenerator::reverseUvValues[4] = {glm::vec2(1,1),
+                                                     glm::vec2(1,0),
+                                                     glm::vec2(0,1),
+                                                     glm::vec2(0,0)};
+
+const glm::vec2 MeshGenerator::reverseVerticalUvValues[4] = {glm::vec2(0,1),
+                                                             glm::vec2(0,0),
+                                                             glm::vec2(1,1),
+                                                             glm::vec2(1,0)};
+                                           
 //-----------------------------------------------------------------------------
 // Name : createBoardMesh
 //-----------------------------------------------------------------------------
@@ -178,7 +188,7 @@ void MeshGenerator::createVerticalFrameSquare(std::vector<Vertex>& frameSquaresV
     pos = framePos;
     pos.x += i * stepX;
     pos.z += 9 * stepZ;
-    createFrameSquare(pos, stepX, stepZ, reverseUvValues, 0, frameSquaresVertices, frameIndices);   
+    createFrameSquare(pos, stepX, stepZ, reverseVerticalUvValues, 0, frameSquaresVertices, frameIndices);   
 }
 
 //-----------------------------------------------------------------------------
@@ -193,7 +203,7 @@ void MeshGenerator::createCornersFrameSquare(std::vector<Vertex>& frameSquaresVe
     pos = framePos;
     pos.z += 0 * stepZ;
     pos.x += 9 * stepX;
-    createFrameSquare(pos, stepX, stepZ, reverseUvValues, 2, frameSquaresVertices, frameIndices);
+    createFrameSquare(pos, stepX, stepZ, reverseVerticalUvValues, 2, frameSquaresVertices, frameIndices);
 
     pos = framePos;
     pos.z += 9 * stepZ;
@@ -202,7 +212,7 @@ void MeshGenerator::createCornersFrameSquare(std::vector<Vertex>& frameSquaresVe
     pos = framePos;
     pos.z += 9 * stepZ;
     pos.x += 9 * stepX;
-    createFrameSquare(pos, stepX, stepZ, reverseUvValues, 0, frameSquaresVertices, frameIndices);
+    createFrameSquare(pos, stepX, stepZ, reverseVerticalUvValues, 0, frameSquaresVertices, frameIndices);
 }
 
 //-----------------------------------------------------------------------------
