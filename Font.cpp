@@ -293,7 +293,7 @@ Point mkFont::calcTextRect(std::string text)
 
     // remove the last charachter advance value
     // unless it is space so space will count in the text Width
-    if (text.back() != ' ')
+    if (text.size() > 0 && text.back() != ' ')
         textWidth = textWidth - offset;
 
     maxTextHeight = m_cachedMaxBearing + maxUnderLineHeight;
