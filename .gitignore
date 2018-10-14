@@ -71,3 +71,14 @@ Thumbs.db
 *.dll
 *.exe
 
+*.config
+*.ipch
+*.db
+*.opendb
+*.json
+/CMakeFiles
+*.sqlite
+/rules.ninja
+/cmake_install.cmake
+/CMakeSettings.json.txt
+/build.ninja
