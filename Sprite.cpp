@@ -4,9 +4,9 @@
 //-----------------------------------------------------------------------------
 // Name : StreamOfVertices (constructor)
 //-----------------------------------------------------------------------------
-StreamOfVertices::StreamOfVertices(GLuint textureName)
+StreamOfVertices::StreamOfVertices(const Texture& _texture)
 {
-    this->textureName = textureName;
+    texture = _texture;
 }
 
 //-----------------------------------------------------------------------------
@@ -20,11 +20,19 @@ void StreamOfVertices::addQuad(const Rect& spriteRect, const Rect& texRect, cons
     startU = startV = widthU = heightV = 0;
 
     // calculate how much to scale  the UV coordinates of the texture to fit the texRect
-    if (textureName != 0)
+    if (texture.name != 0)
     {
         // get the texture width and height
-        glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_WIDTH, &textureWidth);
-        glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_HEIGHT, &textureHeight);
+		if (glGetTextureLevelParameteriv != nullptr)
+		{
+			glGetTextureLevelParameteriv(texture.name, 0, GL_TEXTURE_WIDTH, &textureWidth);
+			glGetTextureLevelParameteriv(texture.name, 0, GL_TEXTURE_HEIGHT, &textureHeight);
+		}
+		else
+		{
+			textureWidth = texture.width;
+			textureHeight = texture.height;
+		}
 
         // normalize the texRect start point to u,v texture coordinates
         startU = static_cast<float>(texRect.left) / static_cast<float>(textureWidth);
@@ -140,32 +148,32 @@ bool Sprite::Init()
 //-----------------------------------------------------------------------------
 bool Sprite::AddTintedQuad(const Rect &spriteRect, const glm::vec4 &tintColor)
 {
-    return AddQuad(spriteRect, tintColor, NO_TEXTURE, EMPTY_RECT, Point(m_fScaleWidth, m_fScaleHeight));
+    return AddQuad(spriteRect, tintColor, Texture(NO_TEXTURE, 0, 0), EMPTY_RECT, Point(m_fScaleWidth, m_fScaleHeight));
 }
 
 //-----------------------------------------------------------------------------
 // Name : AddTexturedQuad ()
 //-----------------------------------------------------------------------------
-bool Sprite::AddTexturedQuad(const Rect& spriteRect, GLuint textureName, const Rect& texRect)
+bool Sprite::AddTexturedQuad(const Rect& spriteRect, const Texture& texture, const Rect& texRect)
 {
-    return AddQuad(spriteRect, WHITE_COLOR, textureName, std::move(texRect), Point(m_fScaleWidth, m_fScaleHeight));
+    return AddQuad(spriteRect, WHITE_COLOR, texture, std::move(texRect), Point(m_fScaleWidth, m_fScaleHeight));
 }
 
 //-----------------------------------------------------------------------------
 // Name : AddTintedTexturedQuad ()
 //-----------------------------------------------------------------------------
-bool Sprite::AddTintedTexturedQuad(const Rect &spriteRect, glm::vec4 tintColor, GLuint textureName, const Rect &texRect/* = Rect(0, 0, 0, 0)*/)
+bool Sprite::AddTintedTexturedQuad(const Rect &spriteRect, glm::vec4 tintColor, const Texture& texture, const Rect &texRect/* = Rect(0, 0, 0, 0)*/)
 {
-    return AddQuad(spriteRect, tintColor, textureName, texRect, Point(m_fScaleWidth, m_fScaleHeight));
+    return AddQuad(spriteRect, tintColor, texture, texRect, Point(m_fScaleWidth, m_fScaleHeight));
 }
 
 //-----------------------------------------------------------------------------
 // Name : AddQuad ()
 //-----------------------------------------------------------------------------
-bool Sprite::AddQuad(const Rect& spriteRect, glm::vec4 tintColor, GLuint textureName, const Rect& texRect,Point scale = Point(1,1))
+bool Sprite::AddQuad(const Rect& spriteRect, glm::vec4 tintColor, const Texture& texture, const Rect& texRect,Point scale = Point(1,1))
 {
-    if (m_vertexStreams.size() == 0 || textureName != m_vertexStreams[m_vertexStreams.size() - 1].textureName)
-        m_vertexStreams.emplace_back(textureName);
+    if (m_vertexStreams.size() == 0 || texture.name != m_vertexStreams[m_vertexStreams.size() - 1].texture.name)
+        m_vertexStreams.emplace_back(texture);
 
     m_vertexStreams[m_vertexStreams.size() - 1].addQuad(spriteRect, texRect, tintColor, scale);
 
@@ -188,10 +196,10 @@ bool Sprite::Render(Shader* shader)
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(VertexIndex) * vertexStream.indices.size(),
                         vertexStream.indices.data());
 
-        if (vertexStream.textureName != 0)
+        if (vertexStream.texture.name != 0)
         {
              glUniform1i( glGetUniformLocation(shader->Program, "textured"), 1);
-             glBindTexture(GL_TEXTURE_2D, vertexStream.textureName);
+             glBindTexture(GL_TEXTURE_2D, vertexStream.texture.name);
         }
         else
             glUniform1i( glGetUniformLocation(shader->Program, "textured"), 0);

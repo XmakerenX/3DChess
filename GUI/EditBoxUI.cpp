@@ -559,7 +559,7 @@ void EditBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_S
     // Render the control graphics
     for(GLuint i = 0; i < m_elementsGFX.size(); ++i)
     {
-        renderRect(sprites[NORMAL], m_rcRender[i], m_elementsGFX[i].iTexture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
+        renderRect(sprites[NORMAL], m_rcRender[i], m_elementsGFX[i].texture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
     }
 
     //
@@ -653,7 +653,7 @@ void EditBoxUI::renderSelection(Sprite& sprite, Sprite& textSprite, Point dialog
         int nSelBottom = m_rcText.top + m_rcText.getHeight()/2 + fontSize;
         rcSelection = Rect(nSelLeftX, std::max(m_rcText.top, nSelTop), nSelRightX, std::min(m_rcText.bottom, nSelBottom));
 
-        renderRect(sprite, rcSelection, 0, Rect(), m_SelBkColor, dialogPos);
+        renderRect(sprite, rcSelection, Texture(NO_TEXTURE, 0, 0) , Rect(), m_SelBkColor, dialogPos);
 
         //temp = m_buffer.substr( nFirstToRender, nNumChatToRender - (m_nFirstVisible - m_nBackwardChars));
         temp = m_buffer.substr( nFirstToRender, nNumChatToRender);
@@ -702,7 +702,7 @@ void EditBoxUI::renderCaret(Sprite& sprite, double timeStamp, std::string& textT
             rcCaret.right = rcCaret.left + letterSize.x;
         }
 
-        renderRect(sprite, rcCaret, NO_TEXTURE, Rect(), m_CaretColor, dialogPos);
+        renderRect(sprite, rcCaret, Texture(NO_TEXTURE, 0 , 0), Rect(), m_CaretColor, dialogPos);
     }
 }
 

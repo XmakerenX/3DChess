@@ -260,8 +260,8 @@ void ComboBoxUI<T>::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRIT
             else
                 tintColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
-    renderRect(sprites[NORMAL], m_rcText, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].texture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], m_rcText, m_elementsGFX[MAIN].texture, m_elementsGFX[MAIN].rcTexture, tintColor, dialogPos);
 
     // Render combobox text
     const std::vector<int>& selectedIndices =  m_dropDown.GetSelectedIndices();

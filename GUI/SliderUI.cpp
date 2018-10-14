@@ -221,20 +221,20 @@ void SliderUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SI
 		return;
 
 	//no texture was given abort rendering
-	if (m_elementsGFX.size() < 2 ||m_elementsGFX[TRACK].iTexture == -1 || m_elementsGFX[BUTTON].iTexture == -1)
+	if (m_elementsGFX.size() < 2 ||m_elementsGFX[TRACK].texture.name == 0 || m_elementsGFX[BUTTON].texture.name == 0)
 		return;
 
     Point dialogPos = m_pParentDialog->getLocation();
 
 	if (m_bMouseOver)
 	{
-        renderRect(sprites[NORMAL], m_rcBoundingBox, m_elementsGFX[TRACK].iTexture, m_elementsGFX[TRACK].rcTexture, WHITE_COLOR, dialogPos);
-        renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, WHITE_COLOR, dialogPos);
+        renderRect(sprites[NORMAL], m_rcBoundingBox, m_elementsGFX[TRACK].texture, m_elementsGFX[TRACK].rcTexture, WHITE_COLOR, dialogPos);
+        renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].texture, m_elementsGFX[BUTTON].rcTexture, WHITE_COLOR, dialogPos);
 	}
 	else
 	{
-        renderRect(sprites[NORMAL], m_rcBoundingBox, m_elementsGFX[TRACK].iTexture, m_elementsGFX[TRACK].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
-        renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
+        renderRect(sprites[NORMAL], m_rcBoundingBox, m_elementsGFX[TRACK].texture, m_elementsGFX[TRACK].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
+        renderRect(sprites[NORMAL], m_rcButton, m_elementsGFX[BUTTON].texture, m_elementsGFX[BUTTON].rcTexture, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f), dialogPos);
 	}
 }
 

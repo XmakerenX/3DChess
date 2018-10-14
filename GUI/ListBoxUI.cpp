@@ -238,7 +238,7 @@ void ListBoxUI<T>::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITE
 
     m_ScrollBar.Render(sprites, topSprites, timeStamp);
 
-    renderRect(sprites[NORMAL], m_rcItembox, m_elementsGFX[MAIN].iTexture, m_elementsGFX[MAIN].rcTexture, WHITE_COLOR, dialogPos);
+    renderRect(sprites[NORMAL], m_rcItembox, m_elementsGFX[MAIN].texture, m_elementsGFX[MAIN].rcTexture, WHITE_COLOR, dialogPos);
 
     int curY = m_rcItemboxText.top;
     int nRemainingHeight =  m_rcItemboxText.getHeight();
@@ -264,7 +264,7 @@ void ListBoxUI<T>::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITE
 
         if(item.bSelected)
         {
-            renderRect(sprites[NORMAL], item.rcActive, m_elementsGFX[SELECTION].iTexture, m_elementsGFX[SELECTION].rcTexture, WHITE_COLOR, dialogPos);
+            renderRect(sprites[NORMAL], item.rcActive, m_elementsGFX[SELECTION].texture, m_elementsGFX[SELECTION].rcTexture, WHITE_COLOR, dialogPos);
             renderText(sprites[TEXT], m_elementsFonts[0].font, item.strText, WHITE_COLOR, item.rcActive, dialogPos, mkFont::TextFormat::Center);
         }
         else

@@ -36,7 +36,7 @@ CheckboxUI::~CheckboxUI(void)
 void CheckboxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     //no texture was given abort rendering
-    if (m_elementsGFX.size() < 2 || m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 || !m_bVisible)
+    if (m_elementsGFX.size() < 2 || m_elementsGFX[BUTTON].texture.name == 0 || m_elementsGFX[MOUSEOVER].texture.name == 0 || !m_bVisible)
         return;
 
     Point dialogPos = calcPositionOffset();
@@ -57,9 +57,9 @@ void CheckboxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_
             else
                 tintColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].texture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
     if (m_bChecked)
-        renderRect(sprites[NORMAL],rcWindow, m_elementsGFX[MOUSEOVER].iTexture, m_elementsGFX[MOUSEOVER].rcTexture, tintColor, dialogPos);
+        renderRect(sprites[NORMAL],rcWindow, m_elementsGFX[MOUSEOVER].texture, m_elementsGFX[MOUSEOVER].rcTexture, tintColor, dialogPos);
 }
 
 //-----------------------------------------------------------------------------

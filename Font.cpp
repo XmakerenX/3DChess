@@ -1,5 +1,4 @@
 #include "Font.h"
-#include <fontconfig/fontconfig.h>
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -17,6 +16,8 @@ mkFont::mkFont()
     m_fontSize = 0;
 
     m_textureAtlas = 0;
+	m_textureAtlasWidth = 0;
+	m_textureAtlasHeight = 0;
 
     m_cachedMaxBearing = 0;
     m_cachedText = "";
@@ -38,6 +39,8 @@ mkFont::mkFont(std::string fontName, bool isPath/* = false*/)
     m_fontSize = 0;
 
     m_textureAtlas = 0;
+	m_textureAtlasWidth = 0;
+	m_textureAtlasHeight = 0;
     m_cachedMaxBearing = 0;
     m_cachedText = "";
 }
@@ -71,6 +74,8 @@ mkFont::mkFont(mkFont&& toMove)
     m_avgWidth = toMove.m_avgWidth;
 
     m_textureAtlas = toMove.m_textureAtlas;
+	m_textureAtlasWidth = toMove.m_textureAtlasWidth;
+	m_textureAtlasHeight = toMove.m_textureAtlasHeight;
 
     toMove.fontPath = "";
     toMove.m_fontSize = 0;
@@ -250,7 +255,8 @@ void mkFont::renderTextAtlas(Sprite& sprite, std::string text, GLfloat x, GLfloa
         GLfloat w = charGlyph.Size.x * scale;
         GLfloat h = charGlyph.Size.y * scale;
 
-        sprite.AddTintedTexturedQuad(Rect(xpos, ypos, xpos + w, ypos + h), color, m_textureAtlas, charGlyph.textureRect);
+		Texture atlasTexture(m_textureAtlas, m_textureAtlasWidth, m_textureAtlasHeight);
+        sprite.AddTintedTexturedQuad(Rect(xpos, ypos, xpos + w, ypos + h), color, atlasTexture, charGlyph.textureRect);
 
         // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
         // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
@@ -588,6 +594,8 @@ void mkFont::createFontAtlas(FT_Library ft, FT_Face face)
     glBindTexture(GL_TEXTURE_2D, 0);
 
     m_textureAtlas = textureName;
+	m_textureAtlasWidth = textureWidth;
+	m_textureAtlasHeight = textureHeight;
 }
 
 //-----------------------------------------------------------------------------
@@ -603,29 +611,7 @@ GLuint mkFont::getFontSize()
 //-----------------------------------------------------------------------------
 std::string mkFont::getFontPath(std::string fontName)
 {
-    FcConfig* config = FcInitLoadConfigAndFonts();
-    FcResult result;
-    // configure the search pattern,
-    // assume "name" is a std::string with the desired font name in it
-    FcPattern* pat = FcNameParse((const FcChar8*)(fontName.c_str()));
-    FcConfigSubstitute(config, pat, FcMatchPattern);
-    FcDefaultSubstitute(pat);
-
-    // find the font
-    std::string path;
-    FcPattern* font = FcFontMatch(config, pat, &result);
-    if (font)
-    {
-       FcChar8* file = NULL;
-       if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch)
-       {
-          // save the file to another std::string
-          path = (char*)file;
-       }
-       FcPatternDestroy(font);
-    }
-
-    FcPatternDestroy(pat);
+	std::string path = "C:/Windows/Fonts/times.ttf";
     return path;
 }
 
@@ -644,6 +630,7 @@ std::string mkFont::getFontNameFromPath(std::string path)
 GLuint mkFont::renderFontAtlas(Sprite& sprite, const Rect& rc)
 {
     CharGlyph ch = charGlyphs['A'];
-    sprite.AddTexturedQuad(rc, m_textureAtlas, Rect(0, 0, 0, 0));
+	Texture atlasTexture(m_textureAtlas, m_textureAtlasWidth, m_textureAtlasHeight);
+    sprite.AddTexturedQuad(rc, atlasTexture, Rect(0, 0, 0, 0));
     return ch.TextureID;
 }

@@ -51,6 +51,17 @@ GLuint AssetManager::getTexture(const std::string& filePath)
 }
 
 //-----------------------------------------------------------------------------
+// Name : getTextureInfo
+//-----------------------------------------------------------------------------
+const TextureInfo& AssetManager::getTextureInfo(GLuint textureName)
+{
+	if (m_textureInfoCache.count(textureName) != 0)
+		return m_textureInfoCache[textureName];
+	else
+		return TextureInfo(0, 0);
+}
+
+//-----------------------------------------------------------------------------
 // Name : loadPng
 //-----------------------------------------------------------------------------
 GLuint AssetManager::loadPng(const std::string &filePath)
@@ -189,6 +200,7 @@ GLuint AssetManager::loadPng(const std::string &filePath)
 
     // cached the loaded texture
     m_textureCache.insert(std::pair<std::string, GLuint>(filePath,textureID));
+	m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
     return textureID;
 }
 
@@ -277,6 +289,7 @@ GLuint AssetManager::loadBMP(const std::string &filePath)
 
     // cache the loaded texture
     m_textureCache.insert(std::pair<std::string, GLuint>(filePath,textureID));
+	m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
 
     return textureID;
 }
@@ -355,6 +368,7 @@ GLuint AssetManager::loadJPEG(const std::string &filePath)
 
     // cache the loaded texture
     m_textureCache.insert(std::pair<std::string, GLuint>(filePath,textureID));
+	m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
 
     return textureID;
 }

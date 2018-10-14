@@ -42,22 +42,20 @@ struct ELEMENT_FONT
 struct ELEMENT_GFX
 {
     ELEMENT_GFX()
+    {}
+
+    ELEMENT_GFX(Texture newTexture, Rect newRcTexture)
     {
-        iTexture = 0;
+        setGFX(newTexture, newRcTexture);
     }
 
-    ELEMENT_GFX(GLuint newITexture, Rect newRcTexture)
+    void setGFX(Texture newTexture, Rect newRcTexture)
     {
-        setGFX(newITexture, newRcTexture);
+		texture = newTexture;
+        rcTexture = newRcTexture;
     }
 
-    void setGFX(GLuint newITexture, Rect newRcTexture)
-    {
-        iTexture	   = newITexture;
-        rcTexture	   = newRcTexture;
-    }
-
-    GLuint iTexture;
+    Texture texture;
     Rect rcTexture;
 
 };
@@ -101,7 +99,7 @@ public:
                                                                                                                            
     virtual void        Render              (Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp) = 0;
 
-            void        renderRect          (Sprite& sprite, const Rect &rcWindow, GLuint textureName, const Rect &rcTexture, glm::vec4 color, Point offset);
+            void        renderRect          (Sprite& sprite, const Rect &rcWindow, const Texture& texture, const Rect &rcTexture, glm::vec4 color, Point offset);
             void        renderText          (Sprite& textSprite, mkFont* font, std::string text, glm::vec4 color , Rect &rcText, Point dialogPos,
                                              mkFont::TextFormat format = mkFont::TextFormat::Center);
 

@@ -283,14 +283,14 @@ void ScrollBarUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES
         for (GLuint i = 0; i < 4; i++)
         {
             //no texture was given abort rendering
-            if (m_elementsGFX[i].iTexture == -1)
+            if (m_elementsGFX[i].texture.name == 0)
                 return;
 
             Point dialogPos = m_pParentDialog->getLocation();
             long  dialogCaptionHeihgt =  m_pParentDialog->getCaptionHeight();
             dialogPos.y += dialogCaptionHeihgt;
 
-            renderRect(sprites[NORMAL], m_rcElements[i], m_elementsGFX[i].iTexture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
+            renderRect(sprites[NORMAL], m_rcElements[i], m_elementsGFX[i].texture, m_elementsGFX[i].rcTexture, WHITE_COLOR, dialogPos);
         }
     }
 }

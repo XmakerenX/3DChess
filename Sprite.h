@@ -9,9 +9,22 @@
 #include "RenderTypes.h"
 #include "Shader.h"
 
+struct Texture
+{
+	Texture()
+		:name(0), width(0), height(0)
+	{}
+	Texture(GLuint _name, GLuint _width, GLuint _height)
+		:name(_name), width(_width), height(_height)
+	{}
+
+	GLuint name;
+	GLuint width;
+	GLuint height;
+};
+
 struct VertexSprite
 {
-
     VertexSprite(float fX, float fY, float fZ, const glm::vec4& diffuseCOlor, float ftu = 0.0f, float ftv = 0.0f)
     {
         pos.x = fX;
@@ -30,12 +43,10 @@ struct VertexSprite
 
 struct StreamOfVertices
 {
-    StreamOfVertices(GLuint textureName);
-
-    //void addQuad(Rect &srcRect, Point quadPos, glm::vec3 tintColor);
+    StreamOfVertices(const Texture& texture);
     void addQuad(const Rect &spriteRect, const Rect &texRect, const glm::vec4 &tintColor, Point scale);
 
-    GLuint textureName;
+	Texture texture;
 
     std::vector<VertexSprite> vertices;
     std::vector<VertexIndex> indices;
@@ -51,10 +62,9 @@ public:
     ~Sprite();
 
     bool AddTintedQuad(const Rect& spriteRect, const glm::vec4& tintColor);
-    bool AddTexturedQuad(const Rect& spriteRect, GLuint textureName, const Rect &texRect);
-    bool AddTintedTexturedQuad(const Rect &spriteRect, glm::vec4 tintColor, GLuint textureName, const Rect &texRect = EMPTY_RECT);
-    //bool AddQuad(GLuint textureName, Rect& srcRect, Point quadPos, glm::vec3 tintColor);
-    bool AddQuad(const Rect &spriteRect, glm::vec4 tintColor, GLuint textureName, const Rect &texRect, Point scale);
+    bool AddTexturedQuad(const Rect& spriteRect, const Texture& texture, const Rect &texRect);
+    bool AddTintedTexturedQuad(const Rect &spriteRect, glm::vec4 tintColor, const Texture& texture, const Rect &texRect = EMPTY_RECT);
+    bool AddQuad(const Rect &spriteRect, glm::vec4 tintColor, const Texture& texture, const Rect &texRect, Point scale);
     void Clear();
 
     bool Init();

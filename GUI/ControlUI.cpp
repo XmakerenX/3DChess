@@ -241,13 +241,13 @@ GLuint ControlUI::getType() const
 // Desc : render a Rect using the given texture and texture Rect
 // Note : the function also scale the texture to fit the Rect being rendered
 //-----------------------------------------------------------------------------
-void ControlUI::renderRect(Sprite& sprite, const Rect& rcWindow, GLuint textureName, const Rect& rcTexture ,glm::vec4 color, Point offset)
+void ControlUI::renderRect(Sprite& sprite, const Rect& rcWindow, const Texture& texture, const Rect& rcTexture ,glm::vec4 color, Point offset)
 {
     Rect offsetedWindowRect(rcWindow);
     offsetedWindowRect.offset(offset);
 
-    if (textureName != NO_TEXTURE)
-        sprite.AddTintedTexturedQuad(offsetedWindowRect, color, textureName, rcTexture);
+    if (texture.name != NO_TEXTURE)
+        sprite.AddTintedTexturedQuad(offsetedWindowRect, color, texture, rcTexture);
     else
         sprite.AddTintedQuad(offsetedWindowRect, color);
 }

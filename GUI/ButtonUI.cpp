@@ -45,7 +45,7 @@ ButtonUI::~ButtonUI(void)
 void ButtonUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SIZE], double timeStamp)
 {
     //no texture was given abort rendering
-    if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].iTexture == -1 || m_elementsGFX[MOUSEOVER].iTexture == -1 || !m_bVisible)
+    if (m_elementsGFX.size() < 2 ||m_elementsGFX[BUTTON].texture.name == 0 || m_elementsGFX[MOUSEOVER].texture.name == 0 || !m_bVisible)
         return;
 
     Point dialogPos = calcPositionOffset();
@@ -65,7 +65,7 @@ void ButtonUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_SI
             else
                 tintColor = glm::vec4(0.785f, 0.785f, 0.785f, 1.0f);
 
-    renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].iTexture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
+    renderRect(sprites[NORMAL], rcWindow, m_elementsGFX[BUTTON].texture, m_elementsGFX[BUTTON].rcTexture, tintColor, dialogPos);
 
     if (m_elementsFonts.size() > 0)
         renderText(sprites[TEXT], m_elementsFonts[0].font, m_strText, m_textColor, rcWindow, dialogPos, m_textOrientation);

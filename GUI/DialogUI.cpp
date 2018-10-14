@@ -82,8 +82,17 @@ bool DialogUI::init(GLuint width, GLuint height, int nCaptionHeight, std::string
         // load the texture for the dialog background
         textureName = assetManger.getTexture(newTexturePath);
         // get the texture width and height
-        glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_WIDTH, &m_texWidth);
-        glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_HEIGHT, &m_texHeight);
+		if (glGetTextureLevelParameteriv != nullptr)
+		{
+			glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_WIDTH, &m_texWidth);
+			glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_HEIGHT, &m_texHeight);
+		}
+		else
+		{
+			TextureInfo textureInfo = assetManger.getTextureInfo(textureName);
+			m_texWidth = textureInfo.width;
+			m_texHeight = textureInfo.height;
+		}
 
         m_texturePath = newTexturePath;
     }
@@ -323,12 +332,13 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
 bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS controlType,std::string texturePath,const std::vector<Rect> textureRects,std::vector<ELEMENT_FONT>& elementFontVec)
 {
     GLuint textureIndex = assetManger.getTexture(texturePath);
+	TextureInfo textureInfo = assetManger.getTextureInfo(textureIndex);
     if (textureIndex == NO_TEXTURE)
         return false;
 
     std::vector<ELEMENT_GFX>  elementGFXvec;
     for (const Rect& textureElementRect : textureRects)
-        elementGFXvec.emplace_back(textureIndex,textureElementRect);
+        elementGFXvec.emplace_back(Texture(textureIndex, textureInfo.width, textureInfo.height),textureElementRect);
 
     // create the button control default GFX and adds to the vector
     m_defaultControlsGFX.emplace_back(controlType, elementGFXvec, elementFontVec);
@@ -343,6 +353,8 @@ bool DialogUI::initControlGFX(AssetManager &assetManger, ControlUI::CONTROLS con
 bool DialogUI::OnRender(Sprite sprites[ControlUI::SPRITES_SIZE], Sprite topSprites[ControlUI::SPRITES_SIZE], AssetManager& assetManger, double timeStamp)
 {
     GLuint textureName = NO_TEXTURE;
+	GLuint textureWidth = 0;
+	GLuint textureHeight = 0;
 
     if (!m_bVisible)
         return true;
@@ -352,9 +364,15 @@ bool DialogUI::OnRender(Sprite sprites[ControlUI::SPRITES_SIZE], Sprite topSprit
         textureName = assetManger.getTexture(m_texturePath);
         if (textureName == NO_TEXTURE)
             std::cout << "Failed to load the dialog texture " << m_texturePath << "\n";
+		else
+		{
+			TextureInfo texInfo = assetManger.getTextureInfo(textureName);
+			textureWidth = texInfo.width;
+			textureHeight = texInfo.height;
+		}
     }
 
-    sprites[ControlUI::NORMAL].AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, textureName);
+    sprites[ControlUI::NORMAL].AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, Texture(textureName, textureWidth, textureHeight));
     if (m_bCaption)
     {
         sprites[ControlUI::NORMAL].AddTintedQuad(m_rcCaptionBox, glm::vec4(0.78125f, 1.0f, 0.0f, 1.0f));
