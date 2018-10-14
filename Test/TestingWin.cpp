@@ -3,7 +3,7 @@
 
 TestingWin::TestingWin()
 {
-    
+	m_scene = new Scene();
 }
 
 void TestingWin::initGUI()

@@ -1,11 +1,10 @@
 #include <iostream>
 #include <string>
-#include <fontconfig/fontconfig.h>
-#include "TestingWin.h"
+#include "ChessWindow.h"
 
 int main(int argc, char* argv[])
 {
-    TestingWin gamewin;
+    ChessWindow gamewin;
     std::string fontName = "NotoMono";
     std::string path;
 
@@ -15,8 +14,11 @@ int main(int argc, char* argv[])
 
     gamewin.initWindow();
     std::cout << "starting init OpenGL\n";
-    //gamewin.initOpenGL(800,600);
-    gamewin.initOpenGL(1024,768);
+    if (!gamewin.initOpenGL(1024,768))
+    {
+        std::cout << "Error occured, Quiting..\n";
+        return 1;
+    }
     std::cout << "--------------------------------\n";
 
     std::cout << "Beginning game\n";
@@ -27,4 +29,3 @@ int main(int argc, char* argv[])
 
     return retCode;
 }
-

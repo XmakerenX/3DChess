@@ -1,19 +1,11 @@
 #include "GameWin.h"
-#include <GL/glut.h>
-#include <unistd.h>
-#include <cmath>
-#include "virtualKeysLinux.h"
-#include <linux/input-event-codes.h>
-#include <X11/Xatom.h>
+#include <windowsx.h>
+#undef max
+#undef min
+//#include <cmath>
+#include "virtualKeysWindows.h"
 #include "gameInput.h"
 
-bool GameWin::ctxErrorOccurred = false;
-Display * GameWin::s_clipboardDisplay = nullptr;
-Atom GameWin::s_utf8 = None ;
-Atom GameWin::s_targets = None;
-Atom GameWin::s_selection = None;
-std::future<void> GameWin::s_clipboardSender;
-Window GameWin::s_clipboardWindow = 0;
 std::string GameWin::s_clipboardString;
 const double GameWin::s_doubleClickTime = 0.5;
 
@@ -30,21 +22,18 @@ std::istream& operator>>(std::istream& is, Resolution res)
     return is;
 }
 
-double calculateXRefreshRate(const XRRModeInfo *info)
-{
-    return (info->hTotal && info->vTotal) ?
-        round(((double)info->dotClock / (double)(info->hTotal * info->vTotal))) : 0;
-}
-
 //-----------------------------------------------------------------------------
 // Name : GameWin (constructor)
 //-----------------------------------------------------------------------------
 GameWin::GameWin()
 {
+	m_hWnd = nullptr;
+	m_hDC = nullptr;
+	m_hRC = nullptr;
+
     font_ = nullptr;
     
     gameRunning = true;
-    ctx = nullptr;
 
     for (int i = 0; i < 256; i++)
         keysStatus[i] = false;
@@ -61,6 +50,9 @@ GameWin::GameWin()
     m_scene = nullptr;
     m_sceneInput = true;
     
+	spriteShader = nullptr;
+	spriteTextShader = nullptr;
+
     m_primaryMonitorIndex = 0;
 }
 
@@ -76,112 +68,7 @@ GameWin::~GameWin()
 //-----------------------------------------------------------------------------
 bool GameWin::initWindow()
 {
-    m_display = XOpenDisplay(nullptr);
-    
-    if (!m_display)
-    {
-        std::cout << "Failed to open X display\n";
-        return false;
-    }
-
-    Screen* pScreen = DefaultScreenOfDisplay(m_display);
-    std::cout << pScreen->width << "X" << pScreen->height << "\n";
-    
-    if ( s_clipboardDisplay == nullptr)
-    {
-        s_clipboardDisplay = XOpenDisplay(nullptr);
-        if (!s_clipboardDisplay )
-        {
-                std::cout << "Failed to open X display for clipboard\n";
-                return false;
-        }
-
-        // get needed atoms for the clipboard operations
-        s_selection = XInternAtom( s_clipboardDisplay, "CLIPBOARD", False);
-        s_utf8 = XInternAtom( s_clipboardDisplay, "UTF8_STRING", False);
-        s_targets = XInternAtom( s_clipboardDisplay, "TARGETS", False);
-    }
-    
     return true;
-}
-
-//-----------------------------------------------------------------------------
-// Name : getBestFBConfig ()
-//-----------------------------------------------------------------------------
-GLXFBConfig GameWin::getBestFBConfig()
-{
-    // Get a matching FB config
-    int visual_attribs[] =
-    {
-      GLX_X_RENDERABLE    , True,
-      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-      GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-      GLX_RED_SIZE        , 8,
-      GLX_GREEN_SIZE      , 8,
-      GLX_BLUE_SIZE       , 8,
-      GLX_ALPHA_SIZE      , 8,
-      GLX_DEPTH_SIZE      , 24,
-      GLX_STENCIL_SIZE    , 8,
-      GLX_DOUBLEBUFFER    , True,
-      //GLX_SAMPLE_BUFFERS  , 1,
-      //GLX_SAMPLES         , 4,
-      None
-    };
-    
-    int glx_major, glx_minor;
- 
-    if (m_display == nullptr)
-        std::cout << "No X display! but it did open it....\n";
-    
-    // FBConfigs were added in GLX version 1.3.
-    if ( !glXQueryVersion(m_display, &glx_major, &glx_minor) ||
-        ( ( glx_major == 1 ) && ( glx_minor < 3 ) ) || ( glx_major < 1 ) )
-    {
-        std::cout << "Invalid GLX Version\n";
-        return nullptr;
-    }
-       
-    std::cout << "Getting matching framebuffer configs\n"; 
-    int fbcount;
-    GLXFBConfig* fbc = glXChooseFBConfig(m_display, DefaultScreen(m_display), visual_attribs, &fbcount);
-    if (!fbc)
-    {
-        std::cout << "Failed to retrieve a framebuffer config\n";
-        return nullptr;
-    }
-    std::cout << "Found " << fbcount << " matching FB configs.\n";
-    
-    // Pick the FB config/visual with the most samples per pixel
-    //std::cout << "Getting XVisualInfos\n";
-    int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
-
-    int i;
-    for (i=0; i<fbcount; ++i)
-    {
-        XVisualInfo *vi = glXGetVisualFromFBConfig( m_display, fbc[i] );
-        if ( vi )
-        {
-            int samp_buf, samples;
-            glXGetFBConfigAttrib( m_display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-            glXGetFBConfigAttrib( m_display, fbc[i], GLX_SAMPLES       , &samples  );
-      
-//             std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
-//              << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
-      
-            if ( (best_fbc < 0) || (samp_buf && (samples > best_num_samp)) )
-                best_fbc = i, best_num_samp = samples;
-            
-            if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
-                worst_fbc = i, worst_num_samp = samples;
-        }
-        XFree( vi );
-    }
-    
-    GLXFBConfig bestFbc = fbc[ best_fbc ];
-    // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
-    XFree( fbc );
-    return bestFbc;
 }
 
 //-----------------------------------------------------------------------------
@@ -189,77 +76,7 @@ GLXFBConfig GameWin::getBestFBConfig()
 //-----------------------------------------------------------------------------
 void GameWin::getMonitorsInfo()
 {
-    int nMonitors;
-    //XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, m_win, true, &nMonitors);
-    XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, DefaultRootWindow(m_display), true, &nMonitors);
-    XRRScreenResources* screenRes = XRRGetScreenResources(m_display, DefaultRootWindow(m_display));
-    
-    for (int monitorIndex = 0; monitorIndex < nMonitors; monitorIndex++)
-    {        
-        std::cout << "Monitor " << monitorIndex + 1<< " " << monitorInfo[monitorIndex].width << "X" << monitorInfo[monitorIndex].height << " " << monitorInfo[monitorIndex].noutput <<"\n";
-        if (monitorInfo[monitorIndex].primary)
-        {
-            m_primaryMonitorIndex = monitorIndex;
-            std::cout << "Monitor is primary\n";
-        }
-        
-        std::vector<MonitorInfo::Mode> modes;
-        std::vector<RROutput> outputs;
-        
-        for (int outputIndex = 0; outputIndex < monitorInfo[monitorIndex].noutput ; outputIndex++)
-            outputs.push_back(monitorInfo[monitorIndex].outputs[outputIndex]);
-        
-        if (monitorInfo[monitorIndex].noutput > 0)
-        {
-            if (monitorInfo[monitorIndex].noutput > 1)
-                std::cout << "Warning monitor " << monitorIndex << "has more than one output\n";
-            
-            std::vector<RRMode> monitorModes;
-            XRROutputInfo* outputInfo = XRRGetOutputInfo(m_display, screenRes, monitorInfo[monitorIndex].outputs[0]);
-                        
-            for (int k = 0; k < outputInfo->nmode; k++)
-                monitorModes.push_back(outputInfo->modes[k]);
-            
-            GLuint lastWidth = 0;
-            GLuint lastHeight = 0;
-            for (int outputModeID = 0; outputModeID < outputInfo->nmode; outputModeID++)
-            {
-                for (int screenModeID = 0; screenModeID < screenRes->nmode; screenModeID++)
-                {
-                    if (screenRes->modes[screenModeID].id == outputInfo->modes[outputModeID])
-                    {
-                        if (lastWidth == screenRes->modes[screenModeID].width && lastHeight == screenRes->modes[screenModeID].height)
-                            continue;
-                        
-                        modes.emplace_back(outputInfo->modes[outputModeID],
-                                           screenRes->modes[screenModeID].width,
-                                           screenRes->modes[screenModeID].height,
-                                           calculateXRefreshRate(&screenRes->modes[screenModeID]));
-                        std::cout << screenRes->modes[screenModeID].width << "X" << screenRes->modes[screenModeID].height
-                                  << " " << calculateXRefreshRate(&screenRes->modes[screenModeID]) << "Hz"  "\n";
-                                  
-                        lastWidth = screenRes->modes[screenModeID].width;
-                        lastHeight = screenRes->modes[screenModeID].height;
-                        break;
-                    }
-                }
-            }
-            std::cout << "\n";
-            
-            m_monitors.emplace_back(monitorIndex, 
-                                    Rect(monitorInfo[monitorIndex].x,
-                                         monitorInfo[monitorIndex].y,
-                                         monitorInfo[monitorIndex].x + monitorInfo[monitorIndex].width,
-                                         monitorInfo[monitorIndex].y + monitorInfo[monitorIndex].height),
-                                    std::move(modes),
-                                    std::move(outputs));
-            
-            XRRFreeOutputInfo (outputInfo);
-        }
-    }
-    
-    XRRFreeMonitors(monitorInfo);
-    XRRFreeScreenResources(screenRes);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -281,165 +98,327 @@ std::vector<std::vector<Mode1>> GameWin::getMonitorsModes() const
 }
 
 //-----------------------------------------------------------------------------
+// Name : StaticWndProc 
+// Desc : forward the message to the proper instance of the class 
+//-----------------------------------------------------------------------------
+LRESULT CALLBACK GameWin::staticWindowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	int tmep = sizeof(LONG_PTR);
+	int temp2 = sizeof(LPVOID);
+	// If this is a create message, trap the 'this' pointer passed in and store it within the window.
+	if (Message == WM_CREATE) SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)((CREATESTRUCT FAR *)lParam)->lpCreateParams);
+
+	// Obtain the correct destination for this message
+	GameWin *Destination = (GameWin*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+
+	// If the hWnd has a related class, pass it through
+	if (Destination) return Destination->windowProc(hWnd, Message, wParam, lParam);
+
+	// No destination found, defer to system...
+	return DefWindowProc(hWnd, Message, wParam, lParam);
+}
+
+//-----------------------------------------------------------------------------
+// Name : windowProc 
+//-----------------------------------------------------------------------------
+LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_CLOSE:
+		PostQuitMessage(0);
+		return 0;
+		break;
+
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+		break;
+	
+	case WM_SIZE:
+	{
+		reshape(LOWORD(lParam), HIWORD(lParam));
+		return 0;
+	}break;
+
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+	case WM_LBUTTONUP:
+	{
+		oldCursorLoc.x = GET_X_LPARAM(lParam);
+		oldCursorLoc.y = GET_Y_LPARAM(lParam);
+		mouseDrag = message == WM_LBUTTONDOWN || message == WM_LBUTTONDBLCLK;
+
+		MouseEventType type;
+		if (message == WM_LBUTTONDBLCLK)
+			type = MouseEventType::DoubleLeftButton;
+		else
+			type = MouseEventType::LeftButton;
+
+		sendMouseEvent(MouseEvent(type,
+								  Point(GET_X_LPARAM(lParam),
+									    GET_Y_LPARAM(lParam)),
+								  message == WM_LBUTTONDOWN || message == WM_LBUTTONDBLCLK,
+								  timer.getCurrentTime(),
+								  0), 
+					   ModifierKeysStates(wParam & MK_SHIFT, wParam & MK_CONTROL, false));
+
+		return 0;
+	}break;
+
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONDBLCLK:
+	case WM_RBUTTONUP:
+	{
+		MouseEventType type;
+		if (message == WM_RBUTTONDBLCLK)
+			type = MouseEventType::DoubleRightButton;
+		else
+			type = MouseEventType::RightButton;
+
+		sendMouseEvent(MouseEvent(type,
+			Point(GET_X_LPARAM(lParam),
+				GET_Y_LPARAM(lParam)),
+			message == WM_RBUTTONDOWN || message == WM_RBUTTONDBLCLK,
+			timer.getCurrentTime(),
+			0),
+			ModifierKeysStates(wParam & MK_SHIFT, wParam & MK_CONTROL, false));
+		
+		return 0;
+	}break;
+
+	case WM_MOUSEWHEEL:
+	{
+		int wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+		bool down;
+
+		if (wheelDelta == 0)
+			return 0;
+
+		if (wheelDelta > 0)
+		{
+			wheelDelta = 1;
+			down = false;
+		}
+		else
+		{
+			wheelDelta = -1;
+			down = true;
+		}
+		sendMouseEvent(MouseEvent(MouseEventType::ScrollVert,
+								  Point(GET_X_LPARAM(lParam),
+									    GET_Y_LPARAM(lParam)),
+								  down,
+								  timer.getCurrentTime(),
+								  wheelDelta),
+					   ModifierKeysStates(false, false, false));
+
+		return 0;
+	}break;
+
+	case WM_MOUSEMOVE:
+	{
+		sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, 
+								  Point(GET_X_LPARAM(lParam),
+									    GET_Y_LPARAM(lParam)), 
+								  false,
+								  timer.getCurrentTime(),
+								  0),
+					   ModifierKeysStates(wParam & MK_SHIFT, wParam & MK_CONTROL, false));
+		return 0;
+	}break;
+
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+	{
+		GK_VirtualKey key = windowsVirtualKeysTable[wParam];
+		if (key != GK_VirtualKey::GK_UNKNOWN)
+		{
+			keysStatus[static_cast<int>(key)] = message == WM_KEYDOWN;
+			sendVirtualKeyEvent(key, message == WM_KEYDOWN, ModifierKeysStates(false, false, false));
+		}
+		else
+		{
+			int scanCode = (lParam & 0xFF0000) >> 16;
+			keysStatus[scanCode] = message == WM_KEYDOWN;
+		}
+		return 0;
+	}break;
+
+	case WM_CHAR:
+	{
+		sendKeyEvent((unsigned char)wParam, true);
+		return 0;
+	}break;
+
+
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+//-----------------------------------------------------------------------------
 // Name : createWindow ()
 //-----------------------------------------------------------------------------
-bool GameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
+bool GameWin::createWindow(int width, int height , HINSTANCE hInstance)
 {
-    if (!bestFbc)
-        return false;
-    
-    // Get a visual
-    XVisualInfo *vi = glXGetVisualFromFBConfig( m_display, bestFbc );
-    std::cout << "Chosen visual ID = 0x" << std::hex << vi->visualid << "\n";
-    std::cout << std::dec;
-    
-    int samp_buf, samples;
-    glXGetFBConfigAttrib( m_display, bestFbc, GLX_SAMPLE_BUFFERS, &samp_buf );
-    glXGetFBConfigAttrib( m_display, bestFbc, GLX_SAMPLES       , &samples  );
-    std::cout << "Choosen sample buffers = " << samp_buf << " and samples = " << samples << "\n";
-    
-    std::cout << "Creating colormap\n";
-    XSetWindowAttributes swa;
-    //Colormap cmap;
-    swa.colormap = cmap = XCreateColormap( m_display, RootWindow( m_display, vi->screen ), vi->visual, AllocNone );
-    swa.background_pixmap = None ;
-    swa.border_pixel      = 0;
-    swa.event_mask        = StructureNotifyMask | ExposureMask | KeyPressMask | KeyReleaseMask |
-                            ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask;
-    //swa.override_redirect = true;
-    
-    
-                            
-    std::cout << "Creating window\n";    
-    m_win = XCreateWindow( m_display,
-                           RootWindow( m_display, vi->screen ),
-                           0,
-                           0,
-                           width,
-                           height,
-                           0,
-                           vi->depth,
-                           InputOutput,
-                           vi->visual,
-                           CWBorderPixel|CWColormap|CWEventMask,
-                           &swa );
-    
-    getMonitorsInfo();
-    
-    XMapWindow(m_display, m_win);
-    // add window hint to disable compositing
-    Atom bypassCompositor = XInternAtom(m_display, "_NET_WM_BYPASS_COMPOSITOR", False);
-    int hint = 1;
-    XChangeProperty(m_display, m_win, bypassCompositor,
-                    XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&hint, 1);
-    
-    moveWindowToMonitor(m_primaryMonitorIndex);
-        
-//     std::cout << "screen sizes!!!!!!!!1\n";
-//     for (int i = 0; i < sizes; i++)
-//         std::cout << screenSize[i].width << "X" << screenSize[i].height << "\n";
-//     
-//     m_hDpi = screenSize->mwidth ? std::round((screenSize->width *10 * 25.4f) / screenSize->mwidth) : 0.0f;
-//     m_vDpi = screenSize->mheight ? std::round((screenSize->height *10 * 25.4f) / screenSize->mheight) : 0.0f;
+	//Creating the window 
+	WNDCLASS wc;
+	wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+	wc.lpfnWndProc = staticWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.lpszMenuName = 0;
+	wc.lpszClassName = "Chess";
 
-    if ( !m_win )
-    {
-        std::cout << "Failed to create window.\n";
-        return false;
-    }
-  
-    // Done with the visual info data
-    XFree( vi );
+	if (!RegisterClass(&wc))
+	{
+		::MessageBox(0, "RegisterClass() - FAILED", 0, 0);
+		return nullptr;
+	}
 
-    XStoreName( m_display, m_win, "GL 3.3 Window" );
-    
-    std::cout << "Mapping window\n";
-    XMapWindow( m_display, m_win );
-    
-    return true;
+	m_hWnd = ::CreateWindowEx(WS_EX_CLIENTEDGE, "Chess", "3D Chess", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, width, height, NULL, NULL, hInstance, (void*)this);
+
+	if (m_hWnd)
+	{
+		::ShowWindow(m_hWnd, SW_SHOW);
+		::UpdateWindow(m_hWnd);
+		return true;
+	}
+	else
+	{
+		::MessageBox(NULL, "failed to create a window", "Error", MB_OK);
+		return false;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Name : dummyWindowProc ()
+//-----------------------------------------------------------------------------
+LRESULT CALLBACK dummyWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+//-----------------------------------------------------------------------------
+// Name : createDummyWindow ()
+//-----------------------------------------------------------------------------
+HWND createDummyWindow(HINSTANCE hInstance)
+{
+	HWND dummyHwnd = nullptr;
+	//Creating the window 
+	WNDCLASS wc;
+	wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+	wc.lpfnWndProc = dummyWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.lpszMenuName = 0;
+	wc.lpszClassName = "dummyWindow";
+
+	if (!RegisterClass(&wc))
+	{
+		::MessageBox(0, "RegisterClass() - FAILED", 0, 0);
+		return nullptr;
+	}
+
+	dummyHwnd = ::CreateWindowEx(WS_EX_CLIENTEDGE, "dummyWindow", "dummy Chess Window", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 100, 100, nullptr, nullptr, hInstance, nullptr);
+
+	if (dummyHwnd)
+	{
+		return dummyHwnd;
+	}
+	else
+	{
+		::MessageBox(NULL, "failed to create a window", "Error", MB_OK);
+		return nullptr;
+	}
 }
 
 //-----------------------------------------------------------------------------
 // Name : createOpenGLContext ()
 //-----------------------------------------------------------------------------
-bool GameWin::createOpenGLContext(GLXFBConfig bestFbc)
+bool GameWin::createOpenGLContext(HINSTANCE hInstance)
 {
-    // Get the default screen's GLX extension list
-    const char *glxExts = glXQueryExtensionsString( m_display,
-                                                  DefaultScreen( m_display ) );
+	HWND dummyhWnd = createDummyWindow(hInstance);
+	if (!dummyhWnd)
+		return false;
 
-    // NOTE: It is not necessary to create or make current to a context before
-    // calling glXGetProcAddressARB
-    glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-    glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
-    
-    GLXContext ctx = 0;
+	HDC	dummyhDC = GetDC(dummyhWnd);
 
-    // Install an X error handler so the application won't exit if GL 3.0
-    // context allocation fails.
-    //
-    // Note this error handler is global.  All display connections in all threads
-    // of a process use the same error handler, so be sure to guard against other
-    // threads issuing X commands while this code is running.
-    // NOTE: this might be an issue if there is more than 1 thread issuing x commands
-    int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
+	PIXELFORMATDESCRIPTOR pfd = {
+		sizeof(PIXELFORMATDESCRIPTOR),    // size of this pfd  
+		1,                                // version number  
+		PFD_DRAW_TO_WINDOW |              // support window  
+		PFD_SUPPORT_OPENGL |              // support OpenGL  
+		PFD_DOUBLEBUFFER,                 // double buffered  
+		PFD_TYPE_RGBA,                    // RGBA type  
+		24,                               // 24-bit color depth  
+		0, 0, 0, 0, 0, 0,                 // color bits ignored  
+		0,                                // no alpha buffer  
+		0,                                // shift bit ignored  
+		0,                                // no accumulation buffer  
+		0, 0, 0, 0,                       // accum bits ignored  
+		32,                               // 32-bit z-buffer      
+		0,                                // no stencil buffer  
+		0,                                // no auxiliary buffer  
+		PFD_MAIN_PLANE,                   // main layer  
+		0,                                // reserved  
+		0, 0, 0                           // layer masks ignored  
+	};
+	int  iPixelFormat;
 
-    // Check for the GLX_ARB_create_context extension string and the function.
-    // If either is not present, use GLX 1.3 context creation method.
-    if ( !isExtensionSupported( glxExts, "GLX_ARB_create_context" ) || !glXCreateContextAttribsARB )
-    {
-        std::cout << "glXCreateContextAttribsARB() not found" << " ... using old-style GLX context\n";
-        ctx = glXCreateNewContext( m_display, bestFbc, GLX_RGBA_TYPE, 0, True );
-    }
-    // If it does, try to get a GL 3.3 context!
-    else
-    {
-        int context_attribs[] =
-        {
-            GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-            GLX_CONTEXT_MINOR_VERSION_ARB, 3,
-            //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-            None
-        };
+	// get the device context's best, available pixel format match  
+	iPixelFormat = ChoosePixelFormat(dummyhDC, &pfd);
 
-        std::cout << "Creating context\n";
-        ctx = glXCreateContextAttribsARB( m_display, bestFbc, 0, True, context_attribs );
+	// make that match the device context's current pixel format  
+	SetPixelFormat(dummyhDC, iPixelFormat, &pfd);
 
-        // Sync to ensure any errors generated are processed.
-        XSync( m_display, False );
-        if ( !ctxErrorOccurred && ctx )
-            std::cout << "Created GL 3.3 context\n";
-        else
-        {
-            std::cout << "Failed to create GL 3.3 context";
-            return false;
-        }
-    }
-    
-    // Sync to ensure any errors generated are processed.
-    XSync( m_display, False );
+	HGLRC dummyhRC = wglCreateContext(dummyhDC);
 
-    // Restore the original error handler
-    XSetErrorHandler( oldHandler );
+	wglMakeCurrent(dummyhDC, dummyhRC);
 
-    if ( ctxErrorOccurred || !ctx )
-    {
-        std::cout << "Failed to create an OpenGL context\n";
-        return false;
-    }
+	wglChoosePixelFormatARBProc wglChoosePixelFormatARB = nullptr;
+	wglChoosePixelFormatARB = (wglChoosePixelFormatARBProc)wglGetProcAddress("wglChoosePixelFormatARB");
 
-    // Verifying that context is a direct context
-    if ( ! glXIsDirect ( m_display, ctx ) )
-    {
-        std::cout << "Indirect GLX rendering context obtained\n";
-    }
-    else
-    {
-        std::cout << "Direct GLX rendering context obtained\n"; 
-    }
+	int attributes[] = {
+		WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+		WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+		WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+		WGL_COLOR_BITS_ARB, 32,
+		WGL_DEPTH_BITS_ARB, 24,
+		WGL_STENCIL_BITS_ARB, 8,
+		WGL_SAMPLE_BUFFERS_ARB, 1, // Number of buffers (must be 1 at time of writing)
+		WGL_SAMPLES_ARB, 4,        // Number of samples
+		0,0
+	};
 
-    std::cout << "Making context current\n";
-    glXMakeCurrent( m_display, m_win, ctx );
+	int pixelFormat;
+	UINT numFormats;
+
+	wglChoosePixelFormatARB(dummyhDC, attributes, nullptr, 1, &pixelFormat, &numFormats);
+
+	m_hDC = GetDC(m_hWnd);
+	SetPixelFormat(m_hDC, pixelFormat, &pfd);
+
+	wglCreateContextAttribsARBProc wglCreateContextAttribsARB = nullptr;
+	wglCreateContextAttribsARB = (wglCreateContextAttribsARBProc)wglGetProcAddress("wglCreateContextAttribsARB");
+
+	int context_attribs[] = { WGL_CONTEXT_MAJOR_VERSION_ARB, 3, WGL_CONTEXT_MINOR_VERSION_ARB, 3, 0 };
+	m_hRC = wglCreateContextAttribsARB(m_hDC, 0, context_attribs);
+
+	wglMakeCurrent(m_hDC, m_hRC);
+	wglDeleteContext(dummyhRC);
+
+	DestroyWindow(dummyhWnd);
     
     std::cout << glGetString(GL_VENDOR) << " " << glGetString(GL_RENDERER) << " " << glGetString(GL_VERSION) << "\n";
         
@@ -451,32 +430,7 @@ bool GameWin::createOpenGLContext(GLXFBConfig bestFbc)
 //-----------------------------------------------------------------------------
 void GameWin::setFullScreenMode(bool fullscreen)
 {
-    Atom wm_state = XInternAtom(m_display, "_NET_WM_STATE", False);
-    Atom fullscreenAtom = XInternAtom(m_display, "_NET_WM_STATE_FULLSCREEN", False);
 
-    XEvent xev;
-    memset(&xev, 0, sizeof(xev));
-    xev.type = ClientMessage;
-    xev.xclient.window = m_win;
-    xev.xclient.message_type = wm_state;
-    xev.xclient.format = 32;
-    if (fullscreen)
-        xev.xclient.data.l[0] = 1;
-    else
-        xev.xclient.data.l[0] = 0;
-    xev.xclient.data.l[1] = fullscreenAtom;
-    xev.xclient.data.l[2] = 0;
-    
-    XMapWindow(m_display, m_win);
-
-    XSendEvent(m_display,
-               DefaultRootWindow(m_display),
-               False,
-               SubstructureRedirectMask | SubstructureNotifyMask,
-               &xev);
-     
-    XSync(m_display, m_win);
-    XFlush(m_display);
 }
 
 //-----------------------------------------------------------------------------
@@ -484,48 +438,7 @@ void GameWin::setFullScreenMode(bool fullscreen)
 //-----------------------------------------------------------------------------
 bool GameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
 {
-    if (monitorIndex > m_monitors.size())
-        return false;
-    
-    RRMode modeID;
-    bool IDfound = false;
-
-    std::vector<Mode1> monitorModes;
-    for (MonitorInfo::Mode mode : m_monitors[monitorIndex].modes)
-    {
-        if (mode.width == newResolution.width && mode.height == newResolution.height)
-        {
-            modeID = mode.ID;
-            IDfound = true;
-            break;
-        }
-    }
-    
-    
-    if (IDfound)
-    {
-        XRRScreenResources* screenRes = XRRGetScreenResources(m_display, m_win);
-        
-        Status status = XRRSetCrtcConfig(m_display,
-                                         screenRes,
-                                         screenRes->crtcs[monitorIndex],
-                                         CurrentTime,
-                                         m_monitors[monitorIndex].positionRect.left,
-                                         m_monitors[monitorIndex].positionRect.top,
-                                         modeID,
-                                         1,
-                                         m_monitors[monitorIndex].outputs.data(),
-                                         m_monitors[monitorIndex].outputs.size());
-    
-        XRRFreeScreenResources(screenRes);
-        
-        if (!status)
-            return true;
-        else
-            return false;
-    }
-    else
-        return false;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -533,12 +446,7 @@ bool GameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
 //-----------------------------------------------------------------------------
 void GameWin::setWindowPosition(int x, int y)
 {
-    XWindowChanges xWinChanges = {0};
-    xWinChanges.x = x;
-    xWinChanges.y = y;
-    XConfigureWindow(m_display, m_win, CWX|CWY, &xWinChanges);
-    XSync(m_display, m_win);
-    XFlush(m_display);
+	SetWindowPos(m_hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
 }
 
 //-----------------------------------------------------------------------------
@@ -615,34 +523,18 @@ void GameWin::setRenderStates()
 //-----------------------------------------------------------------------------
 // Name : initOpenGL ()
 //-----------------------------------------------------------------------------
-bool GameWin::initOpenGL(int width, int height)
+bool GameWin::initOpenGL(int width, int height, HINSTANCE hInstance)
 {
     int err;
     std::cout << "InitOpenGL started\n";
 
-    GLXFBConfig bestFbc = getBestFBConfig();
-    if (!createWindow(width, height, bestFbc))
+    if (!createWindow(width, height, hInstance))
         return false; 
         
-    if(!createOpenGLContext(bestFbc))
+    if(!createOpenGLContext(hInstance))
         return false;
     
-    // register interest in the delete window message
-    wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(m_display, m_win, &wmDeleteMessage, 1);
-
     glewInit();
-
-    //------------------------------------
-    // Create empty cursor pixmap
-    //------------------------------------
-    XColor color = { 0 };
-    const char data[] = { 0 };
-
-    Pixmap pixmap = XCreateBitmapFromData(m_display, m_win, data, 1,1);
-    emptyCursorPixmap = XCreatePixmapCursor(m_display, pixmap, pixmap, &color, &color, 0, 0);
-
-    XFreePixmap(m_display,pixmap);
 
     //------------------------------------
     // Render states
@@ -677,7 +569,9 @@ bool GameWin::initOpenGL(int width, int height)
     // init our font
     font_ = m_asset.getFont("NotoMono", 40);
     // make sure the viewport is updated
-    reshape(width,height);
+	RECT clientRC;
+	GetClientRect(m_hWnd, &clientRC);
+    reshape(clientRC.right - clientRC.left , clientRC.bottom - clientRC.top);
     
     err = glGetError();
     if (err != GL_NO_ERROR)
@@ -724,121 +618,12 @@ bool GameWin::isExtensionSupported(const char *extList, const char *extension)
     return false;
 }
 
-//-----------------------------------------------------------------------------
-// Name : ctxErrorHandler ()
-//-----------------------------------------------------------------------------
-int GameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev)
-{
-    ctxErrorOccurred = true;
-    return 0;
-}
-
-//-----------------------------------------------------------------------------
-// Name : sendEventToXWindow ()
-// Desc : sends a SelectionNotify event to X Window with the given data
-//        if type is None it means there was no data that could be sent
-//-----------------------------------------------------------------------------
-void GameWin::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength)
-{
-    XSelectionEvent ssev;
-
-    ssev.type = SelectionNotify;
-    ssev.requestor = sev->requestor;
-    ssev.selection = sev->selection;
-    ssev.target = sev->target;
-    ssev.property = sev->property;
-    ssev.time = sev->time;
-
-    if (type != None)
-    {
-        XChangeProperty( s_clipboardDisplay, sev->requestor, sev->property, type, bitsPerDataElement, PropModeReplace,
-                        data, dataLength);
-        ssev.property = sev->property;
-    }
-    else
-        // send "nope" to requesting client
-        // can't convert clipboard data to client desired type
-        ssev.property = None;
-
-    XSendEvent( s_clipboardDisplay, sev->requestor, False, NoEventMask, (XEvent *)&ssev);
-}
-
-//-----------------------------------------------------------------------------
-// Name : sendClipboardLoop ()
-//-----------------------------------------------------------------------------
-void GameWin::sendClipboardLoop(Window clipboardWindow)
-{
-    while(1)
-    {
-        XEvent ev;
-        XSelectionRequestEvent *sev;
-
-        XNextEvent( s_clipboardDisplay, &ev);
-        std::cout <<"got event :" << ev.type << "\n";
-        switch (ev.type)
-        {
-            case SelectionClear:
-            {
-                    std::cout << "Lost selection ownership\n";
-                    // close our temp window
-                    XDestroyWindow( s_clipboardDisplay, clipboardWindow);
-                    clipboardWindow = 0;
-                    return;
-            }break;
-
-            case SelectionRequest:
-                sev = (XSelectionRequestEvent*)&ev.xselectionrequest;
-                if (sev->target == s_utf8)
-                {
-                    std::cout << "sent utf8 \n";
-                    sendEventToXWindow(sev, s_utf8, 8, reinterpret_cast<unsigned char*>(const_cast<char*>(s_clipboardString.c_str())), s_clipboardString.length());
-                }
-                else
-                    if (sev->target == s_targets)
-                    {
-                        std::cout << "sent targets\n";
-                        Atom supportedFormats[] = {s_targets , s_utf8};
-                        sendEventToXWindow(sev, XA_ATOM, 32, reinterpret_cast<unsigned char*>(supportedFormats), sizeof(Atom) * 2);
-                    }
-                    else
-                    {
-                        std::cout << "got unknown\n";
-                        sendEventToXWindow(sev, None, 0, nullptr, 0);
-                    }
-                break;
-        }
-    }
-}
 
 //-----------------------------------------------------------------------------
 // Name : copyToClipboard ()
 //-----------------------------------------------------------------------------
 void GameWin::copyToClipboard(const std::string &text)
 {
-    s_clipboardString = text;
-
-    std::cout << "copy to clipboard\n";
-    // check if the thread is still running
-    if ( s_clipboardSender.valid())
-    {
-        std::future_status status = s_clipboardSender.wait_for(std::chrono::microseconds(0));
-        if (status != std::future_status::ready)
-        {
-            return;
-        }
-    }
-
-    std::cout << "finishing copying\n";
-    // either first time or clipthread is not running
-    Window root = RootWindow( s_clipboardDisplay, DefaultScreen( s_clipboardDisplay ));
-
-    // We need a window to receive messages from other clients.
-    s_clipboardWindow = XCreateSimpleWindow( s_clipboardDisplay, root, -10, -10, 1, 1, 0, 0, 0);
-    XSelectInput( s_clipboardDisplay, s_clipboardWindow, SelectionClear | SelectionRequest);
-    // Claim ownership of the clipboard.
-    XSetSelectionOwner( s_clipboardDisplay, s_selection, s_clipboardWindow, CurrentTime);
-    // Create a thread to send the clipboard while we are the owners of it
-    s_clipboardSender = std::async(std::launch::async, GameWin::sendClipboardLoop, s_clipboardWindow );
 
 }
 
@@ -847,110 +632,7 @@ void GameWin::copyToClipboard(const std::string &text)
 //-----------------------------------------------------------------------------
 std::string GameWin::PasteClipboard()
 {
-    Display * pasteDisplay = XOpenDisplay(NULL);
-    Timer timer;
-
-    if (!pasteDisplay)
-    {
-        std::cout << "Failed to open X display\n";
-        return "";
-    }
-
-    Window root = RootWindow(pasteDisplay, DefaultScreen(pasteDisplay));
-
-    Window owner = XGetSelectionOwner(pasteDisplay, s_selection);
-    if (owner == None)
-    {
-        std::cout <<"'CLIPBOARD' has no owner\n";
-        XCloseDisplay(pasteDisplay);
-        return "";
-    }
-
-    // we are the owner of the clipboard return the saved string
-    if (owner == s_clipboardWindow )
-    {
-        XCloseDisplay(pasteDisplay);
-        return s_clipboardString;
-    }
-
-    // The selection owner will store the data in a property on this window:
-    Window target_window = XCreateSimpleWindow(pasteDisplay, root, -10, -10, 1, 1, 0, 0, 0);
-    XSelectInput(pasteDisplay, target_window, SelectionNotify);
-
-    // That's the property used by the owner. Note that it's completely arbitrary.
-    Atom target_property = XInternAtom(pasteDisplay, "ChessClipboard", False);
-
-    // Request conversion to UTF-8. Not all owners will be able to fulfill that request.
-    XConvertSelection(pasteDisplay, s_selection, s_utf8, target_property, target_window, CurrentTime);
-
-    double startTime = timer.getCurrentTime();
-
-    while (1)
-    {
-        XEvent ev;
-        XSelectionEvent *sev;
-
-        //too much time has passed and still no answer abort
-        if (timer.getCurrentTime() - startTime > 0.1)
-        {
-            XDestroyWindow( pasteDisplay, target_window );
-            XCloseDisplay(pasteDisplay);
-            return "";
-        }
-
-        // make sure there is a message in queue to not block
-        if (XPending(pasteDisplay) <= 0)
-            continue;
-
-        XNextEvent(pasteDisplay, &ev);
-        switch (ev.type)
-        {
-            case SelectionNotify:
-                sev = (XSelectionEvent*)&ev.xselection;
-                if (sev->property == None)
-                {
-                    std::cout <<"Conversion could not be performed.\n";
-                    return "";
-                }
-                else
-                {
-                    Atom da, incr, type;
-                    int di;
-                    unsigned long size, dul;
-                    unsigned char *prop_ret = nullptr;
-
-                    // Dummy call to get type and size.
-                    XGetWindowProperty(pasteDisplay, target_window, target_property, 0, 0, False, AnyPropertyType,
-                                       &type, &di, &dul, &size, &prop_ret);
-                    XFree(prop_ret);
-
-                    incr = XInternAtom(pasteDisplay, "INCR", False);
-                    if (type == incr)
-                    {
-                        std::cout << "Data too large and INCR mechanism not implemented\n";
-                        return "";
-                    }
-
-                    // Read the data in one go.
-                    XGetWindowProperty(pasteDisplay, target_window, target_property, 0, size, False, AnyPropertyType,
-                                       &da, &di, &dul, &dul, &prop_ret);
-                    // Save the returned string
-                    std::string ret  = reinterpret_cast<char*>(prop_ret);
-
-                    // Free resourses
-                    XFree(prop_ret);
-                    // Signal the selection owner that we have successfully read the data.
-                    XDeleteProperty(pasteDisplay, target_window, target_property);
-                    // close our temp window
-                    XDestroyWindow( pasteDisplay, target_window );
-
-                    XCloseDisplay(pasteDisplay);
-
-                    return ret;
-                }
-                break;
-        }
-    }
+	return std::string();
 }
 
 //-----------------------------------------------------------------------------
@@ -1025,7 +707,7 @@ void GameWin::drawing()
         std::cout << gluErrorString(err) << "\n";
     }
 
-    glXSwapBuffers (m_display, m_win);
+	SwapBuffers(m_hDC);
 }
 
 //-----------------------------------------------------------------------------
@@ -1052,7 +734,7 @@ void GameWin::renderFPS(Sprite& textSprite, mkFont& font)
 //-----------------------------------------------------------------------------
 void GameWin::reshape(int width, int height)
 {
-    if(m_winWidth != width || m_winHeight != height)
+    //if(m_winWidth != width || m_winHeight != height)
     {
         std::cout <<"reshape called\n";
         std::cout << "New window size is " << width << "X" << height << "\n";
@@ -1078,8 +760,8 @@ void GameWin::reshape(int width, int height)
         
         onSizeChanged();
     }
-    else
-        std::cout <<"reshape ignored\n";
+    //else
+    //    std::cout <<"reshape ignored\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -1096,7 +778,6 @@ void GameWin::ProcessInput(double timeDelta)
         Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
 
         setCursorPos(Point(oldCursorLoc));
-        XFlush(m_display);
     }
     
     if(m_scene && m_sceneInput)
@@ -1108,7 +789,12 @@ void GameWin::ProcessInput(double timeDelta)
 //-----------------------------------------------------------------------------
 void GameWin::setCursorPos(Point newPos)
 {
-    XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, newPos.x, newPos.y);
+	POINT newCursorPos;
+	newCursorPos.x = newPos.x;
+	newCursorPos.y = newPos.y;
+	ClientToScreen(m_hWnd,&newCursorPos);
+
+	SetCursorPos(newCursorPos.x, newCursorPos.y);
 }
 
 //-----------------------------------------------------------------------------
@@ -1116,14 +802,11 @@ void GameWin::setCursorPos(Point newPos)
 //-----------------------------------------------------------------------------
 Point GameWin::getCursorPos()
 {
-    Window root,child;
-    int cursorX  = 0, cursorY = 0 ,x = 0,y = 0;
-    unsigned int maskRet;
+	POINT cursorPos;
+	GetCursorPos(&cursorPos);
+	ScreenToClient(m_hWnd, &cursorPos);
 
-    XQueryPointer(m_display, m_win, &root, &child ,&x, &y,
-                  &cursorX, &cursorY, &maskRet);
-
-    return Point(cursorX, cursorY);
+    return Point(cursorPos.x, cursorPos.y);
 }
 
 //-----------------------------------------------------------------------------
@@ -1131,171 +814,37 @@ Point GameWin::getCursorPos()
 //-----------------------------------------------------------------------------
 int GameWin::BeginGame()
 {
-    while (gameRunning) 
-    {
-        XEvent event;
+	MSG		msg;
 
-         // Handle all messages before rendering the next frame
-        while (XPending(m_display) > 0 && gameRunning)
-        {
-            XNextEvent(m_display, &event);
+	// Start main loop
+	while (gameRunning)
+	{
+		// Did we receive a message, or are we idling ?
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+			{
+				gameRunning = false;
+				break;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 
-            ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
-                                   keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
-                                   keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+		// Advance Game Frame.
+		timer.frameAdvanced();
+		int err = glGetError();
+		if (err != GL_NO_ERROR)
+			std::cout << "MsgLoop: ERROR bitches\n";
 
-            switch(event.type)
-            {
-            case Expose:
-            {
-                XWindowAttributes gwa;
+		if (!timer.isCap())
+		{
+			drawing();
+		}
+	}
 
-                XGetWindowAttributes(m_display, m_win, &gwa);
-                reshape(gwa.width, gwa.height);
-                
-                //XRaiseWindow(m_display, m_win);
-                //XSetInputFocus(m_display, m_win, RevertToPointerRoot, CurrentTime);
-            }break;
+	return 0;
 
-            case FocusIn:
-            {
-                //XRaiseWindow(m_display, m_win);
-                //XSetInputFocus(m_display, m_win, RevertToPointerRoot, CurrentTime);
-            }break;
-            
-            case KeyPress:
-            case KeyRelease:
-            {
-                char buf[128];
-                KeySym key;
-
-                if (event.xkey.keycode - 8 >= 0)
-                    keysStatus[event.xkey.keycode - 8] = event.type == KeyPress;
-
-                if(event.type == KeyPress)
-                    std::cout << "key pressed\n";
-                else
-                    std::cout << "key released\n";
-                
-                std::cout << event.xkey.keycode << "\n";
-                XLookupString(&event.xkey, buf, 128, &key, nullptr);
-                std::cout << "KeySym: " << key << " " << "char: " <<  buf << "\n";
-                if (buf[0] == '\0')
-                {
-                    std::cout << "no valid ascii\n";
-                    if (key > 0xff && key <= 0xffff)
-                    {
-                        int temp = key - 0xff00;
-                        GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
-                        std::cout << "Virtual key was " << (int)vKey << "\n";
-
-                        sendVirtualKeyEvent(vKey, event.type == KeyPress, modifierKeys);
-                    }
-                }
-                else
-                {
-                    sendKeyEvent(buf[0], event.type == KeyPress);
-                }
-            }break;
-            
-            case MotionNotify:
-            {
-                sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
-            }break;
-
-            case ButtonPress:
-            {
-                if (event.xbutton.button == Button1)
-                {
-                    std::cout << "left button pressed\n";
-                        
-                    oldCursorLoc.x = event.xbutton.x;
-                    oldCursorLoc.y = event.xbutton.y;
-                    mouseDrag = true;
-                    XDefineCursor(m_display, m_win, emptyCursorPixmap);
-
-                    double curTime = timer.getCurrentTime();
-                    if (curTime - lastLeftClickTime < s_doubleClickTime)
-                    {
-                        std::cout << "left button was double clicked\n";
-                        sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
-                    }
-                    else
-                        sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
-                    lastLeftClickTime = curTime;
-                }
-
-                if (event.xbutton.button == Button3)
-                {
-                    std::cout << "right button pressed\n";
-
-                    double curTime = timer.getCurrentTime();
-                    if (curTime - lastRightClickTime < s_doubleClickTime)
-                    {
-                        std::cout << "right button was double clicked\n";
-                        sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
-                    }
-                    else
-                        sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
-                    lastRightClickTime = curTime;
-
-                }
-
-                if (event.xbutton.button == Button4)
-                {
-                    std::cout << "mouse scroll up\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1), modifierKeys);
-                }
-
-                if (event.xbutton.button == Button5)
-                {
-                    std::cout << "mouse scroll down\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1), modifierKeys);
-                }
-
-            }break;
-
-            case ButtonRelease:
-            {
-                if (event.xbutton.button == Button1)
-                {
-                    std::cout << "left button released\n";
-                    mouseDrag = false;
-                    XUndefineCursor(m_display, m_win);
-                    sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
-                }
-
-                if (event.xbutton.button == Button3)
-                {
-                    std::cout << "right button released\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
-                }
-
-            }break;
-                        
-            // got quit message, quitting the game loop
-            case ClientMessage:
-                std::cout << "Shutting down now!!!\n";
-                gameRunning = false;
-            break;
-
-            }
-
-        }
-        
-        timer.frameAdvanced();
-
-       int err = glGetError();
-       if (err != GL_NO_ERROR)
-           std::cout <<"MsgLoop: ERROR bitches\n";
-
-        if (!timer.isCap())
-        {
-            drawing();
-        }
-    }
-    
-    return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1346,29 +895,10 @@ void GameWin::onSizeChanged()
 //-----------------------------------------------------------------------------
 bool GameWin::Shutdown()
 {
-    // send event to the clipboard window to make the clipboard thread to shutdown
-    if ( s_clipboardWindow != 0)
-    {
-        XSelectionClearEvent event;
-        event.type = SelectionClear;
-        event.display = s_clipboardDisplay;
-        event.time = CurrentTime;
-        // fake that something took ownership of the clipboard
-        XSendEvent(m_display, s_clipboardWindow, False, NoEventMask, (XEvent *)&event);
-    }
-    
-    // Properly de-allocate all resources once they've outlived their purpose
-    glXMakeCurrent( m_display, 0, 0 );
-    glXDestroyContext( m_display, ctx );
-
-    XFreeCursor(m_display, emptyCursorPixmap);
-    XDestroyWindow( m_display, m_win );
-    XFreeColormap( m_display, cmap );
-    XCloseDisplay( m_display );
-    XCloseDisplay( s_clipboardDisplay );
+	wglMakeCurrent(m_hDC, NULL);
+	wglDeleteContext(m_hRC);
         
     return true;
-    
 }
 
 //-----------------------------------------------------------------------------
@@ -1376,13 +906,10 @@ bool GameWin::Shutdown()
 //-----------------------------------------------------------------------------
 Point GameWin::getWindowPosition()
 {
-        XWindowAttributes windowAttributes;
-    int x,y;
-    Window child;
-    XTranslateCoordinates( m_display, m_win, DefaultRootWindow(m_display), 0, 0, &x, &y, &child );
-    XGetWindowAttributes(m_display, DefaultRootWindow(m_display), &windowAttributes);
-    
-    return Point(x - windowAttributes.x, y - windowAttributes.y);
+	RECT winRect;
+	GetWindowRect(m_hWnd, &winRect);
+
+	return Point(winRect.left, winRect.top);
 }
 
 //-----------------------------------------------------------------------------

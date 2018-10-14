@@ -2,7 +2,7 @@
 #define  _VIRTUALKEYSGAME_H
 
 enum class GK_VirtualKey{GK_UNKNOWN = 0,
-		      GK_Escape,
+		      GK_Escape = 200,
 		      GK_SysReq,
 		      GK_Pause,
 		      GK_Space,
