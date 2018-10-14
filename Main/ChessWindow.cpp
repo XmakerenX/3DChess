@@ -94,25 +94,26 @@ void ChessWindow::initPromotionMenu()
     m_promotionGUI.setLocation( (m_winWidth / 2) - (m_promotionGUI.getWidth() / 2), (m_winHeight / 2) - (m_promotionGUI.getHeight() / 2) );
     m_promotionGUI.setVisible(false);
     GLuint promotionTextureName = m_asset.getTexture("GUITextures/pawnsButtons.png");
+	TextureInfo promotionTextureInfo = m_asset.getTextureInfo(promotionTextureName);
     
     std::vector<ELEMENT_GFX> knightGFX;
-    knightGFX.emplace_back(promotionTextureName, Rect(0, 118, 145, 177));
-    knightGFX.emplace_back(promotionTextureName, Rect(0, 177, 145, 236));
+    knightGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(0, 118, 145, 177));
+    knightGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(0, 177, 145, 236));
     m_promotionGUI.getButton(IDC_KNIGHT)->setControlGFX(knightGFX);
     
     std::vector<ELEMENT_GFX> bishopGFX;
-    bishopGFX.emplace_back(promotionTextureName, Rect(0, 0, 145, 59));
-    bishopGFX.emplace_back(promotionTextureName, Rect(0, 59, 145, 118));
+    bishopGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(0, 0, 145, 59));
+    bishopGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(0, 59, 145, 118));
     m_promotionGUI.getButton(IDC_BISHOP)->setControlGFX(bishopGFX);
     
     std::vector<ELEMENT_GFX> rookGFX;
-    rookGFX.emplace_back(promotionTextureName, Rect(145, 0, 290, 59));
-    rookGFX.emplace_back(promotionTextureName, Rect(145, 59, 290, 118));
+    rookGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(145, 0, 290, 59));
+    rookGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(145, 59, 290, 118));
     m_promotionGUI.getButton(IDC_ROOK)->setControlGFX(rookGFX);
     
     std::vector<ELEMENT_GFX> queenGFX;
-    queenGFX.emplace_back(promotionTextureName, Rect(290, 0, 435, 59));
-    queenGFX.emplace_back(promotionTextureName, Rect(290, 59, 435, 118));
+    queenGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(290, 0, 435, 59));
+    queenGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(290, 59, 435, 118));
     m_promotionGUI.getButton(IDC_QUEEN)->setControlGFX(queenGFX);
 }
 
@@ -249,7 +250,6 @@ void ChessWindow::onOptionMenuOK(ButtonUI* okButton)
     int monitorIndex = *(m_optionDialog.getComboBox<int>(IDC_MONITOR)->GetSelectedData());
     
     setFullScreenMode(false);
-    sleep(1);
     moveWindowToMonitor(monitorIndex);
     
     if (fullscreen)
