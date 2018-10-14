@@ -1,10 +1,10 @@
 #ifndef  _FBXLOADER_H
 #define  _FBXLOADER_H
 
+#include <glm/glm.hpp>
 #include <fbxsdk.h>
 #include<vector>
 #include<string>
-#include <glm/glm.hpp>
 #include "subMesh.h"
 
 class FbxLoader
