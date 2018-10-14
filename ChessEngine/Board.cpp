@@ -256,14 +256,12 @@ void board::processPress(BOARD_POINT pressedSqaure)
         if (pressedSqaure.row == m_startSquare.row && pressedSqaure.col == m_startSquare.col)//the square was already selected
             return;
 
-        std::stringstream out,out2,out3,out4;
+        std::stringstream pressedSquareStream,startSquareStream;
 
-        out3 << m_startSquare.col;
-        out4 << m_startSquare.row;
-        out << pressedSqaure.col;
-        out2 << pressedSqaure.row;
+        startSquareStream << m_startSquare.col << "," << m_startSquare.row;
+        pressedSquareStream << pressedSqaure.col << "," << pressedSqaure.row;
 
-        m_curStatus = "the pressed square is " + out.str() + ","+out2.str();
+        m_curStatus = "the pressed square is " + pressedSquareStream.str();
 
         // check if the object is in the board bounds if not we have nothing to do with this object
         if (pressedSqaure.row < boardX && pressedSqaure.col < boardY && pressedSqaure.row >= 0 && pressedSqaure.col >= 0 &&
@@ -280,7 +278,7 @@ void board::processPress(BOARD_POINT pressedSqaure)
                 m_attackSquares.clear();
                 m_moveSquares.clear();
 
-                m_curStatus += "\n move was invalid start:" + out3.str() + ","+out4.str() + " target:"+out.str() + ","+out2.str();
+                m_curStatus += "\n move was invalid start:" + startSquareStream.str() + " target:" + pressedSquareStream.str();
             }
             else
             {

@@ -42,16 +42,16 @@ bool rook::validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT ta
 
         DIR_VEC dirVec;
         if (dx != 0)
-            dirVec.x = dx / abs(dx);
+            dirVec.x = dx / std::abs(dx);
         else
             dirVec.x = 0;
 
         if (dy != 0)
-            dirVec.y = dy / abs(dy);
+            dirVec.y = dy / std::abs(dy);
         else
             dirVec.y = 0;
 
-        if (targetPiece != NULL)//check if there is a piece on the target square
+        if (targetPiece != nullptr)//check if there is a piece on the target square
         {
             if (targetPiece->getColor() != this->getColor()) //check if it is belong to the other player so we can eat it 
             {

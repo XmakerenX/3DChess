@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <boost/signals2/signal.hpp>
 #include <boost/bind/bind.hpp>
 #undef min

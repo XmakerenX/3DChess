@@ -1,4 +1,5 @@
 #include "subMesh.h"
+#include <glm/ext/scalar_constants.hpp>
 
 struct OBJnode
 {
@@ -103,7 +104,7 @@ void SubMesh::CalcVertexNormals(GLfloat angle)
     }
 
     // calculate the cosine of the angle (in degrees)
-    cos_angle = std::cos(angle * M_PI / 180.0);
+    cos_angle = std::cos(angle * glm::pi<float>() / 180.0);
 
     // allocate a structure that will hold a linked list of triangle indices for each vertex
     members = new OBJnode*[vertices.size() + 1];
