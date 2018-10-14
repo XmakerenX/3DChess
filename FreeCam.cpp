@@ -119,7 +119,7 @@ void FreeCam::Rotate(float x, float y, float z)
         if (m_fRoll < -20.0f)
         {
             z -= (m_fRoll + 20.0f);
-            m_fRoll -20.0f;
+            m_fRoll = -20.0f;
         }
 
         // build rotation matrix
