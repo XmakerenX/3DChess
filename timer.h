@@ -1,29 +1,34 @@
 #ifndef  _TIMER_H
 #define  _TIMER_H
 
-#include <sys/time.h>
+#ifdef _WIN32
+	#include <Windows.h>
+	#undef max
+	#undef min
+#elif
+	#include <sys/time.h>
+	// Helpful conversion constants.
+	static const unsigned usec_per_sec = 1000000;
+	static const unsigned usec_per_msec = 1000;
+#endif
+
 #include <inttypes.h>
 #include <assert.h>
-#include <math.h>
 #include <string.h>
 #include <iostream>
 
-const unsigned long MAX_SAMPLE_COUNT	= 50;  // Maximum frame time sample count
-
-// Helpful conversion constants.
-static const unsigned usec_per_sec = 1000000;
-static const unsigned usec_per_msec = 1000;
-
-// These functions are written to match the win32
-// signatures and behavior as closely as possible.
-bool  QueryPerformanceFrequency(int64_t* frequency);
-bool  QueryPerformanceCounter(int64_t* performance_count);
+const unsigned long MAX_SAMPLE_COUNT = 50;  // Maximum frame time sample count
 
 class Timer
 {
 public:
 	Timer(void);
 	virtual ~Timer(void);
+
+	// These functions are written to match the win32
+	// signatures and behavior as closely as possible.
+	static bool  getPerformanceFrequency(int64_t* frequency);
+	static bool  getPerformanceCounter(int64_t* performance_count);
 
 	void                   frameAdvanced   ();
     double                 getTimeElapsed  ();
