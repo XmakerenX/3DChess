@@ -123,6 +123,8 @@ LRESULT CALLBACK GameWin::staticWindowProc(HWND hWnd, UINT Message, WPARAM wPara
 //-----------------------------------------------------------------------------
 LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	ModifierKeysStates modifierKeys(GetAsyncKeyState(VK_SHIFT) < 0, GetAsyncKeyState(VK_CONTROL) < 0, false);
+
 	switch (message)
 	{
 	case WM_CLOSE:
@@ -161,7 +163,7 @@ LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 								  message == WM_LBUTTONDOWN || message == WM_LBUTTONDBLCLK,
 								  timer.getCurrentTime(),
 								  0), 
-					   ModifierKeysStates(wParam & MK_SHIFT, wParam & MK_CONTROL, false));
+							      modifierKeys);
 
 		return 0;
 	}break;
@@ -182,7 +184,7 @@ LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 			message == WM_RBUTTONDOWN || message == WM_RBUTTONDBLCLK,
 			timer.getCurrentTime(),
 			0),
-			ModifierKeysStates(wParam & MK_SHIFT, wParam & MK_CONTROL, false));
+			modifierKeys);
 		
 		return 0;
 	}break;
@@ -211,7 +213,7 @@ LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 								  down,
 								  timer.getCurrentTime(),
 								  wheelDelta),
-					   ModifierKeysStates(false, false, false));
+						modifierKeys);
 
 		return 0;
 	}break;
@@ -224,7 +226,7 @@ LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 								  false,
 								  timer.getCurrentTime(),
 								  0),
-					   ModifierKeysStates(wParam & MK_SHIFT, wParam & MK_CONTROL, false));
+								  modifierKeys);
 		return 0;
 	}break;
 
@@ -235,7 +237,7 @@ LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		if (key != GK_VirtualKey::GK_UNKNOWN)
 		{
 			keysStatus[static_cast<int>(key)] = message == WM_KEYDOWN;
-			sendVirtualKeyEvent(key, message == WM_KEYDOWN, ModifierKeysStates(false, false, false));
+			sendVirtualKeyEvent(key, message == WM_KEYDOWN, modifierKeys);
 		}
 		else
 		{
@@ -329,7 +331,7 @@ HWND createDummyWindow(HINSTANCE hInstance)
 		return nullptr;
 	}
 
-	dummyHwnd = ::CreateWindowEx(WS_EX_CLIENTEDGE, "dummyWindow", "dummy Chess Window", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 100, 100, nullptr, nullptr, hInstance, nullptr);
+	dummyHwnd = ::CreateWindowEx(WS_EX_CLIENTEDGE, "dummyWindow", "dummy Chess Window", WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, nullptr, nullptr, hInstance, nullptr);
 
 	if (dummyHwnd)
 	{
@@ -624,7 +626,13 @@ bool GameWin::isExtensionSupported(const char *extList, const char *extension)
 //-----------------------------------------------------------------------------
 void GameWin::copyToClipboard(const std::string &text)
 {
-
+	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, text.size());
+	memcpy(GlobalLock(hMem), text.data(), text.size());
+	GlobalUnlock(hMem);
+	OpenClipboard(nullptr);
+	EmptyClipboard();
+	SetClipboardData(CF_TEXT, hMem);
+	CloseClipboard();
 }
 
 //-----------------------------------------------------------------------------
@@ -632,7 +640,41 @@ void GameWin::copyToClipboard(const std::string &text)
 //-----------------------------------------------------------------------------
 std::string GameWin::PasteClipboard()
 {
-	return std::string();
+	// Try opening the clipboard
+	if (!OpenClipboard(nullptr))
+	{
+		std::cout << "Failed to open clipboard for pasting\n";
+		return std::string();
+	}
+
+	// Get handle of clipboard object for ANSI text
+	HANDLE hData = GetClipboardData(CF_TEXT);
+	if (hData == nullptr)
+	{
+		std::cout << "Failed to get handle to clipboard text object\n";
+		CloseClipboard();
+		return std::string();
+	}
+
+	// Lock the handle to get the actual text pointer
+	char * pszText = static_cast<char*>(GlobalLock(hData));
+	if (pszText == nullptr)
+	{
+		std::cout << "Failed to get a lock on actual text data\n";
+		CloseClipboard();
+		return std::string();
+	}
+
+	// Save text in a string class instance
+	std::string text(pszText);
+
+	// Release the lock
+	GlobalUnlock(hData);
+
+	// Release the clipboard
+	CloseClipboard();
+
+	return text;
 }
 
 //-----------------------------------------------------------------------------
