@@ -6,7 +6,7 @@
 #include <fstream>
 
 //-----------------------------------------------------------------------------
-// Name : TestWin (constructor)
+// Name : ChessWindow (constructor)
 //-----------------------------------------------------------------------------
 ChessWindow::ChessWindow()
 :m_optionDialog(*this)
@@ -16,7 +16,7 @@ ChessWindow::ChessWindow()
 }
 
 //-----------------------------------------------------------------------------
-// Name : TestWin (destructor)
+// Name : ChessWindow (destructor)
 //-----------------------------------------------------------------------------
 ChessWindow::~ChessWindow()
 {
