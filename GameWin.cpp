@@ -76,7 +76,65 @@ bool GameWin::initWindow()
 //-----------------------------------------------------------------------------
 void GameWin::getMonitorsInfo()
 {
+	int i = 0;
+	Resolution moniotrResolutions[] = { Resolution(1920, 1080),
+									   Resolution(1600, 1200),
+									   Resolution(1680, 1050),
+									   Resolution(1400, 1050),
+									   Resolution(1600, 900),
+									   Resolution(1280, 1024),
+									   Resolution(1440, 900),
+									   Resolution(1280, 960),
+									   Resolution(1280, 800),
+									   Resolution(1152, 864),
+									   Resolution(1280, 720),
+									   Resolution(1024, 768) };
+	DISPLAY_DEVICE deviceInfo;
+	deviceInfo.cb = sizeof(DISPLAY_DEVICE);
+	BOOL validDeviceIndex = EnumDisplayDevices(NULL, i, &deviceInfo, EDD_GET_DEVICE_INTERFACE_NAME);
+	while (validDeviceIndex)
+	{
+		std::vector<MonitorInfo::Mode> modes;
+		std::string deviceName = deviceInfo.DeviceName;
+		deviceName += "||||";
+		deviceName += deviceInfo.DeviceString;
+		if (deviceInfo.StateFlags & DISPLAY_DEVICE_ACTIVE)
+		{
+			//MessageBox(m_hWnd, deviceName.c_str(), "Device Info", MB_OK);
+			DEVMODE deviceMode;
+			deviceMode.dmSize = sizeof(DEVMODE);
+			if (EnumDisplaySettings(deviceInfo.DeviceName, ENUM_CURRENT_SETTINGS, &deviceMode))
+			{
+				Resolution originalResolution(deviceMode.dmPelsWidth, deviceMode.dmPelsHeight);
+				modes.emplace_back(deviceMode, deviceMode.dmPelsWidth, deviceMode.dmPelsHeight, 0);
+				//streamSettings << deviceMode.dmPelsWidth << "X" << deviceMode.dmPelsHeight << " " << deviceMode.dmDisplayFrequency << "Hz";
+				//MessageBox(m_hWnd, streamSettings.str().c_str(), "Device Settings", MB_OK);
+				DEVMODE testDeviceMode;
+				testDeviceMode = deviceMode;
+				for (const Resolution& monitorResolution : moniotrResolutions)
+				{
+					// The original resolution is always added first so no point in reAdding it
+					if (monitorResolution.width == originalResolution.width && monitorResolution.height == originalResolution.height)
+						continue;
 
+					testDeviceMode.dmPelsWidth = monitorResolution.width;
+					testDeviceMode.dmPelsHeight = monitorResolution.height;
+					LONG ret = ChangeDisplaySettingsEx(deviceInfo.DeviceName, &testDeviceMode, nullptr, CDS_TEST, nullptr);
+					if (ret == DISP_CHANGE_SUCCESSFUL)
+					{
+						std::cout << monitorResolution.width << "X" << monitorResolution.height << "\n";
+						modes.emplace_back(testDeviceMode, monitorResolution.width, monitorResolution.height, 0);
+					}
+				}
+
+				Rect monitorRect = Rect(deviceMode.dmPosition.x, deviceMode.dmPosition.y,
+					deviceMode.dmPosition.x + deviceMode.dmPelsWidth, deviceMode.dmPosition.y + deviceMode.dmPelsHeight);
+				m_monitors.emplace_back(i, deviceInfo.DeviceName, monitorRect, std::move(modes));
+			}
+		}
+		i++;
+		validDeviceIndex = EnumDisplayDevices(NULL, i, &deviceInfo, EDD_GET_DEVICE_INTERFACE_NAME);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -139,7 +197,8 @@ LRESULT CALLBACK GameWin::windowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 	
 	case WM_SIZE:
 	{
-		reshape(LOWORD(lParam), HIWORD(lParam));
+		if (LOWORD(lParam) != 0 && HIWORD(lParam) != 0)
+			reshape(LOWORD(lParam), HIWORD(lParam));
 		return 0;
 	}break;
 
@@ -289,6 +348,9 @@ bool GameWin::createWindow(int width, int height , HINSTANCE hInstance)
 	{
 		::ShowWindow(m_hWnd, SW_SHOW);
 		::UpdateWindow(m_hWnd);
+
+		getMonitorsInfo();
+
 		return true;
 	}
 	else
@@ -432,7 +494,28 @@ bool GameWin::createOpenGLContext(HINSTANCE hInstance)
 //-----------------------------------------------------------------------------
 void GameWin::setFullScreenMode(bool fullscreen)
 {
+	if (fullscreen)
+	{
+		Point windowPos = getWindowPosition();
 
+		for (const MonitorInfo& monitorInfo : m_monitors)
+		{
+			if (monitorInfo.positionRect.isPointInRect(windowPos))
+			{
+				SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+				SetWindowLongPtr(m_hWnd, GWL_EXSTYLE, 0);
+				setWindowPosition(monitorInfo.positionRect.left, monitorInfo.positionRect.top);
+				setWindowSize(monitorInfo.positionRect.getWidth(), monitorInfo.positionRect.getHeight());
+				break;
+			}
+		}
+	}
+	else
+	{
+		SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+		setWindowSize(1600, 900);
+		//setWindowSize(1024, 768);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -440,7 +523,36 @@ void GameWin::setFullScreenMode(bool fullscreen)
 //-----------------------------------------------------------------------------
 bool GameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
 {
-	return false;
+	if (monitorIndex > m_monitors.size())
+		return false;
+
+	bool IDfound = false;
+
+	DEVMODE* modeInfo;
+	std::string deviceName;
+	std::vector<Mode1> monitorModes;
+	for (MonitorInfo::Mode mode : m_monitors[monitorIndex].modes)
+	{
+		if (mode.width == newResolution.width && mode.height == newResolution.height)
+		{
+			modeInfo = &mode.deviceMode;
+			IDfound = true;
+			break;
+		}
+	}
+
+	if (IDfound)
+	{
+		LONG ret = ChangeDisplaySettingsEx(m_monitors[monitorIndex].deviceName.c_str(), modeInfo, nullptr, CDS_FULLSCREEN, nullptr);
+		if (ret == DISP_CHANGE_SUCCESSFUL)
+		{
+			m_monitors[monitorIndex].positionRect.right = m_monitors[monitorIndex].positionRect.left + newResolution.width;
+			m_monitors[monitorIndex].positionRect.bottom = m_monitors[monitorIndex].positionRect.top + newResolution.height;
+			return true;
+		}
+	}
+	else
+		return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -449,6 +561,24 @@ bool GameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
 void GameWin::setWindowPosition(int x, int y)
 {
 	SetWindowPos(m_hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
+}
+
+//-----------------------------------------------------------------------------
+// Name : setWindowSize ()
+//-----------------------------------------------------------------------------
+void GameWin::setWindowSize(GLuint width, GLuint height)
+{
+	RECT wr = { 0, 0, width, height};
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+	int newWidth = wr.right - wr.left;
+	int newHeight = wr.bottom - wr.top;
+	//SetWindowPos(m_hWnd, HWND_TOP, 0, 0, wr.right - wr.left, wr.bottom - wr.top, SWP_NOMOVE);
+	//SetWindowPos(m_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
+	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
+	RECT clientRC;
+	GetClientRect(m_hWnd, &clientRC);
+	std::cout << "setWindowSize window size is: " << clientRC.right - clientRC.left << "X" << clientRC.bottom - clientRC.top << "\n";
+	//reshape(width, height);
 }
 
 //-----------------------------------------------------------------------------

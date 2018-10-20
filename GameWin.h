@@ -65,16 +65,20 @@ struct MonitorInfo
 {
     struct Mode
     {
-        Mode(GLuint _width, GLuint _height, GLuint _frequency)
+        Mode(DEVMODE _deviceMode ,GLuint _width, GLuint _height, GLuint _frequency)
         :width(_width), height(_height), frequency(_frequency)
-        {}
+        {
+			deviceMode = _deviceMode;
+		}
+
+		DEVMODE deviceMode;
         GLuint width;
         GLuint height;
         GLuint frequency;
     };
     
-    MonitorInfo(int _index , const Rect& _positionRect, const std::vector<Mode>& _modes)
-    :modes(_modes)
+    MonitorInfo(int _index , const std::string& _deviceName,const Rect& _positionRect, const std::vector<Mode>& _modes)
+    :deviceName(_deviceName),modes(_modes)
     {
         index = _index;
         positionRect = _positionRect;
@@ -88,6 +92,7 @@ struct MonitorInfo
     }
     
     int index;
+	std::string deviceName;
     Rect positionRect;
     std::vector<Mode> modes;
 };
@@ -106,6 +111,7 @@ public:
     void setFullScreenMode(bool fullscreen);    
     bool setMonitorResolution(int monitorIndex, Resolution newResolution);
     void setWindowPosition(int x, int y);
+	void setWindowSize(GLuint width, GLuint height);
     void moveWindowToMonitor(int monitorIndex);
     
     void setRenderStates();
