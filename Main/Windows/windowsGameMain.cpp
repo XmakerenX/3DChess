@@ -16,6 +16,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	CreateConsoleWindow();
 
+	SetProcessDPIAware();
+
 	std::cout << "--------------------------------\n";
 	std::cout << "starting init window\n";
 	std::cout << "--------------------------------\n";
