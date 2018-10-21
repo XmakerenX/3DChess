@@ -22,7 +22,7 @@ public:
     
     virtual bool handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);
     virtual Object *PickObject(Point& cursor, int& faceCount, int &meshIndex);
-    virtual void Drawing(float frameTimeDelta);
+    virtual void Drawing(double frameTimeDelta);
     
     void setCameraRotationMode(RotationMode newMode);
     void setCameraRotaion(bool enabled);

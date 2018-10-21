@@ -285,7 +285,7 @@ void ChessScene::RotateCamera(float frameTimeDelta)
     {
         case RotationMode::Infinite:
         {       
-            m_rotationAngle += 0.01746 * 20 * frameTimeDelta;
+            m_rotationAngle += 0.01746f * 20 * frameTimeDelta;
             if (m_rotationAngle > (glm::pi<float>() * 2))
               m_rotationAngle -= glm::pi<float>() * 2;           
         }break;
@@ -323,7 +323,7 @@ void ChessScene::RotateCamera(float frameTimeDelta)
         case RotationMode::RotateCW:
         {
             if (m_rotationAngle < m_endAngle)
-                m_rotationAngle += 0.01746 * 100 * frameTimeDelta;
+                m_rotationAngle += 0.01746f * 100 * frameTimeDelta;
             else
                 m_rotationMode = RotationMode::Stoped;
         }break;
@@ -331,7 +331,7 @@ void ChessScene::RotateCamera(float frameTimeDelta)
         case RotationMode::RotateCCW:
         {
             if (m_rotationAngle > m_endAngle)
-                m_rotationAngle -= 0.01746 * 100 * frameTimeDelta;
+                m_rotationAngle -= 0.01746f * 100 * frameTimeDelta;
             else
                 m_rotationMode = RotationMode::Stoped;
         }break;
@@ -348,7 +348,7 @@ void ChessScene::RotateCamera(float frameTimeDelta)
 //-----------------------------------------------------------------------------
 // Name : Darwing
 //-----------------------------------------------------------------------------
-void ChessScene::Drawing(float frameTimeDelta)
+void ChessScene::Drawing(double frameTimeDelta)
 {
     RotateCamera(frameTimeDelta);
     Scene::Drawing(frameTimeDelta);
