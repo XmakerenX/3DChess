@@ -1,8 +1,7 @@
 #ifndef  _LINUXGAMEWIN_H
 #define  _LINUXGAMEWIN_H
 
-// must be included first becuase of conflict between x11 and fbxsdk.h
-#include "../GameWinInterface.h"
+#include "../BaseGameWin.h"
 #include <future>
 
 #include <X11/Xlib.h>
@@ -54,7 +53,7 @@ struct MonitorInfo
 class LinuxGameWin : public BaseGameWin
 {
 public:
-	LinuxGameWin();
+    LinuxGameWin();
     virtual ~LinuxGameWin();
     
     bool initWindow     ();
@@ -66,13 +65,13 @@ public:
     int  BeginGame      ();
     bool Shutdown       ();
     
-	void setFullScreenMode(bool fullscreen);
-	bool setMonitorResolution(int monitorIndex, Resolution newResolution);
-	void setWindowPosition(int x, int y);
-	void moveWindowToMonitor(int monitorIndex);
+    void setFullScreenMode(bool fullscreen);
+    bool setMonitorResolution(int monitorIndex, Resolution newResolution);
+    void setWindowPosition(int x, int y);
+    void moveWindowToMonitor(int monitorIndex);
 
-	void setCursorPos(Point newPos);
-	Point getCursorPos();
+    void setCursorPos(Point newPos);
+    Point getCursorPos();
 
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
@@ -89,7 +88,7 @@ protected:
     static void sendClipboardLoop(Window clipboardWindow);
     static void sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength);
     
-	void glSwapBuffers();
+    void glSwapBuffers();
     void getMonitorsInfo();
     
     Display * m_display;
@@ -104,13 +103,6 @@ protected:
 
     Window m_win;
     
-    GLuint m_winWidth;
-    GLuint m_winHeight;
-
-    int faceCount;
-    int meshIndex;
-    bool hit;
-
     Object* selectedObj;
 
     Atom wmDeleteMessage;

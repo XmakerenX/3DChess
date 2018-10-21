@@ -13,7 +13,7 @@ Display * LinuxGameWin::s_clipboardDisplay = nullptr;
 Atom LinuxGameWin::s_utf8 = None ;
 Atom LinuxGameWin::s_targets = None;
 Atom LinuxGameWin::s_selection = None;
-std::future<void> GameWin::s_clipboardSender;
+std::future<void> LinuxGameWin::s_clipboardSender;
 Window LinuxGameWin::s_clipboardWindow = 0;
 std::string LinuxGameWin::s_clipboardString;
 const double LinuxGameWin::s_doubleClickTime = 0.5;
@@ -39,9 +39,6 @@ LinuxGameWin::LinuxGameWin()
 
     mouseDrag = false;
 
-    faceCount = -1;
-    meshIndex = -1;
-    hit = false;
     selectedObj = nullptr;
 
     lastLeftClickTime = 0;
@@ -439,7 +436,7 @@ bool LinuxGameWin::createOpenGLContext(GLXFBConfig bestFbc)
 //-----------------------------------------------------------------------------
 void LinuxGameWin::glSwapBuffers()
 {
-	glxSwapBuffers(m_display, m_win);
+    glXSwapBuffers(m_display, m_win);
 }
 
 //-----------------------------------------------------------------------------
@@ -776,7 +773,7 @@ void LinuxGameWin::copyToClipboard(const std::string &text)
     // Claim ownership of the clipboard.
     XSetSelectionOwner( s_clipboardDisplay, s_selection, s_clipboardWindow, CurrentTime);
     // Create a thread to send the clipboard while we are the owners of it
-    s_clipboardSender = std::async(std::launch::async, GameWin::sendClipboardLoop, s_clipboardWindow );
+    s_clipboardSender = std::async(std::launch::async, LinuxGameWin::sendClipboardLoop, s_clipboardWindow );
 
 }
 
