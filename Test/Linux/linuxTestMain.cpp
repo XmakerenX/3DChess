@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 	gamewin.initWindow();
 	std::cout << "starting init OpenGL\n";
 	//gamewin.initOpenGL(800,600);
-	gamewin.initOpenGL(1024, 768, 0);
+	gamewin.initOpenGL(1024, 768);
 	std::cout << "--------------------------------\n";
 
 	std::cout << "Beginning game\n";

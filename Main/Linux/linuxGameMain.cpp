@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "ChessWindow.h"
+#include "../ChessWindow.h"
 
 int main(int argc, char* argv[])
 {
