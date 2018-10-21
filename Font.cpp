@@ -1,4 +1,7 @@
 #include "Font.h"
+#ifndef _WIN32
+    #include <fontconfig/fontconfig.h>
+#endif 
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -16,8 +19,8 @@ mkFont::mkFont()
     m_fontSize = 0;
 
     m_textureAtlas = 0;
-	m_textureAtlasWidth = 0;
-	m_textureAtlasHeight = 0;
+    m_textureAtlasWidth = 0;
+    m_textureAtlasHeight = 0;
 
     m_cachedMaxBearing = 0;
     m_cachedText = "";
@@ -39,8 +42,8 @@ mkFont::mkFont(std::string fontName, bool isPath/* = false*/)
     m_fontSize = 0;
 
     m_textureAtlas = 0;
-	m_textureAtlasWidth = 0;
-	m_textureAtlasHeight = 0;
+    m_textureAtlasWidth = 0;
+    m_textureAtlasHeight = 0;
     m_cachedMaxBearing = 0;
     m_cachedText = "";
 }
@@ -74,8 +77,8 @@ mkFont::mkFont(mkFont&& toMove)
     m_avgWidth = toMove.m_avgWidth;
 
     m_textureAtlas = toMove.m_textureAtlas;
-	m_textureAtlasWidth = toMove.m_textureAtlasWidth;
-	m_textureAtlasHeight = toMove.m_textureAtlasHeight;
+    m_textureAtlasWidth = toMove.m_textureAtlasWidth;
+    m_textureAtlasHeight = toMove.m_textureAtlasHeight;
 
     toMove.fontPath = "";
     toMove.m_fontSize = 0;
@@ -255,7 +258,7 @@ void mkFont::renderTextAtlas(Sprite& sprite, std::string text, GLfloat x, GLfloa
         GLfloat w = charGlyph.Size.x * scale;
         GLfloat h = charGlyph.Size.y * scale;
 
-		Texture atlasTexture(m_textureAtlas, m_textureAtlasWidth, m_textureAtlasHeight);
+        Texture atlasTexture(m_textureAtlas, m_textureAtlasWidth, m_textureAtlasHeight);
         sprite.AddTintedTexturedQuad(Rect(xpos, ypos, xpos + w, ypos + h), color, atlasTexture, charGlyph.textureRect);
 
         // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
@@ -611,8 +614,37 @@ GLuint mkFont::getFontSize()
 //-----------------------------------------------------------------------------
 std::string mkFont::getFontPath(std::string fontName)
 {
-	std::string path = "C:/Windows/Fonts/times.ttf";
+    #ifndef _WIN32
+    // Linux Code
+    FcConfig* config = FcInitLoadConfigAndFonts();
+    FcResult result;
+    // configure the search pattern,
+    // assume "name" is a std::string with the desired font name in it
+    FcPattern* pat = FcNameParse((const FcChar8*)(fontName.c_str()));
+    FcConfigSubstitute(config, pat, FcMatchPattern);
+    FcDefaultSubstitute(pat);
+
+    // find the font
+    std::string path;
+    FcPattern* font = FcFontMatch(config, pat, &result);
+    if (font)
+    {
+       FcChar8* file = NULL;
+       if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch)
+       {
+          // save the file to another std::string
+          path = (char*)file;
+       }
+       FcPatternDestroy(font);
+    }
+
+    FcPatternDestroy(pat);
     return path;
+    #else
+    // Windows Code
+    std::string path = "C:/Windows/Fonts/times.ttf";
+    return path;
+    #endif
 }
 
 //-----------------------------------------------------------------------------
