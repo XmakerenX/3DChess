@@ -973,6 +973,9 @@ int LinuxGameWin::BeginGame()
                     {
                         int temp = key - 0xff00;
                         GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
+                        if (vKey != GK_VirtualKey::GK_UNKNOWN)
+                            keysStatus[static_cast<int>(vKey)] = event.type == KeyPress;
+                        
                         std::cout << "Virtual key was " << (int)vKey << "\n";
 
                         sendVirtualKeyEvent(vKey, event.type == KeyPress, modifierKeys);
