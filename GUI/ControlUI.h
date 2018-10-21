@@ -5,13 +5,13 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/bind/bind.hpp>
 #include "../RenderTypes.h"
-#include "../virtualKeysGame.h"
+#include "../input.h"
+#include "../mouseEventsGame.h"
 #include "../timer.h"
 #include "../AssetManager.h"
 #include "../Sprite.h"
 #include "../Font.h"
-#include "../mouseEventsGame.h"
-#include "../gameInput.h"
+
 
 //-----------------------------------------------------------------------------
 // Typedefs, Structures and Enumerators
