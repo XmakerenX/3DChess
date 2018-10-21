@@ -126,8 +126,8 @@ void BaseGameWin::drawing()
 //-----------------------------------------------------------------------------
 void BaseGameWin::renderFPS(Sprite& textSprite, mkFont& font)
 {
-	font.renderToRect(textSprite, std::to_string(timer.getFPS()), 
-		Rect(0, 0, 200, 60), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    font.renderToRect(textSprite, std::to_string(timer.getFPS()), 
+                      Rect(0, 0, 200, 60), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 }
 
 //-----------------------------------------------------------------------------
@@ -135,29 +135,29 @@ void BaseGameWin::renderFPS(Sprite& textSprite, mkFont& font)
 //-----------------------------------------------------------------------------
 void BaseGameWin::reshape(int width, int height)
 {
-	std::cout << "reshape called\n";
-	std::cout << "New window size is " << width << "X" << height << "\n";
-	m_winWidth = width;
-	m_winHeight = height;
+    std::cout << "reshape called\n";
+    std::cout << "New window size is " << width << "X" << height << "\n";
+    m_winWidth = width;
+    m_winHeight = height;
 
-	if (m_scene)
-		m_scene->reshape(m_winWidth, m_winHeight);
-	else
-		glViewport(0, 0, width, height);
+    if (m_scene)
+        m_scene->reshape(m_winWidth, m_winHeight);
+    else
+        glViewport(0, 0, width, height);
 
-	if (spriteShader != nullptr)
-	{
-		spriteShader->Use();
-		glUniform2i(glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
-	}
+    if (spriteShader != nullptr)
+    {
+        spriteShader->Use();
+        glUniform2i(glGetUniformLocation(spriteShader->Program, "screenSize"), width / 2, height / 2);
+    }
 
-	if (spriteTextShader != nullptr)
-	{
-		spriteTextShader->Use();
-		glUniform2i(glGetUniformLocation(spriteTextShader->Program, "screenSize"), width / 2, height / 2);
-	}
+    if (spriteTextShader != nullptr)
+    {
+        spriteTextShader->Use();
+        glUniform2i(glGetUniformLocation(spriteTextShader->Program, "screenSize"), width / 2, height / 2);
+    }
 
-	onSizeChanged();
+    onSizeChanged();
 }
 
 //-----------------------------------------------------------------------------
@@ -165,19 +165,22 @@ void BaseGameWin::reshape(int width, int height)
 //-----------------------------------------------------------------------------
 void BaseGameWin::ProcessInput(double timeDelta)
 {
-	float X = 0.0f, Y = 0.0f;
-	if (mouseDrag)
-	{
-		Point currentCursorPos = getCursorPos();
+    float X = 0.0f, Y = 0.0f;
+    if (mouseDrag)
+    {
+        Point currentCursorPos = getCursorPos();
 
-		X = (float)(currentCursorPos.x - oldCursorLoc.x) / 3.0f;
-		Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
+        X = (float)(currentCursorPos.x - oldCursorLoc.x) / 3.0f;
+        Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
+        std::cout << "currentCursorPos = " << currentCursorPos.x << " " << currentCursorPos.y << "\n";
+        std::cout << "oldCursorLoc = " << oldCursorLoc.x << " " << oldCursorLoc.y << "\n";
+        std::cout << "X = " << X << " Y = " << Y << "\n";
 
-		setCursorPos(Point(oldCursorLoc));
-	}
+        setCursorPos(oldCursorLoc);
+    }
 
-	if (m_scene && m_sceneInput)
-		m_scene->processInput(timeDelta, keysStatus, X, Y);
+    if (m_scene && m_sceneInput)
+        m_scene->processInput(timeDelta, keysStatus, X, Y);
 }
 
 //-----------------------------------------------------------------------------
