@@ -1,5 +1,4 @@
 #include "BaseGameWin.h"
-#include <unistd.h>
 
 std::ostream& operator<<(std::ostream& os, const Resolution res)
 {
