@@ -15,9 +15,10 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	std::cout << "starting init window\n";
 	std::cout << "--------------------------------\n";
 
+	gamewin.setHINSTANCE(hInstance);
 	gamewin.initWindow();
 	std::cout << "starting init OpenGL\n";
-	gamewin.initOpenGL(1024, 768, 0);
+	gamewin.initOpenGL(1024, 768);
 	std::cout << "--------------------------------\n";
 
 	std::cout << "Beginning game\n";
