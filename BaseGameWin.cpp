@@ -1,4 +1,5 @@
 #include "BaseGameWin.h"
+#include <unistd.h>
 
 std::ostream& operator<<(std::ostream& os, const Resolution res)
 {
@@ -172,9 +173,6 @@ void BaseGameWin::ProcessInput(double timeDelta)
 
         X = (float)(currentCursorPos.x - oldCursorLoc.x) / 3.0f;
         Y = (float)(currentCursorPos.y - oldCursorLoc.y) / 3.0f;
-        std::cout << "currentCursorPos = " << currentCursorPos.x << " " << currentCursorPos.y << "\n";
-        std::cout << "oldCursorLoc = " << oldCursorLoc.x << " " << oldCursorLoc.y << "\n";
-        std::cout << "X = " << X << " Y = " << Y << "\n";
 
         setCursorPos(oldCursorLoc);
     }

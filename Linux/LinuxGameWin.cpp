@@ -894,6 +894,7 @@ std::string LinuxGameWin::PasteClipboard()
 void LinuxGameWin::setCursorPos(Point newPos)
 {
     XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, newPos.x, newPos.y);
+    XFlush(m_display);
 }
 
 //-----------------------------------------------------------------------------
