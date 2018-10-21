@@ -2,13 +2,11 @@
 #define  _SCENE_H
 
 #include <vector>
-//#include <glm/gtx/intersect.hpp>
 #include "AssetManager.h"
 #include "FreeCam.h"
 #include "Object.h"
 #include "input.h"
 #include "mouseEventsGame.h"
-#include "gameInput.h"
 
 struct LIGHT_PREFS
 {
@@ -62,7 +60,7 @@ public:
     void InitCamera(int width, int height, const glm::vec3& position, const glm::vec3& lookat);
     void InitLights();
 
-    virtual void Drawing(float frameTimeDelta);
+    virtual void Drawing(double frameTimeDelta);
     void SetAttribute(Attribute& attrib);
 
     void reshape(int width, int height);

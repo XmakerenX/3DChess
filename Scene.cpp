@@ -56,7 +56,7 @@ void Scene::InitScene(int width, int height, const glm::vec3& cameraPosition/* =
 void Scene::InitCamera(int width, int height, const glm::vec3& position, const glm::vec3& lookat)
 {
     m_camera.SetFOV(60.0f);
-    m_camera.SetViewPort(0.0, 0.0, width, height, 1.0f, 5000.0f);
+    m_camera.SetViewPort(0, 0, width, height, 1.0f, 5000.0f);
     m_camera.SetPostion(position);
     m_camera.SetLookAt(lookat);
 }
@@ -109,22 +109,22 @@ void Scene::InitObjects()
                            pMesh,
                            meshShaderPath2);
 
-    curObj = &m_objects[1];
+    curObj = &m_objects[0];
 
-    pMesh = m_assetManager.getMesh("cube.obj");
-    m_objects.emplace_back(m_assetManager,
-                           glm::vec3(20.6f, 1.5f, 0.0f), // position
-                           glm::vec3(0.0f, 0.0f, 0.0f),  // rotation
-                           glm::vec3(0.6f, 0.6f, 0.6f),  // scale
-                           pMesh,
-                           meshShaderPath2);
+    //pMesh = m_assetManager.getMesh("cube.obj");
+    //m_objects.emplace_back(m_assetManager,
+    //                       glm::vec3(20.6f, 1.5f, 0.0f), // position
+    //                       glm::vec3(0.0f, 0.0f, 0.0f),  // rotation
+    //                       glm::vec3(0.6f, 0.6f, 0.6f),  // scale
+    //                       pMesh,
+    //                       meshShaderPath2);
 
 }
 
 //-----------------------------------------------------------------------------
 // Name : Darwing ()
 //-----------------------------------------------------------------------------
-void Scene::Drawing(float frameTimeDelta)
+void Scene::Drawing(double frameTimeDelta)
 {
     //clear m_lastUsedAttrib
     m_lastUsedAttrib.matIndex = -1;
@@ -193,7 +193,7 @@ void Scene::SetAttribute(Attribute &attrib)
 //-----------------------------------------------------------------------------
 void Scene::reshape(int width, int height)
 {
-    m_camera.SetViewPort(0.0f, 0.0f, width, height, 1.0f, 5000.0f);
+    m_camera.SetViewPort(0, 0, width, height, 1.0f, 5000.0f);
 }
 
 //-----------------------------------------------------------------------------
@@ -203,27 +203,27 @@ void Scene::processInput(double timeDelta, bool keysStatus[], float X, float Y)
 {
     GLuint direction = 0;
 
-    if (keysStatus[GK_UP])
+    if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Up)])
     {
         direction |= Camera::DIR_FORWARD;
     }
 
-    if (keysStatus[GK_DOWN])
+    if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Down)])
     {
         direction |= Camera::DIR_BACKWARD;
     }
 
-    if (keysStatus[GK_LEFT])
+    if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Left)])
     {
         direction |= Camera::DIR_LEFT;
     }
 
-    if (keysStatus[GK_RIGHT])
+    if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Right)])
     {
         direction |= Camera::DIR_RIGHT;
     }
 
-    m_camera.Move(direction, 10* timeDelta);
+    m_camera.Move(direction, 10 * timeDelta);
 
     float x = 0,y = 0,z = 0;
     if (keysStatus[GK_D])
