@@ -1,5 +1,5 @@
 #include "timer.h"
-//#include <cmath>
+#include <cmath>
 
 //-----------------------------------------------------------------------------
 // Name : QueryPerformanceFrequency
@@ -7,8 +7,8 @@
 bool Timer::getPerformanceFrequency(int64_t* frequency)
 {
 #ifdef _WIN32
-	QueryPerformanceFrequency((LARGE_INTEGER*)frequency);
-#elif
+    QueryPerformanceFrequency((LARGE_INTEGER*)frequency);
+#else
     // Sanity check.
     assert(frequency != nullptr);
     // gettimeofday reports to microsecond accuracy.
@@ -23,8 +23,8 @@ bool Timer::getPerformanceFrequency(int64_t* frequency)
 bool Timer::getPerformanceCounter(int64_t* performance_count)
 {
 #ifdef _WIN32
-	QueryPerformanceCounter((LARGE_INTEGER*)performance_count);
-#elif
+    QueryPerformanceCounter((LARGE_INTEGER*)performance_count);
+#else
     struct timeval time;
     // Sanity check.
     assert(performance_count != nullptr);
@@ -41,16 +41,16 @@ bool Timer::getPerformanceCounter(int64_t* performance_count)
 //-----------------------------------------------------------------------------
 Timer::Timer(void)
 {
-	getPerformanceFrequency(&m_PerfFreq);
-	getPerformanceCounter(&m_lastTime);
+    getPerformanceFrequency(&m_PerfFreq);
+    getPerformanceCounter(&m_lastTime);
 
-	m_TimeScale = 1.0f / m_PerfFreq;
-	m_avgTimeDelta = 0.0;
-	m_SampleCount = 0;
+    m_TimeScale = 1.0f / m_PerfFreq;
+    m_avgTimeDelta = 0.0;
+    m_SampleCount = 0;
 
-	m_FrameRate	= 0;
-	m_FPSFrameCount	= 0;
-	m_FPSTimeElapsed = 0.0f;
+    m_FrameRate	= 0;
+    m_FPSFrameCount	= 0;
+    m_FPSTimeElapsed = 0.0f;
     m_cap = false;
 }
 
@@ -67,53 +67,53 @@ Timer::~Timer(void)
 //-----------------------------------------------------------------------------
 void Timer::frameAdvanced()
 {
-	int64_t currTime;
-	getPerformanceCounter(&currTime);
-	//the current time delta between frames
+    int64_t currTime;
+    getPerformanceCounter(&currTime);
+    //the current time delta between frames
     double curTimeDelta=(currTime - m_lastTime) * m_TimeScale;
-	m_lastTime = currTime;
+    m_lastTime = currTime;
 
     if (!m_cap)
     {
-		if ( fabsf(curTimeDelta - m_avgTimeDelta) < 1.0f  )
-		{
-			// Wrap FIFO frame time buffer.
-			for (int i = MAX_SAMPLE_COUNT - 1; i > 0; i--)
-			{
-				m_timeDeltas[i] = m_timeDeltas[i - 1];
-			}
+        if ( fabsf(curTimeDelta - m_avgTimeDelta) < 1.0f  )
+        {
+            // Wrap FIFO frame time buffer.
+            for (int i = MAX_SAMPLE_COUNT - 1; i > 0; i--)
+            {
+                m_timeDeltas[i] = m_timeDeltas[i - 1];
+            }
 
-			m_timeDeltas[ 0 ] = curTimeDelta;
-			if (m_SampleCount < MAX_SAMPLE_COUNT)
-				m_SampleCount++;
+            m_timeDeltas[ 0 ] = curTimeDelta;
+            if (m_SampleCount < MAX_SAMPLE_COUNT)
+                m_SampleCount++;
 
-		} // End if
+        } // End if
 
-		// Count up the new average elapsed time
-		m_avgTimeDelta = 0.0f;
+        // Count up the new average elapsed time
+        m_avgTimeDelta = 0.0f;
 
-		for ( unsigned long i = 0; i < m_SampleCount; i++ )
-			m_avgTimeDelta += m_timeDeltas[ i ];
+        for ( unsigned long i = 0; i < m_SampleCount; i++ )
+            m_avgTimeDelta += m_timeDeltas[ i ];
 
-		if ( m_SampleCount > 0 )
-			m_avgTimeDelta /= m_SampleCount;
+        if ( m_SampleCount > 0 )
+            m_avgTimeDelta /= m_SampleCount;
 
-		// Calculate Frame Rate
-		m_FPSFrameCount++;
-		//if (m_FPSFrameCount == 600)
-			//    m_cap = true;
+        // Calculate Frame Rate
+        m_FPSFrameCount++;
+        //if (m_FPSFrameCount == 600)
+            //    m_cap = true;
     }
 
-	m_FPSTimeElapsed += curTimeDelta;
-	//std::cout << "TimeElapsed: " << m_FPSTimeElapsed << "\n";
+    m_FPSTimeElapsed += curTimeDelta;
+    //std::cout << "TimeElapsed: " << m_FPSTimeElapsed << "\n";
 
-	if ( m_FPSTimeElapsed > 1.0f) 
-	{
+    if ( m_FPSTimeElapsed > 1.0f) 
+    {
         m_FrameRate = m_FPSFrameCount;
-		m_FPSFrameCount	= 0;
-		m_FPSTimeElapsed = 0.0f;
+        m_FPSFrameCount = 0;
+        m_FPSTimeElapsed = 0.0f;
         m_cap = false;
-	} // End If Second Elapsed
+    } // End If Second Elapsed
 }
 
 //-----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ void Timer::frameAdvanced()
 //-----------------------------------------------------------------------------
 double Timer::getTimeElapsed()
 {
-	return m_avgTimeDelta;
+    return m_avgTimeDelta;
 }
 
 //-----------------------------------------------------------------------------
@@ -129,7 +129,7 @@ double Timer::getTimeElapsed()
 //-----------------------------------------------------------------------------
 unsigned long Timer::getFPS()
 {
-	return m_FrameRate;
+    return m_FrameRate;
 }
 
 //-----------------------------------------------------------------------------
@@ -137,10 +137,10 @@ unsigned long Timer::getFPS()
 //-----------------------------------------------------------------------------
 double Timer::getCurrentTime()
 {
-	int64_t currTime;
-	getPerformanceCounter(&currTime);
+    int64_t currTime;
+    getPerformanceCounter(&currTime);
 
-	return currTime * m_TimeScale;
+    return currTime * m_TimeScale;
 }
 
 //-----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ double Timer::getCurrentTime()
 //-----------------------------------------------------------------------------
 double Timer::getLastTime()
 {
-	return m_lastTime * m_TimeScale;
+    return m_lastTime * m_TimeScale;
 } 
 
 //-----------------------------------------------------------------------------
@@ -156,5 +156,5 @@ double Timer::getLastTime()
 //-----------------------------------------------------------------------------
 bool Timer::isCap()
 {
-	return m_cap;
+    return m_cap;
 } 
