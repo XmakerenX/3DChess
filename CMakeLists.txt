@@ -1,5 +1,13 @@
 project(GlxOpenGL)
 cmake_minimum_required(VERSION 3.2)
+
+function(was_found package_name isfound) 
+    #message("was_found was called " ${package_name} " " ${isfound})
+    if(NOT isfound)
+        message("The package " ${package_name} " was not found")
+    endif(NOT isfound)
+endfunction(was_found)
+
 # make cmake find our *.cmake files
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -10,7 +18,6 @@ set(TEST_EXE_NAME "Test")
 
 message("Loading libraries")
 if (UNIX)
-    message("searching for X11")
     find_package(X11 QUIET REQUIRED)
     find_package(Xrandr QUIET REQUIRED)
     find_package(FontConfig QUIET REQUIRED)
@@ -24,6 +31,20 @@ find_package(GLEW QUIET REQUIRED)
 find_package(PNG QUIET REQUIRED)
 find_package(JPEG QUIET REQUIRED)
 find_package(FBX QUIET REQUIRED)
+# Print error if one of the packges was not found
+was_found("Threads" ${Threads_FOUND})
+was_found("OpenGL" ${OPENGL_FOUND})
+was_found("FreeType" ${FREETYPE_FOUND})
+was_found("Boost" ${Boost_FOUND})
+was_found("GLEW" ${GLEW_FOUND})
+was_found("PNG" ${PNG_FOUND})
+was_found("JPEG" ${JPEG_FOUND})
+was_found("FBXSDK" ${FBXSDK_FOUND})
+if (UNIX)
+    was_found("X11" ${X11_FOUND})
+    was_found("Xrandr" ${XRANDR_FOUND})
+    was_found("FontConfig" ${FONTCONFIG_FOUND})
+endif(UNIX)
 
 message("Setting include directories")
 include_directories(${FREETYPE_INCLUDE_DIRS})
