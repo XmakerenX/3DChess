@@ -52,6 +52,10 @@ bool RadioButtonUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates 
                 return true;
         }
     }break;
+    
+    default:
+        return false;
+    
     }
 
     return false;

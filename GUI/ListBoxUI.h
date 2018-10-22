@@ -71,8 +71,8 @@ public:
     //-------------------------------------------------------------------------
     bool            AddItem             (std::string strText, T& data);
     bool            AddItem             (std::string strText, T&& data);
-    bool            InsertItem      	(int nIndex, std::string &strText, T& data );
-    bool            InsertItem      	(int nIndex, std::string &strText, T&& data );
+    bool            InsertItem          (int nIndex, std::string &strText, T& data );
+    bool            InsertItem          (int nIndex, std::string &strText, T&& data );
     void            RemoveItem          (GLuint index);
     void            RemoveItemByData	(T& data );
     void            RemoveAllItems      ();

@@ -51,7 +51,7 @@ struct ELEMENT_GFX
 
     void setGFX(Texture newTexture, Rect newRcTexture)
     {
-		texture = newTexture;
+        texture = newTexture;
         rcTexture = newRcTexture;
     }
 

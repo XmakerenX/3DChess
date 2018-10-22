@@ -1,19 +1,19 @@
 #include "Scene.h"
 
-const std::string Scene::meshShaderPath2 = "objectShader4";
+const std::string Scene::s_meshShaderPath2 = "objectShader4";
 //-----------------------------------------------------------------------------
 // Name : Scene (constructor)
 //-----------------------------------------------------------------------------
 Scene::Scene()
 {
-    nActiveLights = 0;
-    ubLight = 0;
+    m_nActiveLights = 0;
+    m_ubLight = 0;
 
     m_faceCount = -1;
     m_meshIndex = -1;
     
-    curObj = nullptr;
-    status = "";
+    m_curObj = nullptr;
+    m_status = "";
 }
 
 //-----------------------------------------------------------------------------
@@ -21,11 +21,11 @@ Scene::Scene()
 //-----------------------------------------------------------------------------
 Scene::~Scene()
 {
-    if (ubMaterial != 0)
-        glDeleteBuffers(1, &ubMaterial);
+    if ( m_ubMaterial != 0)
+        glDeleteBuffers(1, &m_ubMaterial );
     
-    if (ubLight != 0)
-        glDeleteBuffers(1, &ubLight);
+    if ( m_ubLight != 0)
+        glDeleteBuffers(1, &m_ubLight );
 }
 
 //-----------------------------------------------------------------------------
@@ -33,17 +33,17 @@ Scene::~Scene()
 //-----------------------------------------------------------------------------
 void Scene::InitScene(int width, int height, const glm::vec3& cameraPosition/* = glm::vec3(0.0f, 20.0f, 70.0f)*/, const glm::vec3& cameraLookat/* = glm::vec3(0.0f, 0.0f, 0.0f)*/)
 {
-    meshShader =  m_assetManager.getShader(meshShaderPath2);
+    meshShader =  m_assetManager.getShader( s_meshShaderPath2 );
 
-    projectionLoc = glGetUniformLocation(meshShader->Program, "projection");
-    matWorldLoc = glGetUniformLocation(meshShader->Program, "matWorld");
-    matWorldInverseLoc = glGetUniformLocation(meshShader->Program, "matWorldInverseT");
+    m_projectionLoc = glGetUniformLocation(meshShader->Program, "projection");
+    m_matWorldLoc = glGetUniformLocation(meshShader->Program, "matWorld");
+    m_matWorldInverseLoc = glGetUniformLocation(meshShader->Program, "matWorldInverseT");
 
     // Init the material unifrom buffer
-    ubMaterialIndex = glGetUniformBlockIndex(meshShader->Program, "Material");
-    glGenBuffers(1, &ubMaterial);
-    glBindBufferBase(GL_UNIFORM_BUFFER, ubMaterialIndex, ubMaterial);
-    glUniformBlockBinding(meshShader->Program, ubMaterialIndex, ubMaterialIndex);
+    m_ubMaterialIndex = glGetUniformBlockIndex(meshShader->Program, "Material");
+    glGenBuffers(1, &m_ubMaterial );
+    glBindBufferBase(GL_UNIFORM_BUFFER, m_ubMaterialIndex, m_ubMaterial );
+    glUniformBlockBinding(meshShader->Program, m_ubMaterialIndex, m_ubMaterialIndex );
 
     InitLights();
     InitObjects();
@@ -66,25 +66,25 @@ void Scene::InitCamera(int width, int height, const glm::vec3& position, const g
 //-----------------------------------------------------------------------------
 void Scene::InitLights()
 {
-    light[0].dir = glm::vec4(1.0f, -0.8f, 0.4f, 0.0f);
-    light[0].dir = glm::vec4(0.1f, -0.3f, 0.4f, 0.0f);
-    light[0].ambient = glm::vec4(0.4f, 0.4f, 0.4f, 0.4f) * 0.4f;
-    light[0].ambient.a = 1.0f;
-    light[0].diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    light[0].specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    light[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    nActiveLights++;
+    m_light[0].dir = glm::vec4(1.0f, -0.8f, 0.4f, 0.0f);
+    m_light[0].dir = glm::vec4(0.1f, -0.3f, 0.4f, 0.0f);
+    m_light[0].ambient = glm::vec4(0.4f, 0.4f, 0.4f, 0.4f) * 0.4f;
+    m_light[0].ambient.a = 1.0f;
+    m_light[0].diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    m_light[0].specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    m_light[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_nActiveLights++;
 
-    ubLightIndex = glGetUniformBlockIndex(meshShader->Program, "lightBlock");
-    glGenBuffers(1, &ubLight);
-    glBindBufferBase(GL_UNIFORM_BUFFER, ubLightIndex, ubLight);
-    glUniformBlockBinding(meshShader->Program, ubLightIndex, ubLightIndex);
+    m_ubLightIndex = glGetUniformBlockIndex(meshShader->Program, "lightBlock");
+    glGenBuffers(1, &m_ubLight );
+    glBindBufferBase(GL_UNIFORM_BUFFER, m_ubLightIndex, m_ubLight );
+    glUniformBlockBinding(meshShader->Program, m_ubLightIndex, m_ubLightIndex );
 
-    glBindBuffer(GL_UNIFORM_BUFFER, ubLight);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(LIGHT_PREFS) * nActiveLights, light, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_ubLight );
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(LIGHT_PREFS) * m_nActiveLights, m_light, GL_STATIC_DRAW);
 
     meshShader->Use();
-    glUniform1i(glGetUniformLocation(meshShader->Program, "nActiveLights"), nActiveLights);
+    glUniform1i(glGetUniformLocation(meshShader->Program, "nActiveLights"), m_nActiveLights );
 }
 
 //-----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ void Scene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(0.5f, 0.5f, 0.5f), // scale
                            pMesh,
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
     
     pMesh = m_assetManager.getMesh("king.fbx");
     m_objects.emplace_back(m_assetManager,
@@ -107,9 +107,9 @@ void Scene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f),   // rotation
                            glm::vec3(8.0f, 8.0f, 8.0f),   // scale
                            pMesh,
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
 
-    curObj = &m_objects[0];
+    m_curObj = &m_objects[0];
 
     //pMesh = m_assetManager.getMesh("cube.obj");
     //m_objects.emplace_back(m_assetManager,
@@ -148,7 +148,7 @@ void Scene::Drawing(double frameTimeDelta)
         SetAttribute(attribVector[i]);
         for (Object obj : m_objects)
         {
-            obj.Draw(projectionLoc, matWorldLoc, matWorldInverseLoc, i, projViewMat);
+            obj.Draw( m_projectionLoc, m_matWorldLoc, m_matWorldInverseLoc, i, projViewMat);
         }
     }
 }
@@ -182,7 +182,7 @@ void Scene::SetAttribute(Attribute &attrib)
     if (attrib.matIndex != m_lastUsedAttrib.matIndex)
     {
         Material& mat = m_assetManager.getMaterial(attrib.matIndex);
-        glBindBuffer(GL_UNIFORM_BUFFER, ubMaterial);
+        glBindBuffer(GL_UNIFORM_BUFFER, m_ubMaterial );
         glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), &mat, GL_DYNAMIC_DRAW);
         m_lastUsedAttrib = attrib;
     }
@@ -204,69 +204,45 @@ void Scene::processInput(double timeDelta, bool keysStatus[], float X, float Y)
     GLuint direction = 0;
 
     if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Up)])
-    {
         direction |= Camera::DIR_FORWARD;
-    }
 
     if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Down)])
-    {
         direction |= Camera::DIR_BACKWARD;
-    }
 
     if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Left)])
-    {
         direction |= Camera::DIR_LEFT;
-    }
 
     if (keysStatus[static_cast<int>(GK_VirtualKey::GK_Right)])
-    {
         direction |= Camera::DIR_RIGHT;
-    }
 
     m_camera.Move(direction, 10 * timeDelta);
 
     float x = 0,y = 0,z = 0;
     if (keysStatus[GK_D])
-    {
         x += 10.0f;
-    }
 
     if (keysStatus[GK_A])
-    {
         x -= 10.0f;
-    }
 
     if (keysStatus[GK_W])
-    {
         y += 10.0f;
-    }
 
     if (keysStatus[GK_S])
-    {
         y -= 10.0f;
-    }
 
     if (keysStatus[GK_Z])
-    {
         z += 10.0f;
-    }
 
     if (keysStatus[GK_X])
-    {
         z -= 10.0f;
-    }
 
-    curObj->TranslatePos(x * timeDelta, y * timeDelta, z * timeDelta);
+    m_curObj->TranslatePos(x * timeDelta, y * timeDelta, z * timeDelta);
 
     if (keysStatus[GK_Q])
-    {
-        curObj->Rotate(-(glm::pi<float>() / 4) * timeDelta, 0.0f, 0.0f);
-    }
+        m_curObj->Rotate(-(glm::pi<float>() / 4) * timeDelta, 0.0f, 0.0f);
 
     if (keysStatus[GK_E])
-    {
-        curObj->Rotate(glm::pi<float>() / 4 * timeDelta, 0.0f, 0.0f);
-    }
+        m_curObj->Rotate(glm::pi<float>() / 4 * timeDelta, 0.0f, 0.0f);
 
     if (X != 0.0f || Y != 0.0)
         if (X || Y)
@@ -284,7 +260,7 @@ bool Scene::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifie
         {
             Object* temp = PickObject(event.cursorPos, m_faceCount, m_meshIndex);
             if(temp != nullptr)
-                curObj = temp;
+                m_curObj = temp;
             
             return true;
         }break;
@@ -329,7 +305,7 @@ Object* Scene::PickObject(Point &cursor, int& faceCount, int& meshIndex)
 
             if (obj.GetMesh()->IntersectTriangle(rayObjOrigin, rayObjDir, faceCount, meshIndex))
             {
-                curObj = &obj;
+                m_curObj = &obj;
                 return &obj;
             }
         }

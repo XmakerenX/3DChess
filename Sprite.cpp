@@ -23,16 +23,16 @@ void StreamOfVertices::addQuad(const Rect& spriteRect, const Rect& texRect, cons
     if (texture.name != 0)
     {
         // get the texture width and height
-		if (glGetTextureLevelParameteriv != nullptr)
-		{
-			glGetTextureLevelParameteriv(texture.name, 0, GL_TEXTURE_WIDTH, &textureWidth);
-			glGetTextureLevelParameteriv(texture.name, 0, GL_TEXTURE_HEIGHT, &textureHeight);
-		}
-		else
-		{
-			textureWidth = texture.width;
-			textureHeight = texture.height;
-		}
+        if (glGetTextureLevelParameteriv != nullptr)
+        {
+            glGetTextureLevelParameteriv(texture.name, 0, GL_TEXTURE_WIDTH, &textureWidth);
+            glGetTextureLevelParameteriv(texture.name, 0, GL_TEXTURE_HEIGHT, &textureHeight);
+        }
+        else
+        {
+            textureWidth = texture.width;
+            textureHeight = texture.height;
+        }
 
         // normalize the texRect start point to u,v texture coordinates
         startU = static_cast<float>(texRect.left) / static_cast<float>(textureWidth);
@@ -113,9 +113,7 @@ Sprite::Sprite()
 // Name : Sprite (Destructor)
 //-----------------------------------------------------------------------------
 Sprite::~Sprite()
-{
-
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : Init ()

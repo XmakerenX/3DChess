@@ -55,10 +55,10 @@ GLuint AssetManager::getTexture(const std::string& filePath)
 //-----------------------------------------------------------------------------
 const TextureInfo& AssetManager::getTextureInfo(GLuint textureName)
 {
-	if (m_textureInfoCache.count(textureName) != 0)
-		return m_textureInfoCache[textureName];
-	else
-		return TextureInfo(0, 0);
+    if (m_textureInfoCache.count(textureName) != 0)
+        return m_textureInfoCache[textureName];
+    else
+        return TextureInfo(0, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -200,7 +200,7 @@ GLuint AssetManager::loadPng(const std::string &filePath)
 
     // cached the loaded texture
     m_textureCache.insert(std::pair<std::string, GLuint>(filePath,textureID));
-	m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
+    m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
     return textureID;
 }
 
@@ -289,7 +289,7 @@ GLuint AssetManager::loadBMP(const std::string &filePath)
 
     // cache the loaded texture
     m_textureCache.insert(std::pair<std::string, GLuint>(filePath,textureID));
-	m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
+    m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
 
     return textureID;
 }
@@ -368,7 +368,7 @@ GLuint AssetManager::loadJPEG(const std::string &filePath)
 
     // cache the loaded texture
     m_textureCache.insert(std::pair<std::string, GLuint>(filePath,textureID));
-	m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
+    m_textureInfoCache.insert(std::pair<GLuint, TextureInfo>(textureID, TextureInfo(width, height)));
 
     return textureID;
 }
@@ -381,17 +381,17 @@ GLuint AssetManager::createTexture(GLsizei width, GLsizei height, GLenum format,
     // generate the OpenGL texture
     GLuint textureID;
     glGenTextures(1, &textureID);
-	
-	if (textureID != 0)
-	{
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, (GLvoid*)data);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	}
-	else
-		std::cout << "Failed to generate a texture name\n";
-	
-	return textureID;
+    
+    if (textureID != 0)
+    {
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, (GLvoid*)data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+    else
+        std::cout << "Failed to generate a texture name\n";
+    
+    return textureID;
 }
 
 //-----------------------------------------------------------------------------

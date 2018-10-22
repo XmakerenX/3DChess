@@ -5,9 +5,8 @@
 // Name : OptionDialog (constructor)
 //-----------------------------------------------------------------------------
 OptionDialog::OptionDialog(const GameWin& parentWindow)
-: m_parentWindow(parentWindow)
-{
-}
+    : m_parentWindow(parentWindow)
+{}
 
 //-----------------------------------------------------------------------------
 // Name : init ()

@@ -5,13 +5,6 @@ PIECES knight::type = KNIGHT;
 //-----------------------------------------------------------------------------
 // Name : knight (constructor)
 //-----------------------------------------------------------------------------
-// knight::knight(void)
-// {
-// }
-
-//-----------------------------------------------------------------------------
-// Name : knight (constructor)
-//-----------------------------------------------------------------------------
 knight::knight(int playerColor, BOARD_POINT _boardPoistion)
     :piece(playerColor, _boardPoistion)
 {
@@ -25,8 +18,7 @@ knight::knight(int playerColor, BOARD_POINT _boardPoistion)
 // Name : knight (destructor)
 //-----------------------------------------------------------------------------
 knight::~knight(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : validateNewPos
@@ -61,8 +53,3 @@ int knight::getType()
 {
     return knight::type;
 }
-
-// float knight::getYpos()
-// {
-// 	return knight::Ypos;
-// } 

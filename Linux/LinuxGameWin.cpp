@@ -29,15 +29,15 @@ double calculateXRefreshRate(const XRRModeInfo *info)
 //-----------------------------------------------------------------------------
 LinuxGameWin::LinuxGameWin()
 {
-    font_ = nullptr;
+    m_font = nullptr;
     
-    gameRunning = true;
+    m_gameRunning = true;
     ctx = nullptr;
 
     for (int i = 0; i < 256; i++)
-        keysStatus[i] = false;
+        m_keysStatus[i] = false;
 
-    mouseDrag = false;
+    m_mouseDrag = false;
 
     selectedObj = nullptr;
 
@@ -175,7 +175,6 @@ GLXFBConfig LinuxGameWin::getBestFBConfig()
 void LinuxGameWin::getMonitorsInfo()
 {
     int nMonitors;
-    //XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, m_win, true, &nMonitors);
     XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, DefaultRootWindow(m_display), true, &nMonitors);
     XRRScreenResources* screenRes = XRRGetScreenResources(m_display, DefaultRootWindow(m_display));
     
@@ -285,16 +284,12 @@ bool LinuxGameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
     
     std::cout << "Creating colormap\n";
     XSetWindowAttributes swa;
-    //Colormap cmap;
     swa.colormap = cmap = XCreateColormap( m_display, RootWindow( m_display, vi->screen ), vi->visual, AllocNone );
     swa.background_pixmap = None ;
     swa.border_pixel      = 0;
     swa.event_mask        = StructureNotifyMask | ExposureMask | KeyPressMask | KeyReleaseMask |
                             ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask;
-    //swa.override_redirect = true;
     
-    
-                            
     std::cout << "Creating window\n";    
     m_win = XCreateWindow( m_display,
                            RootWindow( m_display, vi->screen ),
@@ -320,13 +315,6 @@ bool LinuxGameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
     
     moveWindowToMonitor(m_primaryMonitorIndex);
         
-//     std::cout << "screen sizes!!!!!!!!1\n";
-//     for (int i = 0; i < sizes; i++)
-//         std::cout << screenSize[i].width << "X" << screenSize[i].height << "\n";
-//     
-//     m_hDpi = screenSize->mwidth ? std::round((screenSize->width *10 * 25.4f) / screenSize->mwidth) : 0.0f;
-//     m_vDpi = screenSize->mheight ? std::round((screenSize->height *10 * 25.4f) / screenSize->mheight) : 0.0f;
-
     if ( !m_win )
     {
         std::cout << "Failed to create window.\n";
@@ -593,8 +581,8 @@ bool LinuxGameWin::initOpenGL(int width, int height)
     // Shader loading
     //------------------------------------
     // complie shaders
-    spriteShader = m_asset.getShader("sprite");
-    spriteTextShader = m_asset.getShader("spriteText");
+    m_spriteShader = m_asset.getShader("sprite");
+    m_spriteTextShader = m_asset.getShader("spriteText");
 
     m_sprites[0].Init();
     m_sprites[1].Init();
@@ -610,7 +598,7 @@ bool LinuxGameWin::initOpenGL(int width, int height)
         m_scene->InitScene(width, height);
     
     // init our font
-    font_ = m_asset.getFont("NotoMono", 40);
+    m_font = m_asset.getFont("NotoMono", 40);
     // make sure the viewport is updated
     reshape(width,height);
     
@@ -917,18 +905,18 @@ Point LinuxGameWin::getCursorPos()
 //-----------------------------------------------------------------------------
 int LinuxGameWin::BeginGame()
 {
-    while (gameRunning) 
+    while ( m_gameRunning ) 
     {
         XEvent event;
 
          // Handle all messages before rendering the next frame
-        while (XPending(m_display) > 0 && gameRunning)
+        while (XPending(m_display) > 0 && m_gameRunning )
         {
             XNextEvent(m_display, &event);
 
-            ModifierKeysStates modifierKeys(keysStatus[KEY_LEFTSHIFT] || keysStatus[KEY_RIGHTSHIFT],
-                                   keysStatus[KEY_LEFTCTRL] ||  keysStatus[KEY_RIGHTCTRL],
-                                   keysStatus[KEY_LEFTALT || keysStatus[KEY_RIGHTALT]]);
+            ModifierKeysStates modifierKeys( m_keysStatus[KEY_LEFTSHIFT] || m_keysStatus[KEY_RIGHTSHIFT],
+                                              m_keysStatus[KEY_LEFTCTRL] ||  m_keysStatus[KEY_RIGHTCTRL],
+                                              m_keysStatus[KEY_LEFTALT || m_keysStatus[KEY_RIGHTALT]]);
 
             switch(event.type)
             {
@@ -956,7 +944,7 @@ int LinuxGameWin::BeginGame()
                 KeySym key;
 
                 if (event.xkey.keycode - 8 >= 0)
-                    keysStatus[event.xkey.keycode - 8] = event.type == KeyPress;
+                    m_keysStatus[event.xkey.keycode - 8] = event.type == KeyPress;
 
                 if(event.type == KeyPress)
                     std::cout << "key pressed\n";
@@ -974,7 +962,7 @@ int LinuxGameWin::BeginGame()
                         int temp = key - 0xff00;
                         GK_VirtualKey vKey = linuxVirtualKeysTable[temp];
                         if (vKey != GK_VirtualKey::GK_UNKNOWN)
-                            keysStatus[static_cast<int>(vKey)] = event.type == KeyPress;
+                            m_keysStatus[static_cast<int>(vKey)] = event.type == KeyPress;
                         
                         std::cout << "Virtual key was " << (int)vKey << "\n";
 
@@ -989,7 +977,7 @@ int LinuxGameWin::BeginGame()
             
             case MotionNotify:
             {
-                sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
+                sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 0), modifierKeys);
             }break;
 
             case ButtonPress:
@@ -998,19 +986,19 @@ int LinuxGameWin::BeginGame()
                 {
                     std::cout << "left button pressed\n";
                         
-                    oldCursorLoc.x = event.xbutton.x;
-                    oldCursorLoc.y = event.xbutton.y;
-                    mouseDrag = true;
+                    m_oldCursorLoc.x = event.xbutton.x;
+                    m_oldCursorLoc.y = event.xbutton.y;
+                    m_mouseDrag = true;
                     XDefineCursor(m_display, m_win, emptyCursorPixmap);
 
-                    double curTime = timer.getCurrentTime();
+                    double curTime = m_timer.getCurrentTime();
                     if (curTime - lastLeftClickTime < s_doubleClickTime)
                     {
                         std::cout << "left button was double clicked\n";
-                        sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), 0), modifierKeys);
                     }
                     else
-                        sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), 0), modifierKeys);
                     lastLeftClickTime = curTime;
                 }
 
@@ -1018,14 +1006,14 @@ int LinuxGameWin::BeginGame()
                 {
                     std::cout << "right button pressed\n";
 
-                    double curTime = timer.getCurrentTime();
+                    double curTime = m_timer.getCurrentTime();
                     if (curTime - lastRightClickTime < s_doubleClickTime)
                     {
                         std::cout << "right button was double clicked\n";
-                        sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), 0), modifierKeys);
                     }
                     else
-                        sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, m_timer.getCurrentTime(), 0), modifierKeys);
                     lastRightClickTime = curTime;
 
                 }
@@ -1033,13 +1021,13 @@ int LinuxGameWin::BeginGame()
                 if (event.xbutton.button == Button4)
                 {
                     std::cout << "mouse scroll up\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 1), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 1), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button5)
                 {
                     std::cout << "mouse scroll down\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, timer.getCurrentTime(), -1), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), -1), modifierKeys);
                 }
 
             }break;
@@ -1049,15 +1037,15 @@ int LinuxGameWin::BeginGame()
                 if (event.xbutton.button == Button1)
                 {
                     std::cout << "left button released\n";
-                    mouseDrag = false;
+                    m_mouseDrag = false;
                     XUndefineCursor(m_display, m_win);
-                    sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 0), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button3)
                 {
                     std::cout << "right button released\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, timer.getCurrentTime(), 0), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 0), modifierKeys);
                 }
 
             }break;
@@ -1065,20 +1053,20 @@ int LinuxGameWin::BeginGame()
             // got quit message, quitting the game loop
             case ClientMessage:
                 std::cout << "Shutting down now!!!\n";
-                gameRunning = false;
+                m_gameRunning = false;
             break;
 
             }
 
         }
         
-        timer.frameAdvanced();
+        m_timer.frameAdvanced();
 
        int err = glGetError();
        if (err != GL_NO_ERROR)
            std::cout <<"MsgLoop: ERROR bitches\n";
 
-        if (!timer.isCap())
+        if (!m_timer.isCap())
         {
             drawing();
         }

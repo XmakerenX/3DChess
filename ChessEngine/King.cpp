@@ -5,13 +5,6 @@ PIECES king::type = KING;
 //-----------------------------------------------------------------------------
 // Name : King (constructor)
 //-----------------------------------------------------------------------------
-// king::king(void)
-// {
-// }
-
-//-----------------------------------------------------------------------------
-// Name : King (constructor)
-//-----------------------------------------------------------------------------
 king::king(int playerColor, BOARD_POINT _boardPoistion)
     :piece(playerColor, _boardPoistion)
 {
@@ -25,8 +18,7 @@ king::king(int playerColor, BOARD_POINT _boardPoistion)
 // Name : King (destructor)
 //-----------------------------------------------------------------------------
 king::~king(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : validateNewPos (destructor)
@@ -67,10 +59,5 @@ bool king::validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT ta
 //-----------------------------------------------------------------------------
 int king::getType()
 {
-	return king::type;
+    return king::type;
 }
-
-// float king::getYpos()
-// {
-// 	return king::Ypos;
-// } 

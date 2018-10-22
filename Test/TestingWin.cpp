@@ -31,7 +31,7 @@ void TestingWin::initGUI()
 
 void TestingWin::renderGUI()
 {
-    m_testDialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
+    m_testDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
 }
 
 void TestingWin::sendKeyEvent(unsigned char key, bool down)

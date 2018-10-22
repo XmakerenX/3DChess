@@ -393,7 +393,6 @@ int ControlUI::getHeight() const
 //-----------------------------------------------------------------------------
 bool ControlUI::SaveToFile(std::ostream& SaveFile)
 {
-    //SaveFile << m_type	  << "| Control Type"   << "\n";
     SaveFile << m_ID	  << "| Control ID"     << "\n";
 
     SaveFile << m_x       << "| Control X"	   << "\n";

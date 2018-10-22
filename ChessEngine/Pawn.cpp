@@ -5,17 +5,9 @@ PIECES Pawn::type = PAWN;
 //-----------------------------------------------------------------------------
 // Name : Pawn (constructor)
 //-----------------------------------------------------------------------------
-// Pawn::Pawn(void)
-// {
-// }
-
-//-----------------------------------------------------------------------------
-// Name : Pawn (constructor)
-//-----------------------------------------------------------------------------
 Pawn::Pawn(int playerColor, BOARD_POINT _boardPoistion)
     :piece(playerColor, _boardPoistion)
 {
-    //type=PAWN;
     dx[0]=-1;
     dx[1]=2;
     dy[0]=-2;
@@ -69,8 +61,3 @@ int Pawn::getType()
 {
     return Pawn::type;
 }
-
-// float Pawn::getYpos()
-// {
-//     return Pawn::Ypos;
-// } 

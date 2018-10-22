@@ -10,9 +10,10 @@
 class FbxLoader
 {
 public:
+    
     FbxLoader()
     {
-	m_pFbxSdkManager = nullptr;
+        m_pFbxSdkManager = nullptr;
     }
 
     bool LoadMesh(std::string meshPath, std::vector<SubMesh>& subMeshes);

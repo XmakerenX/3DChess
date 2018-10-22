@@ -11,16 +11,17 @@
 
 struct Texture
 {
-	Texture()
-		:name(0), width(0), height(0)
-	{}
-	Texture(GLuint _name, GLuint _width, GLuint _height)
-		:name(_name), width(_width), height(_height)
-	{}
+    Texture()
+        :name(0), width(0), height(0)
+    {}
+    
+    Texture(GLuint _name, GLuint _width, GLuint _height)
+        :name(_name), width(_width), height(_height)
+    {}
 
-	GLuint name;
-	GLuint width;
-	GLuint height;
+    GLuint name;
+    GLuint width;
+    GLuint height;
 };
 
 struct VertexSprite
@@ -46,7 +47,7 @@ struct StreamOfVertices
     StreamOfVertices(const Texture& texture);
     void addQuad(const Rect &spriteRect, const Rect &texRect, const glm::vec4 &tintColor, Point scale);
 
-	Texture texture;
+    Texture texture;
 
     std::vector<VertexSprite> vertices;
     std::vector<VertexIndex> indices;

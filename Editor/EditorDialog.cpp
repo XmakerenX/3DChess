@@ -240,7 +240,6 @@ void EditDialogUI::CreateDialogUI(AssetManager& assetManager)
     ButtonUI* pRemoveItem = nullptr;
 
     addListBox(IDC_LISTBOXITEMS, 125, 190, 200, 170, 0, &pListBoxNewItems);
-    //addStatic(IDC_LISTBOXSTATIC, "ListBox Item text", 125, 341, 200, 34, &pListBoxStatic);
     addStatic(IDC_LISTBOXSTATIC, "ListBox Item text", 125, 355, 200, 34, &pListBoxStatic);
     addEditbox(IDCLISTOXEDITBOX,"", 125, 380, 200, 34, &pListBoxEditBox);
     addButton(IDC_LISTBOXITEMSADD, "Add Item", 125, 424, 85, 34, 0, &pAddItem);
@@ -337,11 +336,6 @@ void EditDialogUI::CreateDialogUI(AssetManager& assetManager)
     addButton(IDC_DELETEBUTTON, "Delete Contorl", 330, 500, 100, 34, 0, &pDeleteButton);
     pDeleteButton->connectToClick(boost::bind(&EditDialogUI::DeleteControlClicked, this, _1) );
     pDeleteButton->setEnabled(false);
-
-//     ButtonUI* pOptionsButton = nullptr;
-//     addButton(IDC_OPTIONSBUTTON, "Options", 450, 75, 100, 34, 0, &pOptionsButton);
-//     pOptionsButton->connectToClick(boost::bind(&EditDialogUI::OptionsControlClicked, this, _1) );
-//     pOptionsButton->setEnabled(true);
 
     //-----------------------------------------------------------------------------
     // Dialog initialization of the generated Dialog
@@ -946,4 +940,3 @@ void EditDialogUI::SetComboBoxGUI(bool ControlSelected /* = false */)
         getButton(IDC_DELETEBUTTON)->setEnabled(true);
     }
 }
-

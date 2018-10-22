@@ -4,15 +4,15 @@
 #include "RenderTypes.h"
 
 enum class MouseEventType{Unknown = 0,
-		      LeftButton,
-		      DoubleLeftButton,
-		      MiddleButton,
-		      DoubleMiddleButton,
-		      RightButton,
-		      DoubleRightButton,
-		      ScrollHoriz,
-		      ScrollVert,
-		      MouseMoved};
+                          LeftButton,
+                          DoubleLeftButton,
+                          MiddleButton,
+                          DoubleMiddleButton,
+                          RightButton,
+                          DoubleRightButton,
+                          ScrollHoriz,
+                          ScrollVert,
+                          MouseMoved};
 
 class MouseEvent
 {

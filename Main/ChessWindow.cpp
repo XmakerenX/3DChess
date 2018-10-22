@@ -122,9 +122,9 @@ void ChessWindow::initPromotionMenu()
 //-----------------------------------------------------------------------------
 void ChessWindow::renderGUI()
 {
-      m_dialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
-      m_optionDialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
-      m_promotionGUI.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
+      m_dialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
+      m_optionDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
+      m_promotionGUI.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
 }
 
 //-----------------------------------------------------------------------------
@@ -226,7 +226,7 @@ void ChessWindow::onCredits(ButtonUI* creditsButton)
 //-----------------------------------------------------------------------------
 void ChessWindow::onExitPressed(ButtonUI* exitButton)
 {
-    gameRunning = false;
+    m_gameRunning = false;
 }
 
 //-----------------------------------------------------------------------------

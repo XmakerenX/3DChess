@@ -11,24 +11,24 @@
 struct LIGHT_PREFS
 {
     LIGHT_PREFS()
-	:pos(0.0f, 0.0f, 0.0f),
-	dir(0.0f, 0.0f, 0.0f, 0.0f),
-	attenuation(0.0f, 0.0f, 0.0f),
-	ambient(0.0f, 0.0f, 0.0f, 0.0f),
-	diffuse(0.0f, 0.0f, 0.0f, 0.0f),
-	specular(0.0f, 0.0f, 0.0f, 0.0f),
-	outerCutoff(0.0f)
+        :pos(0.0f, 0.0f, 0.0f),
+        dir(0.0f, 0.0f, 0.0f, 0.0f),
+        attenuation(0.0f, 0.0f, 0.0f),
+        ambient(0.0f, 0.0f, 0.0f, 0.0f),
+        diffuse(0.0f, 0.0f, 0.0f, 0.0f),
+        specular(0.0f, 0.0f, 0.0f, 0.0f),
+        outerCutoff(0.0f)
     {}
 
     LIGHT_PREFS(glm::vec3& newPos, glm::vec4& newDir, glm::vec3& newAtten, glm::vec4& newAmbient,
-		glm::vec4 newDiffuse, glm::vec4 newSpecular, float newSpecPower)
-	:pos(newPos),
-	 dir(newDir),
-	 attenuation(newAtten),
-	 ambient(newAmbient),
-	 diffuse(newDiffuse),
-	 specular(newSpecular),
-	 outerCutoff(newSpecPower)
+                glm::vec4 newDiffuse, glm::vec4 newSpecular, float newSpecPower)
+        :pos(newPos),
+         dir(newDir),
+         attenuation(newAtten),
+         ambient(newAmbient),
+         diffuse(newDiffuse),
+         specular(newSpecular),
+         outerCutoff(newSpecPower)
     {}
 
     glm::vec3 pos;
@@ -75,15 +75,15 @@ public:
     
     std::string& getStatus()
     {
-        return status;
+        return m_status;
     }
 
 
 protected:
     std::vector<Object> m_objects;
     AssetManager m_assetManager;
-    static const std::string meshShaderPath2;
-    Object* curObj;
+    static const std::string s_meshShaderPath2;
+    Object* m_curObj;
     
     FreeCam m_camera;
     int m_faceCount;
@@ -91,22 +91,22 @@ protected:
     
     Shader* meshShader;
     // cache for unifrom variable location
-    GLuint projectionLoc;
-    GLuint matWorldLoc;
-    GLuint matWorldInverseLoc;
-    GLuint vecEyeLoc;
+    GLuint m_projectionLoc;
+    GLuint m_matWorldLoc;
+    GLuint m_matWorldInverseLoc;
+    GLuint m_vecEyeLoc;
 
-    GLuint ubMaterialIndex;
-    GLuint ubMaterial;
+    GLuint m_ubMaterialIndex;
+    GLuint m_ubMaterial;
 
-    LIGHT_PREFS light[4];
-    int nActiveLights;
-    GLuint ubLightIndex;
-    GLuint ubLight;
+    LIGHT_PREFS m_light[4];
+    int m_nActiveLights;
+    GLuint m_ubLightIndex;
+    GLuint m_ubLight;
 
     Attribute m_lastUsedAttrib;
     
-    std::string status;
+    std::string m_status;
 };
 
 #endif  //_SCENE_H

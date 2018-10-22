@@ -85,25 +85,25 @@ protected:
     GLuint m_winWidth;
     GLuint m_winHeight;
 
-    bool gameRunning;
+    bool m_gameRunning;
 
-    Timer timer;
+    Timer m_timer;
 
     Scene* m_scene;
     bool m_sceneInput;
     Object* selectedObj;
 
-    bool keysStatus[256];
-    Point oldCursorLoc;
-    bool mouseDrag;
+    bool m_keysStatus[256];
+    Point m_oldCursorLoc;
+    bool m_mouseDrag;
 
     AssetManager m_asset;
-    mkFont* font_;
+    mkFont* m_font;
     Sprite m_sprites[2];
     Sprite m_topSprites[2];
 
-    Shader* spriteShader;
-    Shader* spriteTextShader;
+    Shader* m_spriteShader;
+    Shader* m_spriteTextShader;
 };
 
 #endif  //_BASEGAMEWIN_H

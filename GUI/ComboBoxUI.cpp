@@ -46,8 +46,7 @@ ComboBoxUI<T>::ComboBoxUI(std::istream& inputFile)
 //-----------------------------------------------------------------------------
 template<class T>
 ComboBoxUI<T>::~ComboBoxUI(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : onInit()
@@ -242,10 +241,7 @@ void ComboBoxUI<T>::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRIT
 
     //if Combobox is open render the scrollbar
     if (m_bOpened)
-    {
-        //m_dropDown.Render(topSprites, topSprites, timeStamp);
         m_dropDown.Render(topSprites, sprites, timeStamp);
-    }
 
     // Render the main combobox elements
     glm::vec4 tintColor;
@@ -518,6 +514,7 @@ bool ComboBoxUI<T>::SetSelectedByText( std::string strText )
 template<class T>
 bool ComboBoxUI<T>::SetSelectedByData( void* pData )
 {
+    //TODO: implement this function
 //    for( GLuint i = 0; i < m_Items.size(); i++ )
 //    {
 //        ComboBoxItem* pItem = m_Items[i];

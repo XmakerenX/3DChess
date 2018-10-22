@@ -5,7 +5,7 @@
 // Name : CheckboxUI (Constructor)
 //-----------------------------------------------------------------------------
 CheckboxUI::CheckboxUI(DialogUI* pParentDialog, int ID, int x, int y, GLuint width, GLuint height, GLuint nHotkey)
-:ButtonUI(pParentDialog, ID, "", x, y, width, height, nHotkey)
+    :ButtonUI(pParentDialog, ID, "", x, y, width, height, nHotkey)
 {
     m_type = CHECKBOX;
     m_bChecked = false;
@@ -27,8 +27,7 @@ CheckboxUI::CheckboxUI(std::istream& inputFile)
 // Name : CCheckboxUI (destructor)
 //-----------------------------------------------------------------------------
 CheckboxUI::~CheckboxUI(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : Render ()
@@ -86,6 +85,10 @@ bool CheckboxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mo
                     return true;
         }
     }break;
+    
+    default:
+        return false;
+    
     }
 
     return false;

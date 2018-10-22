@@ -3,12 +3,6 @@
 
 //initialization of static vars
 PIECES bishop::type = BISHOP;
-//-----------------------------------------------------------------------------
-// Name : Bishop (constructor)
-//-----------------------------------------------------------------------------
-// bishop::bishop(void)
-// {
-// }
 
 //-----------------------------------------------------------------------------
 // Name : Bishop (constructor)
@@ -26,8 +20,7 @@ bishop::bishop(int playerColor, BOARD_POINT _boardPoistion)
 // Name : Bishop (destructor)
 //-----------------------------------------------------------------------------
 bishop::~bishop(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : validateNewPos
@@ -74,8 +67,3 @@ int bishop::getType()
 {
     return bishop::type;
 }
-
-// float bishop::getYpos()
-// {
-// 	return bishop::Ypos;
-// } 

@@ -38,16 +38,13 @@ StaticUI::StaticUI(std::istream& inputFile)
     inputFile >> textOrientation;
     m_textOrientation = static_cast<mkFont::TextFormat>(textOrientation);
     inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-    
-    //m_textOrientation = mkFont::TextFormat::VerticalCenter;
 }
 
 //-----------------------------------------------------------------------------
 // Name : StaticUI (Destructor)
 //-----------------------------------------------------------------------------
 StaticUI::~StaticUI(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : setTextColor ()

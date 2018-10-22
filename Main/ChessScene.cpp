@@ -53,41 +53,41 @@ void ChessScene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("board.gen"),
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
     m_lastIndex++;
     
     boardObject = &m_objects[m_objects.size() - 1];
     // add frame object
     std::vector<unsigned int> frameSquareAttribute;
-    frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", WHITE_MATERIAL, meshShaderPath2));
+    frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", WHITE_MATERIAL, s_meshShaderPath2 ));
     
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.001f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("square.gen"),
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
     m_lastIndex++;
     
     m_objects[m_objects.size() - 1].SetObjectAttributes(frameSquareAttribute);
         
-    curObj = &m_objects[m_objects.size() - 1];
+    m_curObj = &m_objects[m_objects.size() - 1];
     // add skybox object
     m_objects.emplace_back(m_assetManager,
                            m_camera.GetPosition(), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(200.0f, 200.0f, 200.0f), // scale
                            m_assetManager.getMesh("skybox.gen"),
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
     m_lastIndex++;
         
     std::vector<unsigned int> cubeAttribute;
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", WHITE_MATERIAL, meshShaderPath2));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posy.jpg", WHITE_MATERIAL, meshShaderPath2));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", WHITE_MATERIAL, meshShaderPath2));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", WHITE_MATERIAL, meshShaderPath2));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", WHITE_MATERIAL, meshShaderPath2));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", WHITE_MATERIAL, meshShaderPath2));    
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posy.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));    
     m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
     
     // get attribute needed for the board pawns and highlighted squares
@@ -95,30 +95,29 @@ void ChessScene::InitObjects()
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
                    glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
-    m_blackAttribute = m_assetManager.getAttribute("", black, meshShaderPath2);
+    m_blackAttribute = m_assetManager.getAttribute("", black, s_meshShaderPath2 );
     
     Material blue (glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
                    glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
                    glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
                    glm::vec4(0.0f, 0.0f, 0.8f, 0.4f), 8.0f);
-    m_blueAttribute = m_assetManager.getAttribute("", blue, meshShaderPath2);
+    m_blueAttribute = m_assetManager.getAttribute("", blue, s_meshShaderPath2 );
     
     Material red  (glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.0f, 0.0f, 0.4f), 8.0f);
-    m_redAttribute = m_assetManager.getAttribute("", red, meshShaderPath2);
+    m_redAttribute = m_assetManager.getAttribute("", red, s_meshShaderPath2 );
     
     Material yellow (glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f), 8.0f);
-    m_yellowAttribute = m_assetManager.getAttribute("", yellow, meshShaderPath2);
+    m_yellowAttribute = m_assetManager.getAttribute("", yellow, s_meshShaderPath2 );
     
     gameBoard = new board();
     gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
     gameBoard->connectToPieceMoved(boost::bind(&ChessScene::onChessPieceMoved, this, _1, _2, _3));
-    //gameBoard->connectToPieceKilled(boost::bind(&ChessScene::onChessPieceKilled, this, _1));
     
     gameBoard->init();
     
@@ -271,8 +270,6 @@ void ChessScene::RotateCamera(float frameTimeDelta)
     {
         float eyeX = -80*glm::cos(m_rotationAngle) - glm::sin(m_rotationAngle);
         float eyeZ = -80*sin(m_rotationAngle) - cos(m_rotationAngle);
-        //float eyeX = -80*glm::cos(angle);
-        //float eyeZ = -80*sin(angle);
         eyeX += 40;
         eyeZ += 40;            
         glm::vec3 temp = m_camera.GetPosition();
@@ -353,11 +350,11 @@ void ChessScene::Drawing(double frameTimeDelta)
     RotateCamera(frameTimeDelta);
     Scene::Drawing(frameTimeDelta);
     
-    status = gameBoard->getBoardStatus();
+    m_status = gameBoard->getBoardStatus();
     glm::vec3 cameraPos = m_camera.GetPosition();
     std::stringstream ss;
     ss << cameraPos.x << " " << cameraPos.y << " " << cameraPos.z;
-    status = ss.str();
+    m_status = ss.str();
 }
 
 //-----------------------------------------------------------------------------
@@ -451,7 +448,7 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
                            pieceRotaion, // rotation
                            pieceScale, // scale
                            m_assetManager.getMesh(meshPath),
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
     m_lastIndex++;
     
     pieceObjects[pieceBoardPoint.y][pieceBoardPoint.x] = m_objects.size() - 1;
@@ -577,7 +574,7 @@ void ChessScene::hightlightBoardSquare(Point squareToHightlight, GLuint attribut
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("square.gen"),
-                           meshShaderPath2);
+                             s_meshShaderPath2 );
                             
     std::vector<GLuint> m_squareAttribute;
     m_squareAttribute.push_back(attributeID);

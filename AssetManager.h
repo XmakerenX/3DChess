@@ -32,17 +32,17 @@
 
 struct TextureInfo
 {
-	TextureInfo()
-		:width(0), height(0)
-	{}
-	TextureInfo(int _width, int _height)
-	{
-		width = _width;
-		height = _height;
-	}
+        TextureInfo()
+            :width(0), height(0)
+        {}
+        TextureInfo(int _width, int _height)
+        {
+                width = _width;
+                height = _height;
+        }
 
-	int width;
-	int height;
+        int width;
+        int height;
 };
 
 class AssetManager
@@ -52,7 +52,7 @@ public:
     ~AssetManager();
 
     GLuint    getTexture(const std::string& filePath);
-	const TextureInfo& getTextureInfo(GLuint textureName);
+    const TextureInfo& getTextureInfo(GLuint textureName);
 
 
     Mesh*     getMesh(const std::string& meshPath);
@@ -80,7 +80,7 @@ private:
     const unsigned long START_TEXTURE_SIZE = 100;
 
     std::unordered_map<std::string,GLuint>   m_textureCache;
-	std::unordered_map<GLuint, TextureInfo>  m_textureInfoCache;
+    std::unordered_map<GLuint, TextureInfo>  m_textureInfoCache;
     std::unordered_map<std::string, Mesh>    m_meshCache;
     std::unordered_map<std::string, Shader*> m_shaderCache;
     std::unordered_map< std::string, mkFont> m_fontCache;

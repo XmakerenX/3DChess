@@ -5,14 +5,6 @@ PIECES queen::type = QUEEN;
 //-----------------------------------------------------------------------------
 // Name : queen (constructor)
 //-----------------------------------------------------------------------------
-// queen::queen(void)
-// {
-// 
-// }
-
-//-----------------------------------------------------------------------------
-// Name : queen (constructor)
-//-----------------------------------------------------------------------------
 queen::queen(int playerColor, BOARD_POINT _boardPoistion)
     :piece(playerColor, _boardPoistion)
 {
@@ -26,8 +18,7 @@ queen::queen(int playerColor, BOARD_POINT _boardPoistion)
 // Name : knight (destructor)
 //-----------------------------------------------------------------------------
 queen::~queen(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : validateNewPos
@@ -79,8 +70,3 @@ int queen::getType()
 {
     return queen::type;
 }
-
-// float queen::getYpos()
-// {
-// 	return queen::Ypos;
-// } 

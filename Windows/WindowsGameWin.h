@@ -35,10 +35,10 @@ struct MonitorInfo
         Mode(DEVMODE _deviceMode ,GLuint _width, GLuint _height, GLuint _frequency)
         :width(_width), height(_height), frequency(_frequency)
         {
-			deviceMode = _deviceMode;
-		}
+            deviceMode = _deviceMode;
+        }
 
-		DEVMODE deviceMode;
+        DEVMODE deviceMode;
         GLuint width;
         GLuint height;
         GLuint frequency;
@@ -59,7 +59,7 @@ struct MonitorInfo
     }
     
     int index;
-	std::string deviceName;
+    std::string deviceName;
     Rect positionRect;
     std::vector<Mode> modes;
 };
@@ -67,9 +67,9 @@ struct MonitorInfo
 class WindowsGameWin : public BaseGameWin
 {
 public:
-	WindowsGameWin();
+    WindowsGameWin();
     virtual ~WindowsGameWin();
-	void setHINSTANCE(HINSTANCE hInstance);
+    void setHINSTANCE(HINSTANCE hInstance);
     
     bool initWindow     ();
     bool initOpenGL     (int width, int height);
@@ -79,14 +79,14 @@ public:
     int  BeginGame      ();
     bool Shutdown       ();
 
-	void setFullScreenMode(bool fullscreen);
-	bool setMonitorResolution(int monitorIndex, Resolution newResolution);
-	void setWindowPosition(int x, int y);
-	void setWindowSize(GLuint width, GLuint height);
-	void moveWindowToMonitor(int monitorIndex);
+    void setFullScreenMode(bool fullscreen);
+    bool setMonitorResolution(int monitorIndex, Resolution newResolution);
+    void setWindowPosition(int x, int y);
+    void setWindowSize(GLuint width, GLuint height);
+    void moveWindowToMonitor(int monitorIndex);
 
-	void setCursorPos(Point newPos);
-	Point getCursorPos();
+    void setCursorPos(Point newPos);
+    Point getCursorPos();
 
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
@@ -99,18 +99,18 @@ public:
     std::vector<std::vector<Mode1>> getMonitorsModes() const;
     
 protected:    
-	LRESULT CALLBACK windowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
-	static LRESULT CALLBACK staticWindowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+    LRESULT CALLBACK windowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK staticWindowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
-	virtual void glSwapBuffers();
-	virtual void getMonitorsInfo();
+    virtual void glSwapBuffers();
+    virtual void getMonitorsInfo();
         
     static std::string s_clipboardString;
     
-	HINSTANCE m_hInstance;
-	HWND m_hWnd;
-	HDC	m_hDC;
-	HGLRC m_hRC;
+    HINSTANCE m_hInstance;
+    HWND m_hWnd;
+    HDC	m_hDC;
+    HGLRC m_hRC;
 
     std::vector<MonitorInfo> m_monitors;
     GLuint m_primaryMonitorIndex;

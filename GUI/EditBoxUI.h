@@ -10,16 +10,16 @@ class EditBoxUI : public ControlUI
 {
 public:
     typedef boost::signals2::signal<void (EditBoxUI*)>  signal_editbox;
-	//-------------------------------------------------------------------------
-	// Constructors & Destructors for This Class.
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Constructors & Destructors for This Class.
+    //-------------------------------------------------------------------------
                         EditBoxUI(DialogUI *pParentDialog, int ID, std::string strText, int x, int y, int width, int height);
                         EditBoxUI(std::istream& inputFile);
     virtual             ~EditBoxUI(void);
 
-	//-------------------------------------------------------------------------
-	// Functions that handle user input logic
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Functions that handle user input logic	
+    //-------------------------------------------------------------------------
     virtual bool        handleKeyEvent      (unsigned char key , bool down);
     virtual bool        handleVirtualKey    (GK_VirtualKey virtualKey , bool down, const ModifierKeysStates &modifierStates);
     virtual bool        handleMouseEvent    (MouseEvent event, const ModifierKeysStates &modifierStates);
@@ -29,9 +29,9 @@ public:
     virtual bool        Dragged             (Point pt);
 
             void        connectToEditboxChg (const signal_editbox::slot_type& subscriber);
-	//-------------------------------------------------------------------------
-	// Functions that handle Rendering Logic
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Functions that handle Rendering Logic
+    //-------------------------------------------------------------------------
     virtual bool        CanHaveFocus    ();
     virtual void        OnFocusIn       ();
     virtual void        OnFocusOut      ();
@@ -89,11 +89,11 @@ protected:
 
     boost::signals2::signal<void (EditBoxUI*)> m_editboxChangedSig;
 
-	// Mouse-specific
-	bool m_bMouseDrag;       // True to indicate drag in progress
+    // Mouse-specific
+    bool m_bMouseDrag;       // True to indicate drag in progress
 
-	// Static
-	static bool s_bHideCaret;   // If true, we don't render the caret.s
+    // Static
+    static bool s_bHideCaret;   // If true, we don't render the caret.s
     static int s_caretBlinkTime;
 };
 

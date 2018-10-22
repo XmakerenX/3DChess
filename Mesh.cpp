@@ -4,25 +4,23 @@
 // Name : Mesh (constructor)
 //-----------------------------------------------------------------------------
 Mesh::Mesh()
-{
-	
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : Mesh (constructor)
 //-----------------------------------------------------------------------------
 Mesh::Mesh(std::vector<SubMesh> sMeshes)
 {
-	subMeshes = sMeshes;
+    subMeshes = sMeshes;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Mesh (constructor)
 //-----------------------------------------------------------------------------
 Mesh::Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials, std::vector<std::string> dTextures)
-:subMeshes(sMeshes),
- defaultMaterials(dMaterials),
- defaultTextures(dTextures)
+    :subMeshes(sMeshes),
+     defaultMaterials(dMaterials),
+     defaultTextures(dTextures)
 {
     // add empty texture for every material that doesn't have one
     for (int i = defaultTextures.size(); i < defaultMaterials.size(); i++)
@@ -34,7 +32,7 @@ Mesh::Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials, std::ve
 //-----------------------------------------------------------------------------
 void Mesh::Mesh::Draw(unsigned int subMeshIndex)
 {
-	subMeshes[subMeshIndex].Draw();
+    subMeshes[subMeshIndex].Draw();
 }
 
 //-----------------------------------------------------------------------------
@@ -42,7 +40,7 @@ void Mesh::Mesh::Draw(unsigned int subMeshIndex)
 //-----------------------------------------------------------------------------
 void Mesh::addSubMesh(SubMesh subMesh)
 {
-	subMeshes.push_back(subMesh);
+    subMeshes.push_back(subMesh);
 }
 
 //-----------------------------------------------------------------------------
@@ -88,4 +86,3 @@ std::vector<std::string>& Mesh::getDefaultTextures()
 {
     return defaultTextures;
 }
-

@@ -102,7 +102,7 @@ glm::vec3 FbxLoader::readFBXNormal(FbxMesh* mesh, int controlPointIndex, int ver
     glm::vec3 retNormal = glm::vec3(0.0f, 0.0f, 0.0f);
     if (mesh->GetElementNormalCount() < 1)
     {
-        std::cout << "nvalid Normal Number\n";
+        std::cout << "Invalid Normal Number\n";
         //TODO: find why std::expection wont fucking work
         //throw std::exception("Invalid Normal Number");
         return glm::vec3(0.0f, 0.0f, 0.0f);

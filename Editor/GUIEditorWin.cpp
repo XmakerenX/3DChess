@@ -1,9 +1,7 @@
 #include "GUIEditorWin.h" 
 
 GUIEditorWin::GUIEditorWin() : m_editDialog(this)
-{
-    
-}
+{}
 
 void GUIEditorWin::initGUI()
 {
@@ -15,7 +13,7 @@ void GUIEditorWin::initGUI()
 
 void GUIEditorWin::renderGUI()
 {
-    m_editDialog.OnRender(m_sprites, m_topSprites, m_asset, timer.getCurrentTime());
+    m_editDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
 }
 
 void GUIEditorWin::sendKeyEvent(unsigned char key, bool down)

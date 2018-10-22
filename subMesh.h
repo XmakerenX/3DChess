@@ -25,8 +25,8 @@ struct Vertex {
 class SubMesh {
 
 public:
-    std::vector<Vertex> vertices;
-    std::vector<VertexIndex> indices;
+    std::vector<Vertex> m_vertices;
+    std::vector<VertexIndex> m_indices;
 
     SubMesh(const std::vector<Vertex>& vertices, const std::vector<VertexIndex>& indices);
 
@@ -38,7 +38,7 @@ public:
     void CalcVertexNormals(GLfloat angle);
 
 private:
-    GLuint VAO, VBO, EBO;
+    GLuint m_VAO, m_VBO, m_EBO;
 
     void setupMesh();
 };

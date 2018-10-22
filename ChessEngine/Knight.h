@@ -10,9 +10,6 @@ public:
     ~knight(void);
     bool validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX]);
     int   getType();
-// 	float getYpos();
-// 
-// 	static float    Ypos;
 
 private:
     static PIECES   type;

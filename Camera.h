@@ -114,7 +114,6 @@ protected:
     glm::mat4x4 m_mtxView; // Cached view matrix
     glm::mat4x4 m_mtxProj; // Cached projection matrix
     PLANE3D m_Frustum[6];
-    //D3DXPLANE m_Frustum[6]; // The 6 planes of our frustum.
 
     bool m_bViewDirty;
     bool m_bProjDirty;
@@ -125,7 +124,6 @@ protected:
     float m_fNearClip;
     float m_fFarClip;
     VIEWPORT m_viewPort;
-    //D3DVIEWPORT9 m_Viewport; // The viewport details into which we are rendering.
 
     // Camera current position & orientation
     glm::vec3 m_vecPos;

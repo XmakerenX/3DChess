@@ -94,8 +94,8 @@ private:
         unsigned long m_GenControlNum;
 
         GLuint m_curControlID;
-	bool m_controlInCreation;
-	bool m_controlRelocate;
+        bool m_controlInCreation;
+        bool m_controlRelocate;
         ControlUI * m_pCurSelectedControl;
 };
 

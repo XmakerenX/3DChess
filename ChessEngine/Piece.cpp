@@ -5,17 +5,15 @@
 //-----------------------------------------------------------------------------
 piece::piece(int playerColor, BOARD_POINT _boardPoistion) : boardPoistion(_boardPoistion)
 {
-	m_onStartPoint = true;
-	this->color = playerColor;
+    m_onStartPoint = true;
+    this->color = playerColor;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Piece (destructor)
 //-----------------------------------------------------------------------------
 piece::~piece(void)
-{
-
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : setMoved 

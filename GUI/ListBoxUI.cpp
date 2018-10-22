@@ -52,8 +52,7 @@ ListBoxUI<T>::ListBoxUI(std::istream& inputFile)
 //-----------------------------------------------------------------------------
 template<class T>
 ListBoxUI<T>::~ListBoxUI(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : onInit()
@@ -61,7 +60,7 @@ ListBoxUI<T>::~ListBoxUI(void)
 template<class T>
 bool ListBoxUI<T>::onInit()
 {
-	return m_pParentDialog->initControl( &m_ScrollBar );
+    return m_pParentDialog->initControl( &m_ScrollBar );
 }
 
 //-----------------------------------------------------------------------------

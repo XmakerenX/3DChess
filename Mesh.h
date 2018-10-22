@@ -7,7 +7,6 @@
 class Mesh {
 
 public:
-    // Constructor
     Mesh();
     Mesh(std::vector<SubMesh> sMeshes);
     Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials,

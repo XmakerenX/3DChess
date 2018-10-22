@@ -15,55 +15,54 @@ struct Model;
 
 struct Group
 {
-	Group(std::string& rName);
+    Group(std::string& rName);
 
-	GLushort addVertex(glm::vec3 pos, glm::vec3 normal, glm::vec2 texCords);
-	GLushort addVertex(Model& model,int* v, int* t, int* n);
+    GLushort addVertex(glm::vec3 pos, glm::vec3 normal, glm::vec2 texCords);
+    GLushort addVertex(Model& model,int* v, int* t, int* n);
 
-	std::string name;
-	GLuint numTrinagles;
+    std::string name;
+    GLuint numTrinagles;
 
-	std::vector<Vertex> vertices;
+    std::vector<Vertex> vertices;
     std::vector<VertexIndex> indices;
 
-	GLuint material;
+    GLuint material;
 };
 
 struct Model
 {
-	Model(std::string newMeshPath);
-	~Model();
+    Model(std::string newMeshPath);
+    ~Model();
 
-	Group& addGroup(std::string name);
+    Group& addGroup(std::string name);
 
-	std::string meshPath;
-	std::string matrialPath;
+    std::string meshPath;
+    std::string matrialPath;
 
-	GLuint numVertices;
-	GLfloat* verticesPos;
+    GLuint numVertices;
+    GLfloat* verticesPos;
 
-	GLuint numNormals;
-	GLfloat* normals;
+    GLuint numNormals;
+    GLfloat* normals;
 
-	GLuint numTexCords;
-	GLfloat* texCords;
+    GLuint numTexCords;
+    GLfloat* texCords;
 
-	GLuint numfaceNormals;
-	GLfloat* faceNormals;
+    GLuint numfaceNormals;
+    GLfloat* faceNormals;
 
-	GLuint numTrinagles;
+    GLuint numTrinagles;
+    GLuint numMaterials;
+    GLuint numGroups;
+    
+    std::vector<Group> groups;
+    std::unordered_map<std::string,GLuint> materials;
 
-	GLuint numMaterials;
-
-	GLuint numGroups;
-	std::vector<Group> groups;
-	std::unordered_map<std::string,GLuint> materials;
-
-	glm::vec3 pos;
+    glm::vec3 pos;
 };
 
-void 	 objFirstPass(AssetManager &asset, std::ifstream& in , Model& model);
-void 	 objSecondPass(std::ifstream& in ,Model& model);
-void	 objReadMatrial(AssetManager& asset, Model& model, std::string matrialPath);
+void objFirstPass(AssetManager &asset, std::ifstream& in , Model& model);
+void objSecondPass(std::ifstream& in ,Model& model);
+void objReadMatrial(AssetManager& asset, Model& model, std::string matrialPath);
 
-#endif
+#endif // _OBJLOADER_H

@@ -28,15 +28,13 @@ ButtonUI::ButtonUI(std::istream& inputFile)
     m_bPressed = false;
     setHotKey(nHotkey);
     inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-    //m_textOrientation = mkFont::TextFormat::Center;
 }
 
 //-----------------------------------------------------------------------------
 // Name : CButtonUI (destructor)
 //-----------------------------------------------------------------------------
 ButtonUI::~ButtonUI(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : Render ()
@@ -97,7 +95,12 @@ bool ButtonUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modi
                 return true;
         }
     }break;
+    
+    default:
+        return false;
+    
     }
+    
     return false;
 }
 
@@ -187,11 +190,9 @@ void ButtonUI::connectToClick(const signal_clicked::slot_type& subscriber)
 //-----------------------------------------------------------------------------
 bool ButtonUI::SaveToFile(std::ostream& SaveFile)
 {
-    StaticUI::SaveToFile(SaveFile);
-
-    SaveFile << m_nHotkey << "| Button HotKey" << "\n";
-
     //TODO: add the abilty to save custom buttons
+    StaticUI::SaveToFile(SaveFile);
+    SaveFile << m_nHotkey << "| Button HotKey" << "\n";
     return true;
 }
 

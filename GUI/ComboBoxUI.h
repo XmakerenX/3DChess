@@ -59,8 +59,8 @@ public:
     void            RemoveAllItems      ();
     int             FindItem            (std::string strText, GLuint iStart = 0);
     bool            ContainsItem        (std::string strText, GLuint iStart = 0);
-    void*           GetItemData         (std::string strText);
-    void*           GetItemData         (int nIndex);
+    void *          GetItemData         (std::string strText);
+    void *          GetItemData         (int nIndex);
 
     void            SetDropHeight       (GLuint nHeight);
 
@@ -69,11 +69,11 @@ public:
 
     int             GetSelectedIndex    () const;
 
-    T*            GetSelectedData     ();
-    Item<T> *     GetSelectedItem     ();
+    T *             GetSelectedData     ();
+    Item<T> *       GetSelectedItem     ();
 
     GLuint          GetNumItems         ();
-    Item<T>  *    GetItem             (GLuint index);
+    Item<T>  *      GetItem             (GLuint index);
 
     bool            SetSelectedByIndex  (GLuint index);
     bool            SetSelectedByText   (std::string strText);

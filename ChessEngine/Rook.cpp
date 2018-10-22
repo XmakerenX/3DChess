@@ -5,13 +5,6 @@ PIECES rook::type = ROOK;
 //-----------------------------------------------------------------------------
 // Name : Rook (constructor)
 //-----------------------------------------------------------------------------
-// rook::rook(void)
-// {
-// }
-
-//-----------------------------------------------------------------------------
-// Name : Rook (constructor)
-//-----------------------------------------------------------------------------
 rook::rook(int playerColor, BOARD_POINT _boardPoistion)
     :piece(playerColor, _boardPoistion)
 {
@@ -25,8 +18,7 @@ rook::rook(int playerColor, BOARD_POINT _boardPoistion)
 // Name : Rook (destructor)
 //-----------------------------------------------------------------------------
 rook::~rook(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : validateNewPos
@@ -74,8 +66,3 @@ int rook::getType()
 {
     return rook::type;
 }
-
-// float rook::getYpos()
-// {
-// 	return rook::Ypos;
-// }

@@ -1,10 +1,10 @@
 #ifndef _PIECE_H_
 #define _PIECE_H_
 
-//#include "../rendering/CMyObject.h"
 #include "Chess.h"
 
-class piece //: public CMyObject // the base class to all the chess pieces
+// the base class to all the chess pieces
+class piece
 {
 public:
 
@@ -18,7 +18,8 @@ public:
     // Pure Virtual functions of this class
     //-------------------------------------------------------------------------
     virtual bool  validateNewPos(int dx,int dy, BOARD_POINT startSqaure, BOARD_POINT targetSquare,piece * SBoard[boardY][boardX])=0; 
-    virtual int   getType() = 0; //returns the piece type PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING
+    // returns the piece type PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING
+    virtual int   getType() = 0; 
 
     //-------------------------------------------------------------------------
     // misc Functions

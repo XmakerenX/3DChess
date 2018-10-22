@@ -82,17 +82,17 @@ bool DialogUI::init(GLuint width, GLuint height, int nCaptionHeight, std::string
         // load the texture for the dialog background
         textureName = assetManger.getTexture(newTexturePath);
         // get the texture width and height
-		if (glGetTextureLevelParameteriv != nullptr)
-		{
-			glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_WIDTH, &m_texWidth);
-			glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_HEIGHT, &m_texHeight);
-		}
-		else
-		{
-			TextureInfo textureInfo = assetManger.getTextureInfo(textureName);
-			m_texWidth = textureInfo.width;
-			m_texHeight = textureInfo.height;
-		}
+        if (glGetTextureLevelParameteriv != nullptr)
+        {
+            glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_WIDTH, &m_texWidth);
+            glGetTextureLevelParameteriv(textureName, 0, GL_TEXTURE_HEIGHT, &m_texHeight);
+        }
+        else
+        {
+            TextureInfo textureInfo = assetManger.getTextureInfo(textureName);
+            m_texWidth = textureInfo.width;
+            m_texHeight = textureInfo.height;
+        }
 
         m_texturePath = newTexturePath;
     }
@@ -364,12 +364,12 @@ bool DialogUI::OnRender(Sprite sprites[ControlUI::SPRITES_SIZE], Sprite topSprit
         textureName = assetManger.getTexture(m_texturePath);
         if (textureName == NO_TEXTURE)
             std::cout << "Failed to load the dialog texture " << m_texturePath << "\n";
-		else
-		{
-			TextureInfo texInfo = assetManger.getTextureInfo(textureName);
-			textureWidth = texInfo.width;
-			textureHeight = texInfo.height;
-		}
+        else
+        {
+            TextureInfo texInfo = assetManger.getTextureInfo(textureName);
+            textureWidth = texInfo.width;
+            textureHeight = texInfo.height;
+        }
     }
 
     sprites[ControlUI::NORMAL].AddTintedTexturedQuad(m_rcBoundingBox, m_dialogColor, Texture(textureName, textureWidth, textureHeight));
@@ -557,8 +557,8 @@ void DialogUI::ClearRadioButtonGruop(GLuint nButtonGroup)
 //-----------------------------------------------------------------------------
 // Name : OnMouseMove
 // Desc : being called each time the mouse is moved
-//		  check if the mouse is over a control
-//		  if it is highlight that control.
+//        check if the mouse is over a control
+//        if it is highlight that control.
 //-----------------------------------------------------------------------------
 void DialogUI::OnMouseMove(Point pt)
 {
@@ -604,7 +604,7 @@ void DialogUI::OnMouseMove(Point pt)
 // Name : getControlAtPoint
 // Desc : check if the given point is inside
 //        one of the controls that is in the dialog
-//		  and if found returns a pointer to that control
+//        and if found returns a pointer to that control
 //-----------------------------------------------------------------------------
 ControlUI* DialogUI::getControlAtPoint(Point pt)
 {
@@ -737,6 +737,7 @@ bool DialogUI::addListBox(int ID, int x, int y, int width, int height, bool mult
     ListBoxUI<int>* pListBox = new ListBoxUI<int>(this, ID, x, y, width, height, multiSelection);
 
     initControl(pListBox);
+    //TODO: answer this !!!
     // !!! list box needs to update it's Rects on init
     // why?
     pListBox->UpdateRects();
@@ -1106,7 +1107,7 @@ void DialogUI::setCaption(bool bCaption)
 //-----------------------------------------------------------------------------
 // Name : UpdateRects()
 // Desc : Update the dialog bounding box and it's caption box every tine the dialog
-//		  is moved
+//        is moved
 //-----------------------------------------------------------------------------
 void DialogUI::UpdateRects()
 {
@@ -1179,8 +1180,6 @@ void DialogUI::ClearFocus()
         m_pControlFocus->OnFocusOut();
         m_pControlFocus = NULL;
     }
-
-    //ReleaseCapture();
 }
 
 //-----------------------------------------------------------------------------

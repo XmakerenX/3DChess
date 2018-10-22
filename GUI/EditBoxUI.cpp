@@ -6,7 +6,6 @@
 bool EditBoxUI::s_bHideCaret;
 int EditBoxUI::s_caretBlinkTime = 100;
 
-
 //-----------------------------------------------------------------------------
 // Define << and >> operators for glm::vec4
 //-----------------------------------------------------------------------------
@@ -103,8 +102,7 @@ EditBoxUI::EditBoxUI(std::istream& inputFile)
 // Name : CEditBoxUI(destructor) 
 //-----------------------------------------------------------------------------
 EditBoxUI::~EditBoxUI(void)
-{
-}
+{}
 
 //-----------------------------------------------------------------------------
 // Name : handleKeyEvent()
@@ -402,30 +400,29 @@ bool EditBoxUI::handleMouseEvent(MouseEvent event, const ModifierKeysStates &mod
 //-----------------------------------------------------------------------------
 bool EditBoxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, double timeStamp)
 {
-	if( !ContainsPoint( pt ) )
-		return false;
+    if( !ContainsPoint( pt ) )
+        return false;
 
-	if( !m_bHasFocus )
-		m_pParentDialog->RequestFocus( this );
+    if( !m_bHasFocus )
+        m_pParentDialog->RequestFocus( this );
 
-	m_bMouseDrag = true;
-	// Determine the character corresponding to the coordinates.
- 	int nCP;//, nTrail, nX1st;
-
-    nCP = calcCaretPosByPoint(pt);
+    m_bMouseDrag = true;
+    // Determine the character corresponding to the coordinates.
+    int nCP = calcCaretPosByPoint(pt);
 
     if (nCP > m_buffer.size())
         nCP = m_buffer.size();
 
-	// Cap at the NULL character.
+    // Cap at the NULL character.
     if(nCP >= 0 && nCP < (m_buffer.size() + 1) )
         placeCaret( nCP );
-	else
+    else
         placeCaret( 0 );
-	m_nSelStart = m_nCaret;
+    
+    m_nSelStart = m_nCaret;
     resetCaretBlink();
 
-	return true;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -433,9 +430,8 @@ bool EditBoxUI::Pressed(Point pt, const ModifierKeysStates &modifierStates, doub
 //-----------------------------------------------------------------------------
 bool EditBoxUI::Released( Point pt)
 {
-	m_bMouseDrag = false;
-
-	return false;
+    m_bMouseDrag = false;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -443,68 +439,65 @@ bool EditBoxUI::Released( Point pt)
 //-----------------------------------------------------------------------------
 bool EditBoxUI::Dragged( Point pt)
 {
-	if( m_bMouseDrag )
-	{
-		// Determine the character corresponding to the coordinates.
-		int nCP;//, nTrail, nX1st;
-        nCP = calcCaretPosByPoint(pt);
+    if( m_bMouseDrag )
+    {
+        // Determine the character corresponding to the coordinates.
+        int nCP = calcCaretPosByPoint(pt);
 
-		// Cap at the NULL character.
+        // Cap at the NULL character.
         if(nCP >= 0 && nCP < m_buffer.size() )
-		{
+        {
+            if (m_nCaret < m_nFirstVisible)
+                if (m_nFirstVisible > 0 && m_nBackwardChars < m_nFirstVisible)
+                {
+                    m_nBackwardChars += m_nFirstVisible - m_nCaret;
+                    if (m_nBackwardChars > m_nFirstVisible)
+                        m_nBackwardChars = m_nFirstVisible;
+                }
 
-			if (m_nCaret < m_nFirstVisible)
-				if (m_nFirstVisible > 0 && m_nBackwardChars < m_nFirstVisible)
-				{
-					m_nBackwardChars += m_nFirstVisible - m_nCaret;
+            if ( (m_nCaret + 1 - ( m_nFirstVisible - m_nBackwardChars ) ) > m_nVisibleChars )
+                if (m_nBackwardChars > 0)
+                {
+                    m_nBackwardChars -= m_nCaret - m_nVisibleChars;
 
-					if (m_nBackwardChars > m_nFirstVisible)
-						m_nBackwardChars = m_nFirstVisible;
-				}
-
-			if ( (m_nCaret + 1 - ( m_nFirstVisible - m_nBackwardChars ) ) > m_nVisibleChars )
-				if (m_nBackwardChars > 0)
-				{
-					m_nBackwardChars -= m_nCaret - m_nVisibleChars;
-
-					if (m_nBackwardChars < 0)
-						m_nBackwardChars = 0;
-				}
-			
+                    if (m_nBackwardChars < 0)
+                        m_nBackwardChars = 0;
+                }
+                
             placeCaret( nCP );
-
-			if ( nCP > m_nCaret)
+            
+            if ( nCP > m_nCaret)
                 calcFirstVisibleCharUp(true);
-			
-			if ( nCP < m_nCaret)
+            
+            if ( nCP < m_nCaret)
                 calcFirstVisibleCharDown();
-		}
-		else
-		{
+        }
+        else
+        {
             if (nCP < 0 || m_buffer.size() == 0)
-			{
-				nCP = 0;
-			}
+            {
+                nCP = 0;
+            }
 
             if (nCP > m_buffer.size())
-			{
+            {
                 nCP = m_buffer.size();
-				m_nBackwardChars = 0;
-			}
+                m_nBackwardChars = 0;
+            }
 
             placeCaret( nCP );
 
-			if ( nCP > m_nCaret)
+            if ( nCP > m_nCaret)
                 calcFirstVisibleCharUp(true);
 
-			if ( nCP < m_nCaret)
+            if ( nCP < m_nCaret)
                 calcFirstVisibleCharDown();
-		}
-		return true;
+        }
+        
+        return true;
+    }
 
-	}
-
-	return false;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -512,7 +505,7 @@ bool EditBoxUI::Dragged( Point pt)
 //-----------------------------------------------------------------------------
 void EditBoxUI::connectToEditboxChg(const signal_editbox::slot_type& subscriber)
 {
-	m_editboxChangedSig.connect(subscriber);
+    m_editboxChangedSig.connect(subscriber);
 }
 
 //-----------------------------------------------------------------------------
@@ -522,12 +515,12 @@ void EditBoxUI::UpdateRects()
 {
     ControlUI::UpdateRects();
 
-	// Update the text rectangle
-	m_rcText = m_rcBoundingBox;
-	// First inflate by m_nBorder to compute render rects
+    // Update the text rectangle
+    m_rcText = m_rcBoundingBox;
+    // First inflate by m_nBorder to compute render rects
     m_rcText.inflate(-m_nBorder, -m_nBorder);
 
-	// Update the render rectangles
+    // Update the render rectangles
     m_rcRender[0] = m_rcText; // text area texture rect
     m_rcRender[1] = Rect( m_rcBoundingBox.left, m_rcBoundingBox.top, m_rcText.left, m_rcText.top);        // top left border texture
     m_rcRender[2] = Rect(m_rcText.left, m_rcBoundingBox.top, m_rcText.right, m_rcText.top);               // top border
@@ -538,7 +531,7 @@ void EditBoxUI::UpdateRects()
     m_rcRender[7] = Rect(m_rcText.left, m_rcText.bottom, m_rcText.right, m_rcBoundingBox.bottom);         // lower border
     m_rcRender[8] = Rect(m_rcText.right, m_rcText.bottom, m_rcBoundingBox.right, m_rcBoundingBox.bottom); // lower right border
 
-	// Inflate further by m_nSpacing
+    // Inflate further by m_nSpacing
     m_rcText.inflate(-m_nSpacing, -m_nSpacing);
 }
 
@@ -585,7 +578,6 @@ void EditBoxUI::Render(Sprite sprites[SPRITES_SIZE], Sprite topSprites[SPRITES_S
     if (m_nBackwardChars == 0)
         textToRender = m_buffer.substr(m_nFirstVisible, m_buffer.size() - m_nFirstVisible );
     else
-        //textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - m_nBackwardChars );
         textToRender = m_buffer.substr(m_nFirstVisible - m_nBackwardChars, m_buffer.size() - m_nFirstVisible );
 
     if (m_nFirstVisible - m_nBackwardChars == 0)
@@ -712,16 +704,16 @@ void EditBoxUI::renderCaret(Sprite& sprite, double timeStamp, std::string& textT
 void EditBoxUI::setText( std::string strText, bool bSelected /* = false */ )
 {
     m_buffer = strText;
-	m_nFirstVisible = 0;
-	m_nBackwardChars = 0;
+    m_nFirstVisible = 0;
+    m_nBackwardChars = 0;
     m_nVisibleChars = m_buffer.size();
-	// Move the caret to the end of the text
+    // Move the caret to the end of the text
     placeCaret( m_buffer.size() );
 
-	if (bSelected)
-		m_nSelStart = 0;
-	else
-		m_nSelStart = m_nCaret;
+    if (bSelected)
+        m_nSelStart = 0;
+    else
+        m_nSelStart = m_nCaret;
 }
 
 //-----------------------------------------------------------------------------
@@ -754,11 +746,11 @@ std::string EditBoxUI::getTextCopy()
 void EditBoxUI::clearText()
 {
     m_buffer.clear();
-	m_nFirstVisible = 0;
-	m_nBackwardChars = 0;
+    m_nFirstVisible = 0;
+    m_nBackwardChars = 0;
     m_nVisibleChars = m_buffer.size();
     placeCaret( 0 );
-	m_nSelStart = 0;
+        m_nSelStart = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -766,7 +758,7 @@ void EditBoxUI::clearText()
 //-----------------------------------------------------------------------------
 void EditBoxUI::SetTextColor(glm::vec4 Color)
 {
-	m_TextColor = Color;
+    m_TextColor = Color;
 }
 
 //-----------------------------------------------------------------------------
@@ -774,7 +766,7 @@ void EditBoxUI::SetTextColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 void EditBoxUI::setSelectedTextColor(glm::vec4 Color)
 {
-	m_SelTextColor = Color;
+    m_SelTextColor = Color;
 }
 
 //-----------------------------------------------------------------------------
@@ -782,7 +774,7 @@ void EditBoxUI::setSelectedTextColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 void EditBoxUI::setSelectedBackColor(glm::vec4 Color)
 {
-	m_SelBkColor = Color;
+    m_SelBkColor = Color;
 }
 
 //-----------------------------------------------------------------------------
@@ -790,7 +782,7 @@ void EditBoxUI::setSelectedBackColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 void EditBoxUI::setCaretColor(glm::vec4 Color)
 {
-	m_CaretColor = Color;
+    m_CaretColor = Color;
 }
 
 //-----------------------------------------------------------------------------
@@ -798,7 +790,7 @@ void EditBoxUI::setCaretColor(glm::vec4 Color)
 //-----------------------------------------------------------------------------
 void EditBoxUI::setBorderWidth(int nBorder)
 {
-	m_nBorder = nBorder;
+    m_nBorder = nBorder;
 }
 
 //-----------------------------------------------------------------------------
@@ -815,34 +807,34 @@ void EditBoxUI::setSpacing(int nSpacing)
 //-----------------------------------------------------------------------------
 int EditBoxUI::calcCaretPosByPoint( Point pt )
 {
-	// Determine the character corresponding to the coordinates.
-	int nCP;
+    // Determine the character corresponding to the coordinates.
+    int nCP;
 
     Rect rcFullText = {0, 0, 0, 0};
 
     Point textSize = m_elementsFonts[0].font->calcTextRect(m_buffer);
 
     for (nCP = m_nFirstVisible - m_nBackwardChars; nCP <= m_buffer.size() ; nCP++)
-	{
+    {
         std::string curCursorText = m_buffer.substr(0, nCP);
         Point CursorTextSize = m_elementsFonts[0].font->calcTextRect(curCursorText);
 
-		if (m_nFirstVisible - m_nBackwardChars != 0 )
-		{
+        if (m_nFirstVisible - m_nBackwardChars != 0 )
+        {
             int rtExtra = textSize.x - CursorTextSize.x;
             CursorTextSize.x = (m_rcText.right - m_rcText.left) - rtExtra;
-		}
+        }
 
         if (CursorTextSize.x < (pt.x - m_rcText.left) )
-			continue;
-		else 
-			break;
-	}
+            continue;
+        else 
+            break;
+    }
 
     if ( ( pt.x - m_rcText.left ) < 0)
-		nCP--; 
+        nCP--; 
 
-	return nCP;
+    return nCP;
 }
 
 //-----------------------------------------------------------------------------
@@ -865,9 +857,9 @@ void EditBoxUI::deleteSelectionText()
     // Remove the characters
     m_buffer.erase(nFirst, nLast - nFirst);
 
-	// Update caret and selection
+    // Update caret and selection
     placeCaret( nFirst );
-	m_nSelStart = m_nCaret;
+    m_nSelStart = m_nCaret;
     m_nFirstVisible = 0;
     calcFirstVisibleCharDown();
     m_nVisibleChars = m_buffer.size() - m_nFirstVisible;
@@ -951,18 +943,18 @@ void EditBoxUI::OnFocusOut()
 bool EditBoxUI::SaveToFile(std::ostream& SaveFile)
 {
     ControlUI::SaveToFile(SaveFile);
-	
-	//TODO: make all the editbox options saveable
+
+    //TODO: make all the editbox options saveable
     SaveFile << m_buffer << "| EditBox text " << "\n";
-	SaveFile << m_nBorder << "| EditBox Border Number" << "\n";
-	SaveFile << m_nSpacing << "| EditBox Spacing" << "\n";
-	SaveFile << m_bCaretOn << "| is EditBox Caret On" << "\n";
+    SaveFile << m_nBorder << "| EditBox Border Number" << "\n";
+    SaveFile << m_nSpacing << "| EditBox Spacing" << "\n";
+    SaveFile << m_bCaretOn << "| is EditBox Caret On" << "\n";
     SaveFile << m_TextColor << "| EditBox Text Color" << "\n";
     SaveFile << m_SelTextColor << "| EditBox Selection Color" << "\n";
     SaveFile << m_SelBkColor << "| EditBox Background Color" << "\n";
     SaveFile << m_CaretColor << "| EditBox Caret Color" << "\n";
 
-	return true;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1015,5 +1007,5 @@ int EditBoxUI::calcFirstVisibleCharDown()
     if (m_nBackwardChars > m_nFirstVisible)
         m_nBackwardChars = m_nFirstVisible;
 
-	return 0;
+    return 0;
 } 

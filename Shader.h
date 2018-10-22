@@ -5,8 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
-//#include <GL/glcorearb.h>
 #include <GL/glew.h>
 
 class Shader

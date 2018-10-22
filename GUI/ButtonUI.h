@@ -32,8 +32,8 @@ public:
 
 
 protected:
-    GLuint	    m_nHotkey;
-    bool	    m_bPressed;
+    GLuint          m_nHotkey;
+    bool            m_bPressed;
 
     boost::signals2::signal<void (ButtonUI*)> m_clickedSig;
 

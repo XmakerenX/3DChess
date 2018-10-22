@@ -15,7 +15,7 @@ public:
     virtual bool    Pressed             (Point pt, const ModifierKeysStates &modifierStates, double timeStamp);
     virtual bool    Released            (Point pt);
 
-    virtual bool	SaveToFile          (std::ostream& SaveFile);
+    virtual bool    SaveToFile          (std::ostream& SaveFile);
 
             GLuint  getButtonGroup      ();
 
