@@ -67,6 +67,7 @@ public:
     const std::vector<Attribute>& getAttributeVector();
 
 private:
+    static TextureInfo s_noTextureInfo;
     GLuint createTexture(GLsizei width, GLsizei height, GLenum format,unsigned char* data);
 
     GLuint loadPng(const std::string& filePath);

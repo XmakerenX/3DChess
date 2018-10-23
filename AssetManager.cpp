@@ -2,6 +2,8 @@
 #include "MeshGenerator.h"
 #include <sstream>
 
+TextureInfo AssetManager::s_noTextureInfo(0,0);
+
 //-----------------------------------------------------------------------------
 // Name : AssetManager (constructor)
 //-----------------------------------------------------------------------------
@@ -58,7 +60,7 @@ const TextureInfo& AssetManager::getTextureInfo(GLuint textureName)
     if (m_textureInfoCache.count(textureName) != 0)
         return m_textureInfoCache[textureName];
     else
-        return TextureInfo(0, 0);
+        return s_noTextureInfo;
 }
 
 //-----------------------------------------------------------------------------
