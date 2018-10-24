@@ -19,6 +19,9 @@ int main(int argc, char* argv[])
         return 1;
     }
     
+    // give x11 a sec to respond to our init
+    sleep(1);
+    
     std::cout << "--------------------------------\n";
     std::cout << "Beginning game\n";
     int retCode = gamewin.BeginGame();
