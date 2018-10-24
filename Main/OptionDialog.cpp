@@ -19,7 +19,9 @@ bool OptionDialog::init(GLuint width, GLuint height, int nCaptionHeight, std::st
     initWoodControlElements(assetManger);
     //initDefControlElements(assetManger);
     
-    LoadDialogFromFile("settings.txt");
+    if(!LoadDialogFromFile("settings.txt"))
+        return false;
+    
     initGUI();
     
     return true;

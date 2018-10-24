@@ -637,7 +637,8 @@ void EditDialogUI::SaveDialogButtonClicked(ButtonUI* pSaveButton)
 //-----------------------------------------------------------------------------
 void EditDialogUI::LoadDialogButtonClicked(ButtonUI* pLoadButton)
 {
-    m_curControlID = m_GenDialog.LoadDialogFromFile( getEditBox(IDC_FILENAMEEDITBOX)->getText());
+    m_GenDialog.LoadDialogFromFile( getEditBox(IDC_FILENAMEEDITBOX)->getText());
+    m_curControlID = m_GenDialog.getCurControlID();
     m_GenControlNum = m_GenDialog.getControlsNum();
 }
 

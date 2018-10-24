@@ -183,6 +183,7 @@ public:
     int                 getControlsNum          ();
     std::string         getControlIDText        (int ID);
     bool                getVisible              ();
+    GLulong             getCurControlID         ();
 
     void                ClearRadioButtonGruop   (GLuint nButtonGroup);
 
@@ -195,7 +196,7 @@ public:
     // Save/Load Functions
     //-------------------------------------------------------------------------
     bool    SaveDilaogToFile    (const std::string &FileName, GLulong curControlID);
-    GLulong LoadDialogFromFile  (const std::string& FileName);
+    bool LoadDialogFromFile  (const std::string& FileName);
 
     //-------------------------------------------------------------------------
     // get and set Functions
@@ -238,6 +239,7 @@ private:
     bool m_bDrag;
 
     std::vector<ControlUI*> m_Controls;
+    GLulong m_curControlID;
     //Default graphics for the controls elements stuff like : textures,Rects
     std::vector<CONTROL_GFX> m_defaultControlsGFX;
 

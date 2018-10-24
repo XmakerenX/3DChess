@@ -34,6 +34,7 @@ DialogUI::DialogUI(void)
     m_pMouseOverControl = nullptr;
 
     m_pControlFocus = nullptr;
+    m_curControlID = 200;
 }
 
 
@@ -627,6 +628,7 @@ ControlUI* DialogUI::getControlAtPoint(Point pt)
 //-----------------------------------------------------------------------------
 bool DialogUI::addStatic(int ID, const std::string& strText, int x, int y, int width, int height, StaticUI** ppStaticCreated/* = NULL*/, std::string strID /*= ""*/)
 {
+    m_curControlID++;
     //initialized the static control
     StaticUI* pStatic = new StaticUI(this ,ID, strText, x, y, width, height);
 
@@ -649,6 +651,7 @@ bool DialogUI::addStatic(int ID, const std::string& strText, int x, int y, int w
 //-----------------------------------------------------------------------------
 bool DialogUI::addButton(int ID, const std::string &strText, int x, int y, int width, int height, GLuint nHotkey, ButtonUI** ppButtonCreated/* = NULL*/, std::string strID /*= ""*/)
 {
+    m_curControlID++;
     //initialized the button control
     ButtonUI* pButton = new  ButtonUI(this ,ID, strText, x, y, width, height, nHotkey);
 
@@ -670,6 +673,7 @@ bool DialogUI::addButton(int ID, const std::string &strText, int x, int y, int w
 //-----------------------------------------------------------------------------
 bool DialogUI::addCheckBox(int ID, int x, int y, int width, int height, GLuint nHotkey, CheckboxUI** ppCheckBoxCreated/* = NULL*/,  std::string strID /*= ""*/)
 {
+    m_curControlID++;
     //initialized the checkBox control
     CheckboxUI* pCheckBox = new CheckboxUI(this, ID, x, y, width, height, nHotkey);
 
@@ -691,6 +695,7 @@ bool DialogUI::addCheckBox(int ID, int x, int y, int width, int height, GLuint n
 //-----------------------------------------------------------------------------
 bool DialogUI::addRadioButton(int ID, int x, int y, int width, int height, GLuint nHotkey, GLuint nButtonGroup, RadioButtonUI** ppRadioButtonCreated/* = NULL*/ ,std::string strID /*= ""*/)
 {
+    m_curControlID++;
     RadioButtonUI* pRadioButton = new RadioButtonUI(this, ID, x, y, width, height, nHotkey, nButtonGroup);
 
     initControl(pRadioButton);
@@ -712,6 +717,7 @@ bool DialogUI::addRadioButton(int ID, int x, int y, int width, int height, GLuin
 template<class T>
 bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width, int height, GLuint nHotkey, ComboBoxUI<T>** ppComboxCreated/* = NULL*/ , std::string strID /*= ""*/)
 {
+    m_curControlID++;
     ComboBoxUI<T>* pComboBox = new ComboBoxUI<T>(this, ID, strText, x, y, width, height, nHotkey);
 
     initControl(pComboBox);
@@ -734,6 +740,7 @@ bool DialogUI::addComboBox(int ID, std::string strText, int x, int y, int width,
 //-----------------------------------------------------------------------------
 bool DialogUI::addListBox(int ID, int x, int y, int width, int height, bool multiSelection/* = false*/, ListBoxUI<int> **ppListBoxCreated/* = NULL*/, std::string strID /*= ""*/)
 {
+    m_curControlID++;
     ListBoxUI<int>* pListBox = new ListBoxUI<int>(this, ID, x, y, width, height, multiSelection);
 
     initControl(pListBox);
@@ -758,6 +765,7 @@ bool DialogUI::addListBox(int ID, int x, int y, int width, int height, bool mult
 //-----------------------------------------------------------------------------
 bool DialogUI::addSlider( int ID, int x, int y, int width, int height, int min, int max, int nValue, SliderUI** ppSliderCreated/* = NULL*/, std::string strID /*= ""*/ )
 {
+    m_curControlID++;
     SliderUI* pSlider = new SliderUI(this, ID, x, y, width, height, min, max, nValue);
 
     initControl(pSlider);
@@ -780,6 +788,7 @@ bool DialogUI::addSlider( int ID, int x, int y, int width, int height, int min, 
 //-----------------------------------------------------------------------------
 bool DialogUI::addEditbox( int ID, const std::string& strText, int x, int y, int width, int height, EditBoxUI** ppEditBoxCreated/* = NULL*/, std::string strID /*= ""*/)
 {
+    m_curControlID++;
     EditBoxUI* pEditBox = new EditBoxUI(this, ID, strText, x, y, width, height);
 
     initControl(pEditBox);
@@ -1229,15 +1238,21 @@ bool DialogUI::SaveDilaogToFile(const std::string& FileName, GLulong curControlI
 // Name : LoadDialogFromFile
 // Desc : loads the dialog and all of his controls from file
 //-----------------------------------------------------------------------------
-GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
+bool DialogUI::LoadDialogFromFile(const std::string& FileName)
 {
    std::ifstream inputFile;
    GLuint controlType;
 
+   inputFile.open(FileName, std::ifstream::in);
+
+   if (!inputFile.good())
+   {
+       std::cout << "Failed to open " << FileName << "\n";
+       return false;
+   }
+   
    // clear controls on the dialog
    RemoveAllControls();
-
-   inputFile.open(FileName, std::ifstream::in);
 
    //load the Dialog parameters
    inputFile >> m_width;
@@ -1250,8 +1265,8 @@ GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
    std::getline(inputFile, m_captionText, '|');
    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
-   GLulong curControlID = 0;
-   inputFile >> curControlID;
+   m_curControlID = 0;
+   inputFile >> m_curControlID;
    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
 
    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
@@ -1260,7 +1275,7 @@ GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
    {
        inputFile >> controlType;
        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-       if (inputFile.eof() )
+       if (inputFile.eof() && !inputFile.fail())
            break;
 
        switch(controlType)
@@ -1307,8 +1322,15 @@ GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
        }
 
        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skips to next line
-   }while(!inputFile.eof());
+   }while(!inputFile.eof() && !inputFile.fail());
 
+   if(!inputFile.eof())
+   {
+       std::cout << "Error occured while reading " << FileName << "\n";
+       inputFile.close();
+       return false;
+   }
+   
    inputFile.close();
 
    m_defInfo.clear();
@@ -1344,7 +1366,7 @@ GLulong DialogUI::LoadDialogFromFile(const std::string& FileName)
    inputDefFile.close();
    UpdateRects();
 
-   return curControlID;
+   return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1483,6 +1505,14 @@ std::string DialogUI::getControlIDText(int ID)
 bool DialogUI::getVisible()
 {
     return m_bVisible;
+}
+
+//-----------------------------------------------------------------------------
+// Name : getCurControlID
+//-----------------------------------------------------------------------------
+GLulong DialogUI::getCurControlID()
+{
+    return m_curControlID;
 }
 
 #endif  //_DIALOGUI_CPP

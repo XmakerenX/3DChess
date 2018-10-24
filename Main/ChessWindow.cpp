@@ -48,7 +48,8 @@ void ChessWindow::initMainMenu()
     m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
     //m_dialog.initDefControlElements(m_asset);
     m_dialog.initWoodControlElements(m_asset);
-    m_dialog.LoadDialogFromFile("MainMenu.txt");
+    if (!m_dialog.LoadDialogFromFile("MainMenu.txt"))
+        return;
         
     StaticUI* gameTitle;
     m_dialog.addStatic(50, "Chess", -100, -150, 380, 100, &gameTitle);
@@ -90,11 +91,13 @@ void ChessWindow::initPromotionMenu()
     m_promotionGUI.init(500, 100, 18,"Select Pawn", "GUITextures/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
     m_promotionGUI.setCaption(false);
     m_promotionGUI.initWoodControlElements(m_asset);
-    m_promotionGUI.LoadDialogFromFile("pawns.txt");
+    if(!m_promotionGUI.LoadDialogFromFile("pawns.txt"))
+        return;
+    
     m_promotionGUI.setLocation( (m_winWidth / 2) - (m_promotionGUI.getWidth() / 2), (m_winHeight / 2) - (m_promotionGUI.getHeight() / 2) );
     m_promotionGUI.setVisible(false);
     GLuint promotionTextureName = m_asset.getTexture("GUITextures/pawnsButtons.png");
-	TextureInfo promotionTextureInfo = m_asset.getTextureInfo(promotionTextureName);
+    TextureInfo promotionTextureInfo = m_asset.getTextureInfo(promotionTextureName);
     
     std::vector<ELEMENT_GFX> knightGFX;
     knightGFX.emplace_back(Texture(promotionTextureName, promotionTextureInfo.width, promotionTextureInfo.height), Rect(0, 118, 145, 177));
