@@ -43,8 +43,7 @@ public:
     BaseGameWin();
     virtual ~BaseGameWin();
 
-    virtual bool initWindow() = 0;
-    virtual bool initOpenGL(int width, int height) = 0;
+    bool initGame(int width, int height);
 
     void setRenderStates();
 
@@ -71,6 +70,8 @@ public:
     virtual std::vector<std::vector<Mode1>> getMonitorsModes() const = 0;
 
 protected:
+    virtual bool platformInit(int width, int height) = 0;
+    
     virtual void glSwapBuffers() = 0;
     virtual void getMonitorsInfo() = 0;
 
@@ -91,7 +92,6 @@ protected:
 
     Scene* m_scene;
     bool m_sceneInput;
-    Object* selectedObj;
 
     bool m_keysStatus[256];
     Point m_oldCursorLoc;

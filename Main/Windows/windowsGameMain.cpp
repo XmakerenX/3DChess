@@ -23,15 +23,14 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     std::cout << "--------------------------------\n";
 
     gamewin.setHINSTANCE(hInstance);
-    gamewin.initWindow();
     std::cout << "starting init OpenGL\n";
-    if (!gamewin.initOpenGL(1024, 768))
+    if (!gamewin.initGame(1024, 768))
     {
         std::cout << "Error occured, Quiting..\n";
         return 1;
     }
+    
     std::cout << "--------------------------------\n";
-
     std::cout << "Beginning game\n";
     int retCode = gamewin.BeginGame();
 

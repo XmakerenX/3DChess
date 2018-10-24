@@ -56,12 +56,6 @@ public:
     LinuxGameWin();
     virtual ~LinuxGameWin();
     
-    bool initWindow     ();
-    bool initOpenGL     (int width, int height);
-    GLXFBConfig getBestFBConfig();
-    bool createWindow(int width, int height ,GLXFBConfig bestFbc);
-    bool createOpenGLContext(GLXFBConfig bestFbc);
-
     int  BeginGame      ();
     bool Shutdown       ();
     
@@ -76,22 +70,18 @@ public:
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
     
-    static bool isExtensionSupported    (const char *extList, const char *extension);
-    static int  ctxErrorHandler         (Display *dpy, XErrorEvent *ev);
-
     static void copyToClipboard(const std::string& text);
     static std::string PasteClipboard();
     
     std::vector<std::vector<Mode1>> getMonitorsModes() const;
+
+private:
+    static bool isExtensionSupported    (const char *extList, const char *extension);
+    static int  ctxErrorHandler         (Display *dpy, XErrorEvent *ev);
     
-protected:
     static void sendClipboardLoop(Window clipboardWindow);
     static void sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength);
     
-    void glSwapBuffers();
-    void getMonitorsInfo();
-    
-    Display * m_display;
     static Display * s_clipboardDisplay;
     static Atom s_utf8, s_targets, s_selection;
     static std::future<void> s_clipboardSender;
@@ -100,23 +90,29 @@ protected:
 
     static bool ctxErrorOccurred;
     static const double s_doubleClickTime;
-
+    
+    bool platformInit   (int width, int height);
+    bool initDisplay();
+    GLXFBConfig getBestFBConfig();
+    bool createWindow(int width, int height ,GLXFBConfig bestFbc);
+    bool createEmptyCursorPixmap();
+    bool createOpenGLContext(GLXFBConfig bestFbc);
+    
+    void glSwapBuffers();
+    void getMonitorsInfo();
+    
+    Display * m_display;
     Window m_win;
-    
-    Object* selectedObj;
-
     Atom wmDeleteMessage;
-    
     GLXContext ctx;
-    Colormap cmap;
-    
+    Colormap cmap;    
     Cursor emptyCursorPixmap;
 
     double lastLeftClickTime;
     double lastRightClickTime; 
     
     std::vector<MonitorInfo> m_monitors;
-    GLuint m_primaryMonitorIndex;
+    GLuint m_primaryMonitorIndex;    
 };
 
 #endif  //_LINUXGAMEWIN_H

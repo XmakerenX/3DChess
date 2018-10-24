@@ -71,11 +71,6 @@ public:
     virtual ~WindowsGameWin();
     void setHINSTANCE(HINSTANCE hInstance);
     
-    bool initWindow     ();
-    bool initOpenGL     (int width, int height);
-    bool createWindow   (int width, int height);
-    bool createOpenGLContext();
-            
     int  BeginGame      ();
     bool Shutdown       ();
 
@@ -91,21 +86,21 @@ public:
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
     
-    static bool isExtensionSupported    (const char *extList, const char *extension);
-
     static void copyToClipboard(const std::string& text);
     static std::string PasteClipboard();
     
     std::vector<std::vector<Mode1>> getMonitorsModes() const;
     
-protected:    
+private:    
     LRESULT CALLBACK windowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK staticWindowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
-
+    
+    bool platformInit(int width, int height);
+    bool createWindow   (int width, int height);
+    bool createOpenGLContext();
+    
     virtual void glSwapBuffers();
     virtual void getMonitorsInfo();
-        
-    static std::string s_clipboardString;
     
     HINSTANCE m_hInstance;
     HWND m_hWnd;

@@ -29,22 +29,10 @@ double calculateXRefreshRate(const XRRModeInfo *info)
 //-----------------------------------------------------------------------------
 LinuxGameWin::LinuxGameWin()
 {
-    m_font = nullptr;
-    
-    m_gameRunning = true;
     ctx = nullptr;
-
-    for (int i = 0; i < 256; i++)
-        m_keysStatus[i] = false;
-
-    m_mouseDrag = false;
-
-    selectedObj = nullptr;
 
     lastLeftClickTime = 0;
     lastRightClickTime = 0;
-    m_scene = nullptr;
-    m_sceneInput = true;
     
     m_primaryMonitorIndex = 0;
 }
@@ -57,10 +45,37 @@ LinuxGameWin::~LinuxGameWin()
 }
 
 //-----------------------------------------------------------------------------
-// Name : initWindow ()
+// Name : platformInit ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::initWindow()
+bool LinuxGameWin::platformInit(int width, int height)
 {
+    if (!initDisplay())
+        return false;
+    
+    GLXFBConfig bestFbc = getBestFBConfig();
+    if (!createWindow(width, height, bestFbc))
+        return false; 
+    
+    // register interest in the delete window message
+    wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(m_display, m_win, &wmDeleteMessage, 1);
+    
+    if (!createEmptyCursorPixmap())
+        return false;
+    
+    if(!createOpenGLContext(bestFbc))
+        return false;
+        
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+// Name : initDisplay ()
+//-----------------------------------------------------------------------------
+bool LinuxGameWin::initDisplay()
+{
+    std::cout << "initDisplay started\n";
+    
     m_display = XOpenDisplay(nullptr);
     
     if (!m_display)
@@ -89,6 +104,7 @@ bool LinuxGameWin::initWindow()
     
     return true;
 }
+
 
 //-----------------------------------------------------------------------------
 // Name : getBestFBConfig ()
@@ -420,6 +436,25 @@ bool LinuxGameWin::createOpenGLContext(GLXFBConfig bestFbc)
 }
 
 //-----------------------------------------------------------------------------
+// Name : createEmptyCursorPixmap ()
+//-----------------------------------------------------------------------------
+bool LinuxGameWin::createEmptyCursorPixmap()
+{
+    XColor color = { 0 };
+    const char data[] = { 0 };
+
+    Pixmap pixmap = XCreateBitmapFromData(m_display, m_win, data, 1,1);
+    if (pixmap == None)
+        return false;
+    
+    emptyCursorPixmap = XCreatePixmapCursor(m_display, pixmap, pixmap, &color, &color, 0, 0);
+
+    XFreePixmap(m_display,pixmap);
+    
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 // Name : glSwapBuffers ()
 //-----------------------------------------------------------------------------
 void LinuxGameWin::glSwapBuffers()
@@ -535,83 +570,6 @@ void LinuxGameWin::moveWindowToMonitor(int monitorIndex)
     }
 }
     
-//-----------------------------------------------------------------------------
-// Name : initOpenGL ()
-//-----------------------------------------------------------------------------
-bool LinuxGameWin::initOpenGL(int width, int height)
-{
-    int err;
-    std::cout << "InitOpenGL started\n";
-
-    GLXFBConfig bestFbc = getBestFBConfig();
-    if (!createWindow(width, height, bestFbc))
-        return false; 
-        
-    if(!createOpenGLContext(bestFbc))
-        return false;
-    
-    // register interest in the delete window message
-    wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(m_display, m_win, &wmDeleteMessage, 1);
-
-    glewInit();
-
-    //------------------------------------
-    // Create empty cursor pixmap
-    //------------------------------------
-    XColor color = { 0 };
-    const char data[] = { 0 };
-
-    Pixmap pixmap = XCreateBitmapFromData(m_display, m_win, data, 1,1);
-    emptyCursorPixmap = XCreatePixmapCursor(m_display, pixmap, pixmap, &color, &color, 0, 0);
-
-    XFreePixmap(m_display,pixmap);
-
-    //------------------------------------
-    // Render states
-    //------------------------------------
-    setRenderStates();
-
-    //------------------------------------
-    // buffers creation
-    //------------------------------------
-    glBindVertexArray(0);
-
-    //------------------------------------
-    // Shader loading
-    //------------------------------------
-    // complie shaders
-    m_spriteShader = m_asset.getShader("sprite");
-    m_spriteTextShader = m_asset.getShader("spriteText");
-
-    m_sprites[0].Init();
-    m_sprites[1].Init();
-    m_topSprites[0].Init();
-    m_topSprites[1].Init();
-
-    initGUI();
-    
-    //------------------------------------
-    // Init Scene
-    //------------------------------------
-    if (m_scene)
-        m_scene->InitScene(width, height);
-    
-    // init our font
-    m_font = m_asset.getFont("NotoMono", 40);
-    // make sure the viewport is updated
-    reshape(width,height);
-    
-    err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        std::cout <<"Init: ERROR bitches\n";
-        std::cout << gluErrorString(err) << "\n";
-    }
-    
-    return true;
-}
-
 //-----------------------------------------------------------------------------
 // Name : isExtensionSupported ()
 //-----------------------------------------------------------------------------

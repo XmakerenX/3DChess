@@ -42,6 +42,48 @@ BaseGameWin::~BaseGameWin()
 }
 
 //-----------------------------------------------------------------------------
+// Name : initGame 
+//-----------------------------------------------------------------------------
+bool BaseGameWin::initGame(int width, int height)
+{
+    std::cout << "InitGame started\n";
+    
+    if(!platformInit(width, height))
+        return false;
+    
+    glewInit();
+    
+    m_spriteShader = m_asset.getShader("sprite");
+    m_spriteTextShader = m_asset.getShader("spriteText");
+
+    m_sprites[0].Init();
+    m_sprites[1].Init();
+    m_topSprites[0].Init();
+    m_topSprites[1].Init();
+
+    setRenderStates();
+    
+    initGUI();
+    
+    if (m_scene)
+        m_scene->InitScene(width, height);
+    
+    // init our font
+    m_font = m_asset.getFont("NotoMono", 40);
+    // make sure the viewport is updated
+    reshape(width,height);
+    
+    int err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        std::cout <<"Init: ERROR bitches\n";
+        std::cout << gluErrorString(err) << "\n";
+    }
+    
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 // Name : setRenderStates 
 //-----------------------------------------------------------------------------
 void BaseGameWin::setRenderStates()

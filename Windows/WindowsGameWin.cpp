@@ -4,8 +4,6 @@
 #undef min
 #include "virtualKeysWindows.h"
 
-std::string WindowsGameWin::s_clipboardString;
-
 //-----------------------------------------------------------------------------
 // Name : WindowsGameWin (constructor)
 //-----------------------------------------------------------------------------
@@ -31,14 +29,22 @@ WindowsGameWin::~WindowsGameWin()
 //-----------------------------------------------------------------------------
 void WindowsGameWin::setHINSTANCE(HINSTANCE hInstance)
 {
-	m_hInstance = hInstance;
+    m_hInstance = hInstance;
 }
 
 //-----------------------------------------------------------------------------
-// Name : initWindow ()
+// Name : platformInit ()
 //-----------------------------------------------------------------------------
-bool WindowsGameWin::initWindow()
+bool WindowsGameWin::platformInit(int width, int height)
 {
+    std::cout << "InitOpenGL started\n";
+
+    if (!createWindow(width, height))
+        return false; 
+        
+    if(!createOpenGLContext())
+        return false;
+    
     return true;
 }
 
@@ -381,6 +387,7 @@ HWND createDummyWindow(HINSTANCE hInstance)
 //-----------------------------------------------------------------------------
 bool WindowsGameWin::createOpenGLContext()
 {
+    // create dummy window to find the wanted pixel format
     HWND dummyhWnd = createDummyWindow(m_hInstance);
     if (!dummyhWnd)
         return false;
@@ -549,13 +556,10 @@ void WindowsGameWin::setWindowSize(GLuint width, GLuint height)
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
     int newWidth = wr.right - wr.left;
     int newHeight = wr.bottom - wr.top;
-    //SetWindowPos(m_hWnd, HWND_TOP, 0, 0, wr.right - wr.left, wr.bottom - wr.top, SWP_NOMOVE);
-    //SetWindowPos(m_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
     SetWindowPos(m_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
     RECT clientRC;
     GetClientRect(m_hWnd, &clientRC);
     std::cout << "setWindowSize window size is: " << clientRC.right - clientRC.left << "X" << clientRC.bottom - clientRC.top << "\n";
-    //reshape(width, height);
 }
 
 //-----------------------------------------------------------------------------
@@ -571,105 +575,6 @@ void WindowsGameWin::moveWindowToMonitor(int monitorIndex)
     }
 }
     
-//-----------------------------------------------------------------------------
-// Name : initOpenGL ()
-//-----------------------------------------------------------------------------
-bool WindowsGameWin::initOpenGL(int width, int height)
-{
-    int err;
-    std::cout << "InitOpenGL started\n";
-
-    if (!createWindow(width, height))
-        return false; 
-        
-    if(!createOpenGLContext())
-        return false;
-    
-    glewInit();
-
-    //------------------------------------
-    // Render states
-    //------------------------------------
-    setRenderStates();
-
-    //------------------------------------
-    // buffers creation
-    //------------------------------------
-    glBindVertexArray(0);
-
-    //------------------------------------
-    // Shader loading
-    //------------------------------------
-    // complie shaders
-    m_spriteShader = m_asset.getShader("sprite");
-    m_spriteTextShader = m_asset.getShader("spriteText");
-
-    m_sprites[0].Init();
-    m_sprites[1].Init();
-    m_topSprites[0].Init();
-    m_topSprites[1].Init();
-
-    initGUI();
-    
-    //------------------------------------
-    // Init Scene
-    //------------------------------------
-    if (m_scene)
-        m_scene->InitScene(width, height);
-    
-    // init our font
-    m_font = m_asset.getFont("NotoMono", 40);
-    // make sure the viewport is updated
-    RECT clientRC;
-    GetClientRect(m_hWnd, &clientRC);
-    reshape(clientRC.right - clientRC.left , clientRC.bottom - clientRC.top);
-    
-    err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        std::cout <<"Init: ERROR bitches\n";
-        std::cout << gluErrorString(err) << "\n";
-    }
-    
-    return true;
-}
-
-//-----------------------------------------------------------------------------
-// Name : isExtensionSupported ()
-//-----------------------------------------------------------------------------
-bool WindowsGameWin::isExtensionSupported(const char *extList, const char *extension)
-{
-    const char *start;
-    const char *where, *terminator;
-  
-    // Extension names should not have spaces.
-    where = strchr(extension, ' ');
-    if (where || *extension == '\0')
-        return false;
-
-    // It takes a bit of care to be fool-proof about parsing the
-    // OpenGL extensions string. Don't be fooled by sub-strings,
-    // etc.
-    for (start = extList;;) 
-    {
-        where = strstr(start, extension);
-
-        if (!where)
-            break;
-
-        terminator = where + strlen(extension);
-
-        if ( where == start || *(where - 1) == ' ' )
-        if ( *terminator == ' ' || *terminator == '\0' )
-            return true;
-
-        start = terminator;
-    }
-
-    return false;
-}
-
-
 //-----------------------------------------------------------------------------
 // Name : copyToClipboard ()
 //-----------------------------------------------------------------------------
