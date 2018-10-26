@@ -8,9 +8,13 @@ class Mesh {
 
 public:
     Mesh();
-    Mesh(std::vector<SubMesh> sMeshes);
-    Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials,
-    std::vector<std::string> dTextures);
+    Mesh(const std::vector<SubMesh>& sMeshes);
+    Mesh(const std::vector<SubMesh>& sMeshes, const std::vector<GLuint>& dMaterials, const std::vector<std::string>& dTextures);
+    Mesh(std::vector<SubMesh>&& sMeshes, std::vector<GLuint>&& dMaterials, std::vector<std::string>&& dTextures);
+    Mesh(const Mesh& copyMesh);
+    Mesh& operator=(const Mesh& copy);
+    Mesh(Mesh&& moveMesh);
+    Mesh& operator=(Mesh&& move);
 
     // Render the mesh
     void Draw(unsigned int subMeshIndex);
@@ -23,9 +27,9 @@ public:
     std::vector<std::string>& getDefaultTextures();
 
 private:
-    std::vector<SubMesh> subMeshes;
-    std::vector<GLuint> defaultMaterials;
-    std::vector<std::string> defaultTextures;
+    std::vector<SubMesh> m_subMeshes;
+    std::vector<GLuint> m_defaultMaterials;
+    std::vector<std::string> m_defaultTextures;
 };
 
 

@@ -99,7 +99,7 @@ void Scene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(0.5f, 0.5f, 0.5f), // scale
                            pMesh,
-                             s_meshShaderPath2 );
+                           s_meshShaderPath2 );
     
     pMesh = m_assetManager.getMesh("king.fbx");
     m_objects.emplace_back(m_assetManager,
@@ -107,18 +107,18 @@ void Scene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f),   // rotation
                            glm::vec3(8.0f, 8.0f, 8.0f),   // scale
                            pMesh,
-                             s_meshShaderPath2 );
+                           s_meshShaderPath2 );
 
     m_curObj = &m_objects[0];
 
-    //pMesh = m_assetManager.getMesh("cube.obj");
-    //m_objects.emplace_back(m_assetManager,
-    //                       glm::vec3(20.6f, 1.5f, 0.0f), // position
-    //                       glm::vec3(0.0f, 0.0f, 0.0f),  // rotation
-    //                       glm::vec3(0.6f, 0.6f, 0.6f),  // scale
-    //                       pMesh,
-    //                       meshShaderPath2);
-
+    pMesh = m_assetManager.getMesh("cube.gen");
+    m_objects.emplace_back(m_assetManager,
+                           glm::vec3(0.f, 0.0f, 0.0f), // position
+                           glm::vec3(0.0f, 0.0f, 0.0f),  // rotation
+                           glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+                           pMesh,
+                           s_meshShaderPath2);
+    
 }
 
 //-----------------------------------------------------------------------------

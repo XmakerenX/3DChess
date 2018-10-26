@@ -9,22 +9,79 @@ Mesh::Mesh()
 //-----------------------------------------------------------------------------
 // Name : Mesh (constructor)
 //-----------------------------------------------------------------------------
-Mesh::Mesh(std::vector<SubMesh> sMeshes)
+Mesh::Mesh(const std::vector<SubMesh>& sMeshes)
 {
-    subMeshes = sMeshes;
+    m_subMeshes = sMeshes;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Mesh (constructor)
 //-----------------------------------------------------------------------------
-Mesh::Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials, std::vector<std::string> dTextures)
-    :subMeshes(sMeshes),
-     defaultMaterials(dMaterials),
-     defaultTextures(dTextures)
+Mesh::Mesh(const std::vector<SubMesh>& sMeshes, const std::vector<GLuint>& dMaterials, const std::vector<std::string>& dTextures)
+    :m_subMeshes(sMeshes),
+     m_defaultMaterials(dMaterials),
+     m_defaultTextures(dTextures)
 {
     // add empty texture for every material that doesn't have one
-    for (int i = defaultTextures.size(); i < defaultMaterials.size(); i++)
-        defaultTextures.push_back("");
+    for (int i = m_defaultTextures.size(); i < m_defaultMaterials.size(); i++)
+        m_defaultTextures.push_back("");
+}
+
+//-----------------------------------------------------------------------------
+// Name : Mesh (constructor)
+//-----------------------------------------------------------------------------
+Mesh::Mesh(std::vector<SubMesh>&& sMeshes, std::vector<GLuint>&& dMaterials, std::vector<std::string>&& dTextures)
+    :m_subMeshes(std::move(sMeshes)),
+     m_defaultMaterials(std::move(dMaterials)),
+     m_defaultTextures(std::move(dTextures))
+{
+    // add empty texture for every material that doesn't have one
+    for (int i = m_defaultTextures.size(); i < m_defaultMaterials.size(); i++)
+        m_defaultTextures.push_back("");
+}
+
+//-----------------------------------------------------------------------------
+// Name : Mesh (copy constructor)
+//-----------------------------------------------------------------------------
+Mesh::Mesh(const Mesh& copyMesh)
+    :m_subMeshes(copyMesh.m_subMeshes), 
+     m_defaultMaterials(copyMesh.m_defaultMaterials),
+     m_defaultTextures(copyMesh.m_defaultTextures)
+{
+}
+
+//-----------------------------------------------------------------------------
+// Name : Mesh (copy assignment)
+//-----------------------------------------------------------------------------
+Mesh& Mesh::operator=(const Mesh& copy)
+{
+    m_subMeshes = copy.m_subMeshes;
+    m_defaultMaterials = copy.m_defaultMaterials;
+    m_defaultTextures = copy.m_defaultTextures;
+    
+    return *this;
+}
+
+//-----------------------------------------------------------------------------
+// Name : Mesh (move constructor)
+//-----------------------------------------------------------------------------
+Mesh::Mesh(Mesh&& moveMesh)
+    :m_subMeshes(std::move(moveMesh.m_subMeshes)), 
+     m_defaultMaterials(std::move(moveMesh.m_defaultMaterials)),
+     m_defaultTextures(std::move(moveMesh.m_defaultTextures))
+{
+}
+
+//-----------------------------------------------------------------------------
+// Name : Mesh (move assignment)
+//-----------------------------------------------------------------------------
+Mesh& Mesh::operator=(Mesh&& move)
+{
+    m_subMeshes = std::move(move.m_subMeshes);
+    m_defaultMaterials = std::move(move.m_defaultMaterials);
+    m_defaultTextures = std::move(move.m_defaultTextures);
+    
+    return *this;
 }
 
 //-----------------------------------------------------------------------------
@@ -32,7 +89,7 @@ Mesh::Mesh(std::vector<SubMesh> sMeshes, std::vector<GLuint> dMaterials, std::ve
 //-----------------------------------------------------------------------------
 void Mesh::Mesh::Draw(unsigned int subMeshIndex)
 {
-    subMeshes[subMeshIndex].Draw();
+    m_subMeshes[subMeshIndex].Draw();
 }
 
 //-----------------------------------------------------------------------------
@@ -40,7 +97,7 @@ void Mesh::Mesh::Draw(unsigned int subMeshIndex)
 //-----------------------------------------------------------------------------
 void Mesh::addSubMesh(SubMesh subMesh)
 {
-    subMeshes.push_back(subMesh);
+    m_subMeshes.push_back(subMesh);
 }
 
 //-----------------------------------------------------------------------------
@@ -48,9 +105,9 @@ void Mesh::addSubMesh(SubMesh subMesh)
 //-----------------------------------------------------------------------------
 bool Mesh::IntersectTriangle(glm::vec3& rayObjOrigin, glm::vec3& rayObjDir, int& faceCount, int& subMeshIndex)
 {
-    for (GLuint i = 0; i < subMeshes.size(); ++i)
+    for (GLuint i = 0; i < m_subMeshes.size(); ++i)
     {
-        if (subMeshes[i].IntersectTriangle(rayObjOrigin, rayObjDir, faceCount))
+        if (m_subMeshes[i].IntersectTriangle(rayObjOrigin, rayObjDir, faceCount))
         {
             subMeshIndex = i;
             return true;
@@ -65,7 +122,7 @@ bool Mesh::IntersectTriangle(glm::vec3& rayObjOrigin, glm::vec3& rayObjDir, int&
 //-----------------------------------------------------------------------------
 void Mesh::CalcVertexNormals(GLfloat angle)
 {
-    for (SubMesh& mesh : subMeshes)
+    for (SubMesh& mesh : m_subMeshes)
     {
         mesh.CalcVertexNormals(angle);
     }
@@ -76,7 +133,7 @@ void Mesh::CalcVertexNormals(GLfloat angle)
 //-----------------------------------------------------------------------------
 std::vector<GLuint>& Mesh::getDefaultMaterials()
 {
-    return defaultMaterials;
+    return m_defaultMaterials;
 }
 
 //-----------------------------------------------------------------------------
@@ -84,5 +141,5 @@ std::vector<GLuint>& Mesh::getDefaultMaterials()
 //-----------------------------------------------------------------------------
 std::vector<std::string>& Mesh::getDefaultTextures()
 {
-    return defaultTextures;
+    return m_defaultTextures;
 }

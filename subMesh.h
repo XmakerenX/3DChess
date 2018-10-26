@@ -25,10 +25,13 @@ struct Vertex {
 class SubMesh {
 
 public:
-    std::vector<Vertex> m_vertices;
-    std::vector<VertexIndex> m_indices;
-
     SubMesh(const std::vector<Vertex>& vertices, const std::vector<VertexIndex>& indices);
+    SubMesh(const SubMesh& copySubMesh);
+    SubMesh& operator=(const SubMesh& copy);
+    SubMesh(SubMesh&& moveSubMesh);
+    SubMesh& operator=(SubMesh&& move);
+    
+    ~SubMesh();
 
     void Draw();
 
@@ -38,6 +41,9 @@ public:
     void CalcVertexNormals(GLfloat angle);
 
 private:
+    std::vector<Vertex> m_vertices;
+    std::vector<VertexIndex> m_indices;
+    
     GLuint m_VAO, m_VBO, m_EBO;
 
     void setupMesh();

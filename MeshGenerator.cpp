@@ -24,6 +24,7 @@ Mesh MeshGenerator::createBoardMesh(AssetManager& assetManager, const glm::vec2&
     float stepZ = 1.0f * scale.y;
     
     std::vector<SubMesh> boardSubMeshes;
+    boardSubMeshes.reserve(19);
     
     createBoardSubMeshes(stepX, stepZ, boardSubMeshes);
     createFrameSubMeshes(stepX, stepZ, boardSubMeshes);
@@ -52,7 +53,7 @@ Mesh MeshGenerator::createBoardMesh(AssetManager& assetManager, const glm::vec2&
         "boardTextures/frameLowerLeft.png", "boardTextures/frameLowerLeft.png"
     };
         
-    return Mesh(boardSubMeshes, materials, texturesPath);
+    return Mesh(std::move(boardSubMeshes), std::move(materials), std::move(texturesPath));
 }
 
 //-----------------------------------------------------------------------------
@@ -273,23 +274,23 @@ Mesh MeshGenerator::createSquareMesh(AssetManager& assetManager, const glm::vec2
     std::vector<GLuint> squareMatrial = {materialIndex};
     std::vector<std::string> squareTexture = {""};
     
-    return Mesh(squareSubMesh, squareMatrial, squareTexture);
+    return Mesh(std::move(squareSubMesh), std::move(squareMatrial), std::move(squareTexture));
 }
 
 //-----------------------------------------------------------------------------
 // Name : createSquareIndices
 //-----------------------------------------------------------------------------
-void MeshGenerator::createSquareIndices(std::vector<VertexIndex>& indices)
+void MeshGenerator::createSquareIndices(std::vector<VertexIndex>& indices, GLuint vIndex/* = 0*/)
 {
     // first triangle
-    indices.push_back(0);
-    indices.push_back(2);
-    indices.push_back(3);
+    indices.push_back(vIndex);
+    indices.push_back(vIndex + 2);
+    indices.push_back(vIndex + 3);
      
     // secound triangle
-    indices.push_back(0);
-    indices.push_back(3);
-    indices.push_back(1);
+    indices.push_back(vIndex);
+    indices.push_back(vIndex + 3);
+    indices.push_back(vIndex + 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -301,6 +302,7 @@ Mesh MeshGenerator::createSkyBoxMesh()
     std::vector<VertexIndex> cubeIndices;
     
     std::vector<SubMesh> cubeFaces;
+    cubeFaces.reserve(6);
     
     // front face    
     cubeVertices.emplace_back(glm::vec3(10.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f));
@@ -371,6 +373,66 @@ Mesh MeshGenerator::createSkyBoxMesh()
     std::vector<GLuint> cubeMatrial;
     std::vector<std::string> cubeTexture;
     
-    return Mesh(cubeFaces, cubeMatrial, cubeTexture);
+    return Mesh(std::move(cubeFaces), std::move(cubeMatrial), std::move(cubeTexture));
 }
 
+//-----------------------------------------------------------------------------
+// Name : createCubeMesh
+//-----------------------------------------------------------------------------
+Mesh MeshGenerator::createCubeMesh()
+{
+    std::vector<Vertex> cubeVertices;
+    std::vector<VertexIndex> cubeIndices;
+    
+    std::vector<SubMesh> cubeFaces;
+    float cubeSize = 0.25f;
+    
+    // down face    
+    cubeVertices.emplace_back(glm::vec3(cubeSize, -cubeSize, -cubeSize), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, -cubeSize, -cubeSize), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f)); 
+    cubeVertices.emplace_back(glm::vec3(cubeSize, -cubeSize, cubeSize), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f)); 
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, -cubeSize, cubeSize), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f)); 
+    createSquareIndices(cubeIndices, 0);
+        
+    // up face
+    createSquareIndices(cubeIndices, cubeVertices.size());
+    cubeVertices.emplace_back(glm::vec3(cubeSize, cubeSize, -cubeSize), glm::vec3(0.0f ,1.0f, 0.0f), glm::vec2(1.0f, 1.0f));
+    cubeVertices.emplace_back(glm::vec3(cubeSize, cubeSize, cubeSize), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, cubeSize, -cubeSize), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f,0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, cubeSize, cubeSize), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f));
+    
+    // right face
+    createSquareIndices(cubeIndices, cubeVertices.size());
+    cubeVertices.emplace_back(glm::vec3(cubeSize, -cubeSize, -cubeSize), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(cubeSize, -cubeSize, cubeSize), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f));
+    cubeVertices.emplace_back(glm::vec3(cubeSize, cubeSize, -cubeSize), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(cubeSize, cubeSize, cubeSize), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f));
+    
+    // left face
+    createSquareIndices(cubeIndices, cubeVertices.size());
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, -cubeSize, -cubeSize), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, cubeSize, -cubeSize), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, -cubeSize, cubeSize), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, cubeSize, cubeSize), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f));
+       
+    // Front face
+    createSquareIndices(cubeIndices, cubeVertices.size());
+    cubeVertices.emplace_back(glm::vec3(cubeSize, cubeSize, cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(cubeSize, -cubeSize, cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, cubeSize, cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, -cubeSize, cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f));
+    
+    // back face
+    createSquareIndices(cubeIndices, cubeVertices.size());
+    cubeVertices.emplace_back(glm::vec3(cubeSize, cubeSize, -cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, cubeSize, -cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f));
+    cubeVertices.emplace_back(glm::vec3(cubeSize, -cubeSize, -cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f));
+    cubeVertices.emplace_back(glm::vec3(-cubeSize, -cubeSize, -cubeSize), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f));
+    
+    cubeFaces.emplace_back(cubeVertices, cubeIndices);
+        
+    std::vector<GLuint> cubeMatrial;
+    std::vector<std::string> cubeTexture;
+    
+    return Mesh(std::move(cubeFaces), std::move(cubeMatrial), std::move(cubeTexture));
+}

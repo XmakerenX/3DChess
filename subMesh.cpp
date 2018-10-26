@@ -26,6 +26,84 @@ SubMesh::SubMesh(const std::vector<Vertex>& vertices, const std::vector<VertexIn
 }
 
 //-----------------------------------------------------------------------------
+// Name : SubMesh (copy constructor)
+//-----------------------------------------------------------------------------
+SubMesh::SubMesh(const SubMesh& copySubMesh)
+    :m_vertices(copySubMesh.m_vertices), m_indices(copySubMesh.m_indices)
+{
+    m_VAO = 0;
+    m_VBO = 0;
+    m_EBO = 0;
+    setupMesh();
+}
+
+//-----------------------------------------------------------------------------
+// Name : SubMesh (copy assignment)
+//-----------------------------------------------------------------------------
+SubMesh& SubMesh::operator=(const SubMesh& copy)
+{
+    m_vertices = copy.m_vertices;
+    m_indices = copy.m_indices;
+    
+    m_VAO = 0;
+    m_VBO = 0;
+    m_EBO = 0;
+    setupMesh();
+    
+    return *this;
+}
+
+//-----------------------------------------------------------------------------
+// Name : SubMesh (move constructor)
+//-----------------------------------------------------------------------------
+SubMesh::SubMesh(SubMesh&& moveSubMesh)
+    :m_vertices(std::move(moveSubMesh.m_vertices)), m_indices(std::move(moveSubMesh.m_indices))
+{
+    m_VAO = moveSubMesh.m_VAO;
+    m_VBO = moveSubMesh.m_VBO;
+    m_EBO = moveSubMesh.m_EBO;
+    
+    moveSubMesh.m_VAO = 0;
+    moveSubMesh.m_VBO = 0;
+    moveSubMesh.m_EBO = 0;
+}
+
+//-----------------------------------------------------------------------------
+// Name : SubMesh (move assignment)
+//-----------------------------------------------------------------------------
+SubMesh& SubMesh::operator=(SubMesh&& move)
+{
+    m_vertices = std::move(move.m_vertices);
+    m_indices = std::move(move.m_indices);
+    
+    m_VAO = move.m_VAO;
+    m_VBO = move.m_VBO;
+    m_EBO = move.m_EBO;
+    
+    move.m_VAO = 0;
+    move.m_VBO = 0;
+    move.m_EBO = 0;
+    
+    return *this;
+}
+
+//-----------------------------------------------------------------------------
+// Name : SubMesh (destructor)
+//-----------------------------------------------------------------------------
+SubMesh::~SubMesh()
+{
+    if (m_EBO != 0)
+        glDeleteBuffers(1, &m_EBO);
+    
+    if (m_VBO != 0)
+        glDeleteBuffers(1, &m_VBO);
+    
+    if (m_VAO != 0)
+        glDeleteVertexArrays(1, &m_VAO);
+}
+
+
+//-----------------------------------------------------------------------------
 // Name : Draw
 //-----------------------------------------------------------------------------
 void SubMesh::Draw()

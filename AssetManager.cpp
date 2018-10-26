@@ -416,16 +416,33 @@ Mesh* AssetManager::getMesh(const std::string& meshPath)
         std::getline(s, suffix, '.');
         // gets the file suffix
         std::getline(s, suffix, '.');
+        Mesh* ret = nullptr;
+        bool knowSuffix = false;
         // load the texutre using the appropriate method
         if (suffix == "obj")
-            return loadObjMesh(meshPath);
+        {
+            ret = loadObjMesh(meshPath);
+            knowSuffix = true;
+        }
         if (suffix == "fbx")
-            return loadFBXMesh(meshPath);
+        {
+            ret = loadFBXMesh(meshPath);
+            knowSuffix = true;
+        }
         if (suffix == "gen")
-            return generateMesh(meshPath);
+        {
+            ret = generateMesh(meshPath);
+            knowSuffix = true;
+        }
 
-        std::cout << suffix << " is not a supported mesh type\n";
-        return nullptr;
+        if (!knowSuffix)
+            std::cout << suffix << " is not a supported mesh type\n";
+        
+        if (ret != nullptr)
+            return ret;
+        else
+            //return getMesh("cube.obj");
+            return getMesh("cube.gen");
     }
 }
 
@@ -468,7 +485,7 @@ Mesh* AssetManager::loadObjMesh(const std::string& meshPath)
     }
     
     m_meshCache.insert(std::pair<std::string, Mesh>(meshPath, 
-    Mesh(subMeshes, meshMaterials,std::vector<std::string>())) );
+    Mesh(std::move(subMeshes), std::move(meshMaterials),std::vector<std::string>())) );
     
     return &m_meshCache[meshPath];
 }
@@ -483,7 +500,7 @@ Mesh *AssetManager::loadFBXMesh(const std::string &meshPath)
     if (m_fbxLoader.LoadMesh(meshPath, subMeshes))
     {
         m_meshCache.insert(std::pair<std::string, Mesh>(meshPath,
-                        Mesh(subMeshes, meshMaterials,std::vector<std::string>())) );
+                        Mesh(std::move(subMeshes), std::move(meshMaterials), std::vector<std::string>())) );
 
         return &m_meshCache[meshPath];
     }
@@ -513,6 +530,13 @@ Mesh*  AssetManager::generateMesh(const std::string& meshString)
     if (meshString == "skybox.gen")
     {
         m_meshCache.insert(std::pair<std::string, Mesh>(meshString, MeshGenerator::createSkyBoxMesh()));
+        
+        return &m_meshCache[meshString];
+    }
+    
+    if (meshString == "cube.gen")
+    {
+        m_meshCache.insert(std::pair<std::string, Mesh>(meshString, MeshGenerator::createCubeMesh()));
         
         return &m_meshCache[meshString];
     }
