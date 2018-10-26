@@ -3,22 +3,11 @@
 //-----------------------------------------------------------------------------
 // Name : Object (constructor)
 //-----------------------------------------------------------------------------
-Object::Object() : m_mthxWorld(1.0f),
-                   m_mtxRot(1.0f),
-                   m_mtxScale(1.0f),
-                   m_rotAngles(0.0f)
-{
-    m_pMesh = nullptr;
-    m_hideObject = false;
-    m_worldDirty = false;
-}
-
-//-----------------------------------------------------------------------------
-// Name : Object (constructor)
-//-----------------------------------------------------------------------------
 Object::Object::Object(const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute) 
     : m_mtxScale(1.0f)
 {
+    assert(pMesh);
+    
     InitObject(pos, angle, scale, pMesh, meshAttribute);
 }
 
@@ -28,6 +17,8 @@ Object::Object::Object(const glm::vec3& pos, const glm::vec3& angle, const glm::
 Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle, const glm::vec3 &scale, Mesh *pMesh, std::string shaderPath)
     :m_mtxScale(1.0f)
 {
+    assert(pMesh);
+    
     std::vector<GLuint> meshMaterial = pMesh->getDefaultMaterials();
     std::vector<std::string> meshTextures = pMesh->getDefaultTextures();
     std::vector<unsigned int> objAtteributes;
