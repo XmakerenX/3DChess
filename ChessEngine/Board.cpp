@@ -133,12 +133,12 @@ bool board::LoadBoardFromFile()
 
     do 
     {
-        unsigned int i,j;
+        unsigned int i = 0,j = 0;
         int color,type;
 
         inputFile >> i;
         inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        if (inputFile.eof() )
+        if (inputFile.eof() && inputFile.fail())
             break;
 
         inputFile >> j;
@@ -156,11 +156,19 @@ bool board::LoadBoardFromFile()
             else
                 m_kings[BOTTOM] = static_cast<king*>(m_board[i][j]);
         }
-    } while (!inputFile.eof());
+    } while (!inputFile.eof() && !inputFile.fail());
 
+    if (inputFile.eof())
+        m_gameActive = true;
+    else
+    {
+        std::cout << "Error occurred while loading board save file\n";
+        m_gameActive = false;
+    }
+    
     inputFile.close();
-    m_gameActive = true;
-    return true;
+    //m_gameActive = true;
+    return m_gameActive;
 }
 
 //-----------------------------------------------------------------------------
