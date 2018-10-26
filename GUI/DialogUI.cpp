@@ -1346,12 +1346,17 @@ bool DialogUI::LoadDialogFromFile(const std::string& FileName)
    defFileName = defFileName + "Def.h";
 
    inputDefFile.open(defFileName);
+   if (!inputDefFile.good())
+   {
+       std::cout << "Failed to open " << defFileName << "\n";
+       return false;
+   }
 
    do
    {
        inputDefFile >> strID;
 
-       if (inputDefFile.eof())
+       if (inputDefFile.eof() && !inputDefFile.fail())
            break;
 
        inputDefFile >> strID;
@@ -1361,8 +1366,15 @@ bool DialogUI::LoadDialogFromFile(const std::string& FileName)
        m_defInfo.push_back( DEF_INFO(strID, ID) );
 
        inputDefFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-   }while(!inputDefFile.eof());
+   }while(!inputDefFile.eof() && !inputDefFile.fail());
 
+   if(!inputDefFile.eof())
+   {
+       std::cout << "Error occured while reading " << defFileName << "\n";
+       inputDefFile.close();
+       return false;
+   }
+   
    inputDefFile.close();
    UpdateRects();
 
