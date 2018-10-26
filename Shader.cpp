@@ -2,6 +2,9 @@
 
 //TODO: change to std::string instead of raw string
 //TODO: add a shader valid var so outside caller can tell if shader was constructed successfully
+//-----------------------------------------------------------------------------
+// Name : Shader (constructor)
+//-----------------------------------------------------------------------------
 Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 {
 
@@ -91,6 +94,9 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 
 }
 
+//-----------------------------------------------------------------------------
+// Name : Use ()
+//-----------------------------------------------------------------------------
 void Shader::Use()
 {
     glUseProgram(this->Program);
