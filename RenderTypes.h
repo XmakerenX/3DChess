@@ -139,12 +139,13 @@ struct Material
 struct Attribute
 {
     std::string  texIndex;
+    GLint wrapMode;
     unsigned int matIndex;
     std::string shaderIndex;
 
     inline bool operator==(const Attribute& atrib)
     {
-        return (texIndex == atrib.texIndex && matIndex == atrib.matIndex && shaderIndex == atrib.shaderIndex);
+        return (texIndex == atrib.texIndex && matIndex == atrib.matIndex && shaderIndex == atrib.shaderIndex && wrapMode == atrib.wrapMode);
     }
 };
 

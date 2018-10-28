@@ -596,10 +596,10 @@ Material& AssetManager::getMaterial(int materialIndex)
 // Name : getAttribute
 // Desc : returns the attribute index that correlate to the given properties
 //-----------------------------------------------------------------------------
-int AssetManager::getAttribute(const std::string& texPath, const Material& mat,const std::string& shaderPath)
+int AssetManager::getAttribute(const std::string& texPath, GLint wrapMode, const Material& mat,const std::string& shaderPath)
 {
-	unsigned int  matIndex = getMaterialIndex(mat);
-    return getAttribute(texPath, matIndex, shaderPath);
+    unsigned int  matIndex = getMaterialIndex(mat);
+    return getAttribute(texPath, wrapMode, matIndex, shaderPath);
 }
 
 //-----------------------------------------------------------------------------
@@ -607,9 +607,9 @@ int AssetManager::getAttribute(const std::string& texPath, const Material& mat,c
 // Desc : returns the attribute index that correlate to the given properties
 // ****   Material property is given by index
 //-----------------------------------------------------------------------------
-int AssetManager::getAttribute(const std::string &texPath, GLuint matIndex, const std::string &shaderPath)
+int AssetManager::getAttribute(const std::string &texPath, GLint wrapMode, GLuint matIndex, const std::string &shaderPath)
 {
-    Attribute attrib = {texPath, matIndex, shaderPath};
+    Attribute attrib = {texPath, wrapMode, matIndex, shaderPath};
 
 
     for (unsigned int i = 0; i < m_attributes.size(); i++)

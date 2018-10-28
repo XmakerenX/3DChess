@@ -53,20 +53,20 @@ void ChessScene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("board.gen"),
-                             s_meshShaderPath2 );
+                           s_meshShaderPath2 );
     m_lastIndex++;
     
     boardObject = &m_objects[m_objects.size() - 1];
     // add frame object
     std::vector<unsigned int> frameSquareAttribute;
-    frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", WHITE_MATERIAL, s_meshShaderPath2 ));
+    frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", GL_REPEAT, WHITE_MATERIAL, s_meshShaderPath2 ));
     
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.001f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(1.0f, 1.0f, 1.0f), // scale
                            m_assetManager.getMesh("square.gen"),
-                             s_meshShaderPath2 );
+                           s_meshShaderPath2 );
     m_lastIndex++;
     
     m_objects[m_objects.size() - 1].SetObjectAttributes(frameSquareAttribute);
@@ -78,42 +78,47 @@ void ChessScene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(200.0f, 200.0f, 200.0f), // scale
                            m_assetManager.getMesh("skybox.gen"),
-                             s_meshShaderPath2 );
+                           s_meshShaderPath2 );
+    
     m_lastIndex++;
         
     std::vector<unsigned int> cubeAttribute;
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posy.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", WHITE_MATERIAL, s_meshShaderPath2 ));    
+    Material temp(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posy.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));    
     m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
     // get attribute needed for the board pawns and highlighted squares
     Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
                    glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
-    m_blackAttribute = m_assetManager.getAttribute("", black, s_meshShaderPath2 );
+    m_blackAttribute = m_assetManager.getAttribute("", GL_REPEAT ,black, s_meshShaderPath2 );
     
     Material blue (glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
                    glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
                    glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
                    glm::vec4(0.0f, 0.0f, 0.8f, 0.4f), 8.0f);
-    m_blueAttribute = m_assetManager.getAttribute("", blue, s_meshShaderPath2 );
+    m_blueAttribute = m_assetManager.getAttribute("", GL_REPEAT, blue, s_meshShaderPath2 );
     
     Material red  (glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.0f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.0f, 0.0f, 0.4f), 8.0f);
-    m_redAttribute = m_assetManager.getAttribute("", red, s_meshShaderPath2 );
+    m_redAttribute = m_assetManager.getAttribute("", GL_REPEAT, red, s_meshShaderPath2 );
     
     Material yellow (glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f), 8.0f);
-    m_yellowAttribute = m_assetManager.getAttribute("", yellow, s_meshShaderPath2 );
+    m_yellowAttribute = m_assetManager.getAttribute("", GL_REPEAT, yellow, s_meshShaderPath2 );
     
     gameBoard = new board();
     gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));

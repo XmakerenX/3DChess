@@ -60,8 +60,8 @@ public:
     Shader*   getShader(const std::string& shaderPath);
     int       getMaterialIndex(const Material& mat);
     Material& getMaterial(int materialIndex);
-    int       getAttribute(const std::string& texPath, const Material& mat,const std::string& shaderPath);
-    int       getAttribute(const std::string& texPath, GLuint matIndex,const std::string& shaderPath);
+    int       getAttribute(const std::string& texPath, GLint wrapMode, const Material& mat,const std::string& shaderPath);
+    int       getAttribute(const std::string& texPath, GLint wrapMode, GLuint matIndex, const std::string& shaderPath);
     mkFont *  getFont(std::string fontName, int fontSize, bool isPath = false);
 
     const std::vector<Attribute>& getAttributeVector();

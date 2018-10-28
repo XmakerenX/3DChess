@@ -27,7 +27,7 @@ Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle
     {
         for (GLuint attributeIndex  = 0; attributeIndex < std::min(meshMaterial.size(), meshTextures.size()); attributeIndex++)
         {
-            objAtteributes.push_back(asset.getAttribute(meshTextures[attributeIndex], meshMaterial[attributeIndex], shaderPath));
+            objAtteributes.push_back(asset.getAttribute(meshTextures[attributeIndex], GL_REPEAT, meshMaterial[attributeIndex], shaderPath));
         }
     }
     else
@@ -39,7 +39,7 @@ Object::Object(AssetManager &asset, const glm::vec3 &pos, const glm::vec3 &angle
         matt.specular = glm::vec4(0.3f, 0.3f, 0.3f, 1.0);
         matt.power = 1.0f;
         GLuint i = asset.getMaterialIndex(matt);
-        objAtteributes.push_back(asset.getAttribute("", i, shaderPath));
+        objAtteributes.push_back(asset.getAttribute("", GL_REPEAT, i, shaderPath));
     }
     
     InitObject(pos, angle, scale,pMesh,objAtteributes);

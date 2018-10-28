@@ -161,8 +161,8 @@ void Scene::SetAttribute(Attribute &attrib)
     if (attrib.shaderIndex != m_lastUsedAttrib.shaderIndex)
     {
         m_assetManager.getShader(attrib.shaderIndex)->Use();
-    }
-
+    }       
+    
     if (attrib.texIndex != m_lastUsedAttrib.texIndex)
     {
         
@@ -171,17 +171,22 @@ void Scene::SetAttribute(Attribute &attrib)
         else
         {
             glBindTexture(GL_TEXTURE_2D, m_assetManager.getTexture(attrib.texIndex));
+            // set texture warp mode
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, attrib.wrapMode);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, attrib.wrapMode);
+            
             glUniform1i(glGetUniformLocation(m_assetManager.getShader(attrib.shaderIndex)->Program, "textured"), 1);
         }
     }
-
+    
     if (attrib.matIndex != m_lastUsedAttrib.matIndex)
     {
         Material& mat = m_assetManager.getMaterial(attrib.matIndex);
         glBindBuffer(GL_UNIFORM_BUFFER, m_ubMaterial );
         glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), &mat, GL_DYNAMIC_DRAW);
-        m_lastUsedAttrib = attrib;
     }
+    
+    m_lastUsedAttrib = attrib;
 }
 
 //-----------------------------------------------------------------------------
