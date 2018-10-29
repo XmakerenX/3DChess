@@ -289,8 +289,11 @@ void ListBoxUI<T>::UpdateRects()
 
     m_ScrollBar.setLocation( m_rcItembox.right, m_rcItembox.top + 2 );
     m_ScrollBar.setSize( m_ScrollBar.getWidth(), m_rcItembox.getHeight() - 2 );
-    m_ScrollBar.SetPageSize( (m_rcItemboxText.getHeight())  /
-                             (m_elementsFonts[0].font->getFontSize() + 0.1875*m_elementsFonts[0].font->getFontSize() + 4));
+    if (m_elementsFonts.size() > 0)
+    {
+        m_ScrollBar.SetPageSize( (m_rcItemboxText.getHeight())  /
+                                (m_elementsFonts[0].font->getFontSize() + 0.1875*m_elementsFonts[0].font->getFontSize() + 4));
+    }
 
     if (m_selectedItems.size() > 0)
         m_ScrollBar.ShowItem(m_selectedItems.back());
