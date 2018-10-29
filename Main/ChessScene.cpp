@@ -59,7 +59,7 @@ void ChessScene::InitObjects()
     boardObject = &m_objects[m_objects.size() - 1];
     // add frame object
     std::vector<unsigned int> frameSquareAttribute;
-    frameSquareAttribute.push_back(m_assetManager.getAttribute("boardTextures/frame.png", GL_REPEAT, WHITE_MATERIAL, s_meshShaderPath2 ));
+    frameSquareAttribute.push_back(m_assetManager.getAttribute("data/textures/board/frame.png", GL_REPEAT, WHITE_MATERIAL, s_meshShaderPath2 ));
     
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.001f, 0.0f), // position
@@ -83,18 +83,15 @@ void ChessScene::InitObjects()
     m_lastIndex++;
         
     std::vector<unsigned int> cubeAttribute;
-    Material temp(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posz.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posy.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/posx.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negx.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negy.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("skyboxTextures/negz.jpg", GL_CLAMP_TO_EDGE, temp, s_meshShaderPath2 ));    
+    Material skyboxMaterial(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));    
     m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
-    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
+        
     // get attribute needed for the board pawns and highlighted squares
     Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
                    glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
@@ -413,11 +410,11 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
     switch (pPiece->getType())
     {
         case PAWN:
-            meshPath = "models/pawn.fbx";
+            meshPath = "data/models/pawn.fbx";
             break;
             
         case BISHOP:
-            meshPath = "models/bishop.fbx";
+            meshPath = "data/models/bishop.fbx";
             if (pPiece->getColor() == BLACK)
                 pieceRotaion.y = glm::half_pi<float>();
             else
@@ -425,23 +422,23 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
             break;
             
         case KNIGHT:
-            meshPath = "models/knight.fbx";
+            meshPath = "data/models/knight.fbx";
             if (pPiece->getColor() == BLACK)
                 pieceRotaion.y = glm::pi<float>();
             break;
             
         case ROOK:
-            meshPath = "models/rook.fbx";
+            meshPath = "data/models/rook.fbx";
             pieceScale = pieceScale * glm::vec3(0.269f, 0.422f, 0.269f);
             piecePosition.y += 3.4f;
             break;
             
         case QUEEN:
-            meshPath = "models/queen.fbx";
+            meshPath = "data/models/queen.fbx";
             break;
             
         case KING:
-            meshPath = "models/king.fbx";
+            meshPath = "data/models/king.fbx";
             break;
     }
     

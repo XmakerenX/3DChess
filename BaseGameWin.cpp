@@ -53,8 +53,8 @@ bool BaseGameWin::initGame(int width, int height)
     
     glewInit();
     
-    m_spriteShader = m_asset.getShader("sprite");
-    m_spriteTextShader = m_asset.getShader("spriteText");
+    m_spriteShader = m_asset.getShader("data/shaders/sprite");
+    m_spriteTextShader = m_asset.getShader("data/shaders/spriteText");
 
     m_sprites[0].Init();
     m_sprites[1].Init();

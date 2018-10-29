@@ -1,6 +1,6 @@
 #include "Scene.h"
 
-const std::string Scene::s_meshShaderPath2 = "objectShader4";
+const std::string Scene::s_meshShaderPath2 = "data/shaders/objectShader4";
 //-----------------------------------------------------------------------------
 // Name : Scene (constructor)
 //-----------------------------------------------------------------------------
@@ -96,14 +96,14 @@ void Scene::InitObjects()
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f), // rotation
                            glm::vec3(0.5f, 0.5f, 0.5f), // scale
-                           m_assetManager.getMesh("porsche.obj"),
+                           m_assetManager.getMesh("data/models/porsche.obj"),
                            s_meshShaderPath2 );
     
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(18.5f, -0.5f, 0.0f), // position
                            glm::vec3(0.0f, 0.0f, 0.0f),   // rotation
                            glm::vec3(8.0f, 8.0f, 8.0f),   // scale
-                           m_assetManager.getMesh("king.fbx"),
+                           m_assetManager.getMesh("data/models/king.fbx"),
                            s_meshShaderPath2 );
 
     m_curObj = &m_objects[0];

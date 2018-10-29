@@ -140,21 +140,21 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     //-------------------------------------
     // loads the button default texture
     const std::vector<Rect> buttonTexturesRects = {Rect(1, 2, 134, 51) ,Rect(138, 3, 248, 50)};
-    if (!initControlGFX(assetManger, ControlUI::BUTTON, "tex.png", buttonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::BUTTON, "data/textures/GUI/tex.png", buttonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init CheckBox elements
     //-------------------------------------
     const std::vector<Rect> checkboxTexturesRects = {Rect(0, 54, 27, 81 ), Rect(27, 54, 54, 81 )};
-    if (!initControlGFX(assetManger, ControlUI::CHECKBOX, "tex.png", checkboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::CHECKBOX, "data/textures/GUI/tex.png", checkboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init RadioButton elements
     //-------------------------------------
     const std::vector<Rect> radioButtonTexturesRects = {Rect(54, 54, 81, 81), Rect(81, 54, 108, 81)};
-    if (!initControlGFX(assetManger, ControlUI::RADIOBUTTON, "tex.png", radioButtonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::RADIOBUTTON, "data/textures/GUI/tex.png", radioButtonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -165,7 +165,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
                                                      Rect(13, 123, 241, 160), // Drop down textrue rect
                                                      Rect(12, 163, 239, 183)};// selection textrue rect
 
-    if (!initControlGFX(assetManger, ControlUI::COMBOBOX, "tex.png", comboboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::COMBOBOX, "data/textures/GUI/tex.png", comboboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -178,7 +178,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
                                                      Rect(nScrollBarStartX + 0, nScrollBarStartY + 32, nScrollBarStartX + 22, nScrollBarStartY + 53), // Down Arrow textrue rect
                                                     Rect(220, 192, 238, 234)};                                                                        // Button textrue rect
 
-    if (!initControlGFX(assetManger, ControlUI::SCROLLBAR, "tex.png", scrollBarTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::SCROLLBAR, "data/textures/GUI/tex.png", scrollBarTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -187,7 +187,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     const std::vector<Rect> listTexturesRects = {Rect( 13, 123, 241, 160),      // Main texture rect
                                                      Rect( 16, 166, 240, 183)}; // Selection texture rect
 
-    if (!initControlGFX(assetManger, ControlUI::LISTBOX, "tex.png", listTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::LISTBOX, "data/textures/GUI/tex.png", listTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -196,7 +196,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
     const std::vector<Rect> sliderTexturesRects = {Rect( 1, 187, 93, 228),       // Track texture rect
                                                      Rect( 151, 193, 192, 234)}; // Button texture rect
 
-    if (!initControlGFX(assetManger, ControlUI::SLIDER, "tex.png", sliderTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::SLIDER, "data/textures/GUI/tex.png", sliderTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -212,7 +212,7 @@ bool DialogUI::initDefControlElements(AssetManager &assetManger)
                                                    Rect( 14, 113, 241, 121 ),     // lower border 7
                                                    Rect( 241, 113, 246, 121 )};   // lower right border 8
 
-    if (!initControlGFX(assetManger, ControlUI::EDITBOX, "tex.png", editboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManger, ControlUI::EDITBOX, "data/textures/GUI/tex.png", editboxTexturesRects, elementFontVec))
         return false;
 
     return true;
@@ -251,21 +251,21 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     //-------------------------------------
     // loads our wood GUI texture
     const std::vector<Rect> buttonTexturesRects = {Rect(0, 0, 84, 34), Rect(0, 34, 84, 68)};
-    if (!initControlGFX(assetManager, ControlUI::BUTTON, "woodGUI.png", buttonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::BUTTON, "data/textures/GUI/woodGUI.png", buttonTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init CheckBox elements
     //-------------------------------------
     const std::vector<Rect> checkboxTexturesRects = {Rect(0, 115, 15, 130 ), Rect(60, 112, 76, 130 )};
-    if (!initControlGFX(assetManager, ControlUI::CHECKBOX, "woodGUI.png", checkboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::CHECKBOX, "data/textures/GUI/woodGUI.png", checkboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
     // Init RadioButton elements
     //-------------------------------------
     const std::vector<Rect> radioButtonTexturesRects = {Rect(1, 145, 19, 163), Rect(61, 145, 79, 163)};
-    if (!initControlGFX(assetManager, ControlUI::RADIOBUTTON, "woodGUI.png", radioButtonTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::RADIOBUTTON, "data/textures/GUI/woodGUI.png", radioButtonTexturesRects, elementFontVec))
         return false;
                                                     
     //-------------------------------------
@@ -276,7 +276,7 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
                                                      Rect(93, 108, 320, 145), // Drop down textrue rect
                                                      Rect(93, 150, 320, 172)};// selection textrue rect
 
-    if (!initControlGFX(assetManager, ControlUI::COMBOBOX, "woodGUI.png", comboboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::COMBOBOX, "data/textures/GUI/woodGUI.png", comboboxTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -285,7 +285,7 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     const std::vector<Rect> listTexturesRects = {Rect( 93, 108, 320, 145),      // Main texture rect
                                                      Rect( 93, 150, 320, 172)}; // Selection texture rect
 
-    if (!initControlGFX(assetManager, ControlUI::LISTBOX, "woodGUI.png", listTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::LISTBOX, "data/textures/GUI/woodGUI.png", listTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -294,7 +294,7 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
     const std::vector<Rect> sliderTexturesRects = {Rect( 102, 84, 243, 90),       // Track texture rect
                                                      Rect( 243, 81, 259, 100)}; // Button texture rect
 
-    if (!initControlGFX(assetManager, ControlUI::SLIDER, "woodGUI.png", sliderTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::SLIDER, "data/textures/GUI/woodGUI.png", sliderTexturesRects, elementFontVec))
         return false;
 
     //-------------------------------------
@@ -310,7 +310,7 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
                                                    Rect( 100, 66, 354, 68 ),     // lower border
                                                    Rect( 354, 65, 357, 68 )};   // lower right border
 
-    if (!initControlGFX(assetManager, ControlUI::EDITBOX, "woodGUI.png", editboxTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::EDITBOX, "data/textures/GUI/woodGUI.png", editboxTexturesRects, elementFontVec))
         return false;
                                                                                                        
     //-------------------------------------
@@ -321,7 +321,7 @@ bool DialogUI::initWoodControlElements(AssetManager& assetManager)
                                                       Rect(329, 140, 350, 159),  // Down Arrow textrue rect
                                                       Rect(220, 192, 238, 234)}; // Button textrue rect 
 
-    if (!initControlGFX(assetManager, ControlUI::SCROLLBAR, "woodGUI.png", scrollBarTexturesRects, elementFontVec))
+    if (!initControlGFX(assetManager, ControlUI::SCROLLBAR, "data/textures/GUI/woodGUI.png", scrollBarTexturesRects, elementFontVec))
         return false;
 
     return true;

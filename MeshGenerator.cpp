@@ -40,17 +40,17 @@ Mesh MeshGenerator::createBoardMesh(AssetManager& assetManager, const glm::vec2&
         materialIndex, materialIndex
     };
     
-    std::vector<std::string> texturesPath = {"black2.png", "white.jpg", 
-        "boardTextures/frame1.png", "boardTextures/frame2.png",
-        "boardTextures/frame3.png", "boardTextures/frame4.png", 
-        "boardTextures/frame5.png", "boardTextures/frame6.png", 
-        "boardTextures/frame7.png", "boardTextures/frame8.png",
-        "boardTextures/frameA.png", "boardTextures/frameB.png",
-        "boardTextures/frameC.png", "boardTextures/frameD.png",
-        "boardTextures/frameE.png", "boardTextures/frameF.png",
-        "boardTextures/frameG.png", "boardTextures/frameH.png",
-        "boardTextures/frameLowerLeft.png", "boardTextures/frameLowerLeft.png",
-        "boardTextures/frameLowerLeft.png", "boardTextures/frameLowerLeft.png"
+    std::vector<std::string> texturesPath = {"data/textures/board/black.png", "data/textures/board/white.jpg", 
+        "data/textures/board/frame1.png", "data/textures/board/frame2.png",
+        "data/textures/board/frame3.png", "data/textures/board/frame4.png", 
+        "data/textures/board/frame5.png", "data/textures/board/frame6.png", 
+        "data/textures/board/frame7.png", "data/textures/board/frame8.png",
+        "data/textures/board/frameA.png", "data/textures/board/frameB.png",
+        "data/textures/board/frameC.png", "data/textures/board/frameD.png",
+        "data/textures/board/frameE.png", "data/textures/board/frameF.png",
+        "data/textures/board/frameG.png", "data/textures/board/frameH.png",
+        "data/textures/board/frameLowerLeft.png", "data/textures/board/frameLowerLeft.png",
+        "data/textures/board/frameLowerLeft.png", "data/textures/board/frameLowerLeft.png"
     };
         
     return Mesh(std::move(boardSubMeshes), std::move(materials), std::move(texturesPath));

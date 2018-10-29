@@ -48,13 +48,13 @@ void ChessWindow::initMainMenu()
     m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
     //m_dialog.initDefControlElements(m_asset);
     m_dialog.initWoodControlElements(m_asset);
-    if (!m_dialog.LoadDialogFromFile("MainMenu.txt"))
+    if (!m_dialog.LoadDialogFromFile("data/dialogs/MainMenu.txt"))
         return;
         
     StaticUI* gameTitle;
     m_dialog.addStatic(50, "Chess", -100, -150, 380, 100, &gameTitle);
     std::vector<ELEMENT_FONT> gameTitleFont;
-    gameTitleFont.emplace_back(FontInfo("RosewoodStd-Regular.otf", 64) , m_asset.getFont("RosewoodStd-Regular.otf", 64, true));
+    gameTitleFont.emplace_back(FontInfo("data/fonts/RosewoodStd-Regular.otf", 64) , m_asset.getFont("data/fonts/RosewoodStd-Regular.otf", 64, true));
     gameTitle->setControlFonts(gameTitleFont);
     gameTitle->setTextOrientation(mkFont::TextFormat::Center);
     
@@ -74,7 +74,7 @@ void ChessWindow::initMainMenu()
 //-----------------------------------------------------------------------------
 void ChessWindow::initOptionsMenu()
 {
-    m_optionDialog.init(100, 100, 18, "Options", "GUITextures/woodBack.png", glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
+    m_optionDialog.init(100, 100, 18, "Options", "data/textures/GUI/woodBack.png", glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
     m_optionDialog.setLocation( (m_winWidth / 2) - (m_optionDialog.getWidth() / 2), (m_winHeight / 2) - (m_optionDialog.getHeight() / 2) );
     m_optionDialog.setVisible(false);
     m_optionDialog.setCaption(false);
@@ -88,15 +88,15 @@ void ChessWindow::initOptionsMenu()
 //-----------------------------------------------------------------------------
 void ChessWindow::initPromotionMenu()
 {
-    m_promotionGUI.init(500, 100, 18,"Select Pawn", "GUITextures/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
+    m_promotionGUI.init(500, 100, 18,"Select Pawn", "data/textures/GUI/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
     m_promotionGUI.setCaption(false);
     m_promotionGUI.initWoodControlElements(m_asset);
-    if(!m_promotionGUI.LoadDialogFromFile("pawns.txt"))
+    if(!m_promotionGUI.LoadDialogFromFile("data/dialogs/pawns.txt"))
         return;
     
     m_promotionGUI.setLocation( (m_winWidth / 2) - (m_promotionGUI.getWidth() / 2), (m_winHeight / 2) - (m_promotionGUI.getHeight() / 2) );
     m_promotionGUI.setVisible(false);
-    GLuint promotionTextureName = m_asset.getTexture("GUITextures/pawnsButtons.png");
+    GLuint promotionTextureName = m_asset.getTexture("data/textures/GUI/pawnsButtons.png");
     TextureInfo promotionTextureInfo = m_asset.getTextureInfo(promotionTextureName);
     
     std::vector<ELEMENT_GFX> knightGFX;
