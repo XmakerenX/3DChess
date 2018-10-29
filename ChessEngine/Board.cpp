@@ -75,8 +75,9 @@ void board::SaveBoardToFile()
             {
                 saveFile << i << "| piece i" << "\n";
                 saveFile << j << "| piece j" << "\n";
-                saveFile << m_board[i][j]->getColor() << "| piece Color" << "\n";
-                saveFile << m_board[i][j]->getType() << "| piece Type" << "\n";
+                saveFile << m_board[i][j]->getColor() << "| piece Color\n";
+                saveFile << m_board[i][j]->getType() << "| piece Type\n";
+                saveFile << m_board[i][j]->isMoved() << "| piece moved\n";
             }
         }
     }
@@ -135,6 +136,7 @@ bool board::LoadBoardFromFile()
     {
         unsigned int i = 0,j = 0;
         int color,type;
+        bool moved;
 
         inputFile >> i;
         inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -147,8 +149,11 @@ bool board::LoadBoardFromFile()
         inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         inputFile >> type;
         inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        inputFile >> moved;
+        inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         m_board[i][j] = createPiece(color, static_cast<PIECES>(type), BOARD_POINT(j,i));
+        m_board[i][j]->setMoved(moved);
         if (type == KING)
         {
             if (color == BLACK)
@@ -168,6 +173,8 @@ bool board::LoadBoardFromFile()
     
     inputFile.close();
     //m_gameActive = true;
+    m_currentPlayer *=-1;
+    endTurn();
     return m_gameActive;
 }
 

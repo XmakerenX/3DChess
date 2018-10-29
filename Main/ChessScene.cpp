@@ -161,6 +161,10 @@ void ChessScene::loadGame()
     
     m_lastIndex = 3;
     gameBoard->LoadBoardFromFile();
+    
+    const BOARD_POINT& threatBoardSquare = gameBoard->getThreatSquare();
+    if (threatBoardSquare.row != -1 && threatBoardSquare.col != -1)
+        hightlightBoardSquare(boardPointToPoint(threatBoardSquare), m_redAttribute);
 }
 
 //-----------------------------------------------------------------------------
