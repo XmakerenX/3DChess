@@ -4,6 +4,7 @@
 #include "DialogUI.h"
 #include "ListBoxUI.cpp"
 #include "ComboBoxUI.cpp"
+#include "../BaseGameWin.h"
 #include <iostream>
 #include <limits>
 
@@ -1464,6 +1465,8 @@ ComboBoxUI<T> * DialogUI::getComboBox( int ID )
 {
     return static_cast<ComboBoxUI<T>*> (getControl(ID, ControlUI::COMBOBOX));
 }
+template ComboBoxUI<int>* DialogUI::getComboBox<int>(int);
+template ComboBoxUI<Resolution>* DialogUI::getComboBox<Resolution>(int);
 
 //-----------------------------------------------------------------------------
 // Name : GetSlider
