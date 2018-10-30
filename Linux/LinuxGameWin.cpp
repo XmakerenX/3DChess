@@ -156,6 +156,7 @@ GLXFBConfig LinuxGameWin::getBestFBConfig()
     // Pick the FB config/visual with the most samples per pixel
     //std::cout << "Getting XVisualInfos\n";
     int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+    int fbx8x = -1, fbx4x = -1;
 
     int i;
     for (i=0; i<fbcount; ++i)
@@ -167,9 +168,15 @@ GLXFBConfig LinuxGameWin::getBestFBConfig()
             glXGetFBConfigAttrib( m_display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
             glXGetFBConfigAttrib( m_display, fbc[i], GLX_SAMPLES       , &samples  );
       
-//             std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
-//              << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
+//              std::cout << "  Matching fbconfig " << i << " , visual ID 0x" << std::hex << vi->visualid
+//               << ": SAMPLE_BUFFERS = " << samp_buf << " SAMPLES = " << samples << "\n";
       
+            if ((fbx4x < 0) && samp_buf && (samples == 4) )
+                fbx4x = i;
+            
+            if ((fbx8x < 0) && samp_buf && (samples == 8) )
+                fbx8x = i;
+              
             if ( (best_fbc < 0) || (samp_buf && (samples > best_num_samp)) )
                 best_fbc = i, best_num_samp = samples;
             
@@ -179,7 +186,7 @@ GLXFBConfig LinuxGameWin::getBestFBConfig()
         XFree( vi );
     }
     
-    GLXFBConfig bestFbc = fbc[ best_fbc ];
+    GLXFBConfig bestFbc = fbc[ fbx4x ];
     // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
     XFree( fbc );
     return bestFbc;
