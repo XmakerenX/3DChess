@@ -8,6 +8,54 @@ function(was_found package_name isfound)
     endif(NOT isfound)
 endfunction(was_found)
 
+macro(generateWaylandFiles)
+    if(WAYLAND_FOUND)
+        execute_process(
+            COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=wayland_scanner wayland-scanner
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            RESULT_VARIABLE WAYLAND_SCANNER_RC
+            OUTPUT_VARIABLE WAYLAND_SCANNER
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(NOT WAYLAND_SCANNER_RC EQUAL 0)
+            set(WAYLAND_FOUND FALSE)
+        endif()
+    endif()
+    
+    if(WAYLAND_FOUND)
+      execute_process(
+        COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=pkgdatadir wayland-protocols
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RESULT_VARIABLE WAYLAND_PROTOCOLS_DIR_RC
+        OUTPUT_VARIABLE WAYLAND_PROTOCOLS_DIR
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      if(NOT WAYLAND_PROTOCOLS_DIR_RC EQUAL 0)
+        set(WAYLAND_FOUND FALSE)
+      endif()
+    endif()
+    
+    add_custom_command(
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.h"
+        DEPENDS "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-shell/xdg-shell-unstable-v6.xml"
+        COMMAND "${WAYLAND_SCANNER}"
+        ARGS client-header "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-shell/xdg-shell-unstable-v6.xml" "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.h"
+    )
+
+    add_custom_command(
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.c"
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.h"
+        COMMAND "${WAYLAND_SCANNER}"
+        ARGS private-code "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-shell/xdg-shell-unstable-v6.xml" "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.c"
+        
+    )
+    
+    set(SRC_LIST ${SRC_LIST} "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.c")
+    include_directories("${CMAKE_CURRENT_BINARY_DIR}/WaylandGen")
+endmacro(generateWaylandFiles)
+
 # make cmake find our *.cmake files
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -21,7 +69,13 @@ if (UNIX)
     find_package(X11 QUIET REQUIRED)
     find_package(Xrandr QUIET REQUIRED)
     find_package(FontConfig QUIET REQUIRED)
+    find_package(Wayland QUIET REQUIRED)
+    find_package(XKBCommon QUIET REQUIRED)
+    find_package(EGL QUIET REQUIRED)
     set(OpenGL_GL_PREFERENCE GLVND)
+    find_package(PkgConfig QUIET REQUIRED)
+    was_found("PkgConfig" ${PKG_CONFIG_FOUND})
+    generateWaylandFiles()
 endif(UNIX)
 find_package(Threads QUIET REQUIRED)
 find_package(OpenGL QUIET REQUIRED)
@@ -44,6 +98,9 @@ if (UNIX)
     was_found("X11" ${X11_FOUND})
     was_found("Xrandr" ${XRANDR_FOUND})
     was_found("FontConfig" ${FONTCONFIG_FOUND})
+    was_found("Wayland" ${WAYLAND_FOUND})
+    was_found("XKBCommon" ${XKBCOMMON_FOUND})
+    was_found("EGL" ${EGL_FOUND})
 endif(UNIX)
 
 message("Setting include directories")
@@ -57,6 +114,10 @@ if (UNIX)
     include_directories(${X11_INCLUDE_DIR})
     include_directories(${XRANDR_INCLUDE_DIRS})
     include_directories(${FONTCONFIG_INCLUDE_DIRS})
+    include_directories(${WAYLAND_CLIENT_INCLUDE_DIR})
+    include_directories(${WAYLAND_EGL_INCLUDE_DIR})
+    include_directories(${XKBCOMMON_INCLUDE_DIRS})
+    include_directories(${EGL_INCLUDE_DIR})
 endif(UNIX)
 
 message("adiing source files")
@@ -74,6 +135,7 @@ if (WIN32)
 else()
     aux_source_directory(./Linux SRC_LIST)
     aux_source_directory(./Main/Linux MAIN_SRC_LIST)
+    aux_source_directory(./Build/Linux MAIN_SRC_LIST)
     aux_source_directory(./Editor/Linux EDITOR_SRC_LIST)
     aux_source_directory(./Test/Linux TEST_SRC_LIST)
 endif(WIN32)
@@ -97,6 +159,10 @@ if (UNIX)
     target_link_libraries(${ENGINE_NAME} ${X11_LIBRARIES})
     target_link_libraries(${ENGINE_NAME} ${XRANDR_LIBRARIES})
     target_link_libraries(${ENGINE_NAME} ${FONTCONFIG_LIBRARIES})
+    target_link_libraries(${ENGINE_NAME} ${WAYLAND_LIBRARIES})
+    target_link_libraries(${ENGINE_NAME} ${WAYLAND_EGL_LIBRARIES})
+    target_link_libraries(${ENGINE_NAME} ${XKBCOMMON_LIBRARIES})
+    target_link_libraries(${ENGINE_NAME} ${EGL_LIBRARY})
 endif(UNIX)
 target_link_libraries(${ENGINE_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
