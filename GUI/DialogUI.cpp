@@ -12,6 +12,7 @@
 // Name : DialogUI (constructor)
 //-----------------------------------------------------------------------------
 DialogUI::DialogUI(void)
+    :m_clipboardCopyFunc([](std::string x){}), m_clipboardPasteFunc([](){return std::string();})
 {
     m_nCaptionHeight = 18;
 
@@ -1528,6 +1529,31 @@ bool DialogUI::getVisible()
 GLulong DialogUI::getCurControlID()
 {
     return m_curControlID;
+}
+
+//-----------------------------------------------------------------------------
+// Name : copyToClipboard
+//-----------------------------------------------------------------------------
+void DialogUI::copyToClipboard(std::string textToCopy)
+{
+    m_clipboardCopyFunc(textToCopy);
+}
+
+//-----------------------------------------------------------------------------
+// Name : pasteFromClipboard
+//-----------------------------------------------------------------------------
+std::string DialogUI::pasteFromClipboard()
+{
+    return m_clipboardPasteFunc();
+}
+
+//-----------------------------------------------------------------------------
+// Name : pasteFromClipboard
+//-----------------------------------------------------------------------------
+void DialogUI::setClipboardFunctions(std::function<void (std::string)> clipboardCopyFunc, std::function<std::string (void)> clipboardPasteFunc)
+{
+    m_clipboardCopyFunc = clipboardCopyFunc;
+    m_clipboardPasteFunc = clipboardPasteFunc;
 }
 
 #endif  //_DIALOGUI_CPP

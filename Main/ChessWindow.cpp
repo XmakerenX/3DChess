@@ -44,6 +44,7 @@ void ChessWindow::initGUI()
 void ChessWindow::initMainMenu()
 {
     m_dialog.init(200,320, 18, "Main Menu", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
+    m_dialog.setClipboardFunctions(copyToClipboard, PasteClipboard);
     m_dialog.setCaption(false);
     m_dialog.setLocation( (m_winWidth / 2) - (m_dialog.getWidth() / 2), (m_winHeight / 2) - (m_dialog.getHeight() / 2) );
     //m_dialog.initDefControlElements(m_asset);
@@ -75,6 +76,7 @@ void ChessWindow::initMainMenu()
 void ChessWindow::initOptionsMenu()
 {
     m_optionDialog.init(100, 100, 18, "Options", "data/textures/GUI/woodBack.png", glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
+    m_optionDialog.setClipboardFunctions(copyToClipboard, PasteClipboard);
     m_optionDialog.setLocation( (m_winWidth / 2) - (m_optionDialog.getWidth() / 2), (m_winHeight / 2) - (m_optionDialog.getHeight() / 2) );
     m_optionDialog.setVisible(false);
     m_optionDialog.setCaption(false);
@@ -89,6 +91,7 @@ void ChessWindow::initOptionsMenu()
 void ChessWindow::initPromotionMenu()
 {
     m_promotionGUI.init(500, 100, 18,"Select Pawn", "data/textures/GUI/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
+    m_promotionGUI.setClipboardFunctions(copyToClipboard, PasteClipboard);
     m_promotionGUI.setCaption(false);
     m_promotionGUI.initWoodControlElements(m_asset);
     if(!m_promotionGUI.LoadDialogFromFile("data/dialogs/pawns.txt"))

@@ -6,6 +6,7 @@ GUIEditorWin::GUIEditorWin() : m_editDialog(this)
 void GUIEditorWin::initGUI()
 {
     m_editDialog.init(500, 735, 18, "Edit Dialog", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
+    m_editDialog.setClipboardFunctions(copyToClipboard, PasteClipboard);
     m_editDialog.setLocation(550, 0);
     m_editDialog.initDefControlElements(m_asset);
     m_editDialog.CreateDialogUI(m_asset);

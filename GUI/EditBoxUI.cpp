@@ -892,7 +892,8 @@ void EditBoxUI::copyToClipboard()
 {
     if (m_nCaret != m_nSelStart)
     {
-        GameWin::copyToClipboard(m_buffer.substr(std::min(m_nCaret, m_nSelStart), std::abs(m_nCaret - m_nSelStart)));
+        m_pParentDialog->copyToClipboard(m_buffer.substr(std::min(m_nCaret, m_nSelStart), std::abs(m_nCaret - m_nSelStart)));
+        //GameWin::copyToClipboard(m_buffer.substr(std::min(m_nCaret, m_nSelStart), std::abs(m_nCaret - m_nSelStart)));
     }
 }
 
@@ -902,7 +903,8 @@ void EditBoxUI::copyToClipboard()
 void EditBoxUI::pasteFromClipboard()
 {
     deleteSelectionText();
-    std::string pasteString = GameWin::PasteClipboard();
+    //std::string pasteString = GameWin::PasteClipboard();
+    std::string pasteString = m_pParentDialog->pasteFromClipboard();
     if (pasteString != "")
     {
         m_buffer.insert(m_nCaret, pasteString);

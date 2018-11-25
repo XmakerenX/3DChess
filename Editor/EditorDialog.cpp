@@ -341,6 +341,7 @@ void EditDialogUI::CreateDialogUI(AssetManager& assetManager)
     // Dialog initialization of the generated Dialog
     //-----------------------------------------------------------------------------
     m_GenDialog.init(500, 200, 18, "Generated Dialog", "data/textures/GUI/dialog.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8f), assetManager);
+    m_GenDialog.setClipboardFunctions(m_clipboardCopyFunc, m_clipboardPasteFunc);
     m_GenDialog.setLocation(0, 50);
     m_GenDialog.initDefControlElements(assetManager);
 }

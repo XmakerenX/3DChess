@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <functional>
 #include <boost/signals2/signal.hpp>
 #include <boost/bind/bind.hpp>
 #include "../AssetManager.h"
@@ -79,6 +80,10 @@ public:
 
     void UpdateRects();
 
+    void copyToClipboard(std::string textToCopy);
+    std::string pasteFromClipboard();
+    void setClipboardFunctions(std::function<void (std::string)> clipboardCopyFunc, std::function<std::string (void)> clipboardPasteFunc);
+    
     //-------------------------------------------------------------------------
     // Functions that handle the Dialog Controls
     //-------------------------------------------------------------------------
@@ -212,6 +217,10 @@ public:
 
     long    getCaptionHeight    ();
 
+protected:
+    std::function<void (std::string)> m_clipboardCopyFunc;
+    std::function<std::string (void)> m_clipboardPasteFunc;
+    
 private:
     int  m_x, m_y;
     GLuint m_width;
@@ -248,7 +257,7 @@ private:
 
     ControlUI* m_pControlFocus; // The control which has focus
     ControlUI* m_pMouseOverControl;
-
+    
     boost::signals2::signal<void (ControlUI*)> m_controlRightClkSig;
 };
 

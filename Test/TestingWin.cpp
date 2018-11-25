@@ -9,6 +9,7 @@ TestingWin::TestingWin()
 void TestingWin::initGUI()
 {
     m_testDialog.init(500, 735, 18, "Edit Dialog", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
+    m_testDialog.setClipboardFunctions(copyToClipboard, PasteClipboard);
     m_testDialog.setLocation(50, 50);
     m_testDialog.initDefControlElements(m_asset);
 //     ListBoxUI<int>* listbox;
