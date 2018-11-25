@@ -73,9 +73,22 @@ void Timer::frameAdvanced()
     double curTimeDelta=(currTime - m_lastTime) * m_TimeScale;
     m_lastTime = currTime;
 
+    for (std::list<alarm>::iterator it = --m_alarms.end(); it != --m_alarms.begin(); --it)
+    {
+        if (it->fireTime <= currTime)
+        {
+            std::cout << "fireing callback\n";
+            it->callback();
+            if (it->repeat > 0)
+                it->fireTime = currTime + it->repeat;
+            else
+                m_alarms.erase(it);
+        }
+    }
+    
     if (!m_cap)
     {
-        if ( fabsf(curTimeDelta - m_avgTimeDelta) < 1.0f  )
+        if ( fabs(curTimeDelta - m_avgTimeDelta) < 1.0f  )
         {
             // Wrap FIFO frame time buffer.
             for (int i = MAX_SAMPLE_COUNT - 1; i > 0; i--)
@@ -158,3 +171,41 @@ bool Timer::isCap()
 {
     return m_cap;
 } 
+
+//-----------------------------------------------------------------------------
+// Name : addAlram
+//-----------------------------------------------------------------------------
+std::list<Timer::alarm>::iterator Timer::addAlram(int64_t duration, const std::function<void (void)>& callback ,int64_t repeated)
+{
+    int64_t currentTime;
+    getPerformanceCounter(&currentTime);
+    m_alarms.emplace_back(currentTime, currentTime + duration, callback, repeated);
+    return --m_alarms.end();
+}
+
+//-----------------------------------------------------------------------------
+// Name : addAlram
+//-----------------------------------------------------------------------------
+std::list<Timer::alarm>::iterator Timer::addAlram(int64_t duration, std::function<void (void)>&& callback ,int64_t repeated)
+{
+    int64_t currentTime;
+    getPerformanceCounter(&currentTime);
+    m_alarms.emplace_back(currentTime, currentTime + duration, callback, repeated);
+    return --m_alarms.end();
+}
+
+//-----------------------------------------------------------------------------
+// Name : removeAlarm
+//-----------------------------------------------------------------------------
+void Timer::removeAlarm(std::list<alarm>::iterator itemIndex)
+{
+    m_alarms.erase(itemIndex);
+}
+
+//-----------------------------------------------------------------------------
+// Name : convertTime
+//-----------------------------------------------------------------------------
+int64_t Timer::convertTime(unsigned int seconds, unsigned int microseconds)
+{
+    return microseconds + seconds * m_PerfFreq;
+}

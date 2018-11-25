@@ -16,12 +16,33 @@
 #include <assert.h>
 #include <string.h>
 #include <iostream>
+#include <list>
+#include <functional>
 
 const unsigned long MAX_SAMPLE_COUNT = 50;  // Maximum frame time sample count
 
 class Timer
 {
+    
+    struct alarm
+    {
+        alarm(int64_t _creationTime, int64_t _fireTime, const std::function<void (void)>& _callback, int64_t _repeat)
+            :creationTime(_creationTime), fireTime(_fireTime), callback(_callback), repeat(_repeat)
+        {}
+        
+        alarm(int64_t _creationTime, int64_t _fireTime, std::function<void (void)>&& _callback, int64_t _repeat)
+            :creationTime(_creationTime), fireTime(_fireTime), callback(_callback), repeat(_repeat)
+        {}
+        
+        int64_t creationTime;
+        int64_t fireTime;
+        std::function<void (void)> callback;
+        int64_t repeat;
+    };
+    
 public:
+    typedef std::list<alarm>::iterator AlarmIterator;
+    
     Timer(void);
     virtual ~Timer(void);
 
@@ -36,6 +57,12 @@ public:
     double                 getLastTime     ();
     unsigned long          getFPS          ();
     bool                   isCap           ();
+    
+    std::list<alarm>::iterator addAlram(int64_t duration, const std::function<void (void)>& callback ,int64_t repeated);
+    std::list<alarm>::iterator addAlram(int64_t duration, std::function<void (void)>&& callback ,int64_t repeated);
+    void removeAlarm(std::list<alarm>::iterator itemIndex);
+    
+    int64_t convertTime(unsigned int seconds, unsigned int microseconds);
 
 private:
     int64_t                m_lastTime;
@@ -49,6 +76,8 @@ private:
     unsigned long          m_FPSFrameCount;   // Elapsed frames in any given second
     float                  m_FPSTimeElapsed;  // How much time has passed during FPS sample
     bool                   m_cap;
+    
+    std::list<alarm> m_alarms;
 
 };
 
