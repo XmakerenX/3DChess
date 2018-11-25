@@ -47,6 +47,7 @@ void ChessScene::InitScene(int width, int height, const glm::vec3& cameraPos, co
 //-----------------------------------------------------------------------------
 void ChessScene::InitObjects()
 {
+    int skyboxIndex = -1; 
     // add board object
     m_objects.emplace_back(m_assetManager,
                            glm::vec3(0.0f, 0.0f, 0.0f), // position
@@ -82,15 +83,16 @@ void ChessScene::InitObjects()
     
     m_lastIndex++;
         
-    std::vector<unsigned int> cubeAttribute;
-    Material skyboxMaterial(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
-    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));    
-    m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
+//     std::vector<unsigned int> cubeAttribute;
+//     Material skyboxMaterial(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
+//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));  
+//     m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
+    skyboxIndex = m_objects.size() - 1;
         
     // get attribute needed for the board pawns and highlighted squares
     Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
@@ -127,6 +129,16 @@ void ChessScene::InitObjects()
     m_promotionDialog.getButton(IDC_BISHOP)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
     m_promotionDialog.getButton(IDC_ROOK)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
     m_promotionDialog.getButton(IDC_QUEEN)->connectToClick( boost::bind(&ChessScene::onPromotionSelected, this, _1));
+    
+    std::vector<unsigned int> cubeAttribute;
+    Material skyboxMaterial(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
+    cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));  
+    m_objects[skyboxIndex].SetObjectAttributes(cubeAttribute);
 }
 
 //-----------------------------------------------------------------------------
