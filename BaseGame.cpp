@@ -109,7 +109,7 @@ bool BaseGame::initGame(BaseWindow* window,int width, int height)
     // init our font
     m_font = m_asset.getFont("NotoMono", 40);
     // make sure the viewport is updated
-    m_window->reshape(width,height);
+    m_window->reshape(m_window->getWidth(), m_window->getHeight());
     
     int err = glGetError();
     if (err != GL_NO_ERROR)
