@@ -135,6 +135,22 @@ std::vector<std::vector<Mode1>> WindowsGameWin::getMonitorsModes() const
 }
 
 //-----------------------------------------------------------------------------
+// Name : getCopyToClipboardFunc ()
+//-----------------------------------------------------------------------------
+std::function<void (const std::string&)> WindowsGameWin::getCopyToClipboardFunc()
+{
+    return boost::bind(&WindowsGameWin::copyToClipboard, this, _1);
+}
+
+//-----------------------------------------------------------------------------
+// Name : getPasteClipboardFunc ()
+//-----------------------------------------------------------------------------
+std::function<std::string (void)> WindowsGameWin::getPasteClipboardFunc()
+{
+    return boost::bind(&WindowsGameWin::PasteClipboard, this);
+}
+
+//-----------------------------------------------------------------------------
 // Name : StaticWndProc 
 // Desc : forward the message to the proper instance of the class 
 //-----------------------------------------------------------------------------
@@ -655,42 +671,24 @@ Point WindowsGameWin::getCursorPos()
 }
 
 //-----------------------------------------------------------------------------
-// Name : BeginGame ()
+// Name : pumpMessages ()
 //-----------------------------------------------------------------------------
-int WindowsGameWin::BeginGame()
+int WindowsGameWin::pumpMessages()
 {
     MSG msg;
 
-    // Start main loop
-    while (m_gameRunning)
+    // Did we receive a message, or are we idling ?
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     {
-        // Did we receive a message, or are we idling ?
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (msg.message == WM_QUIT)
         {
-            if (msg.message == WM_QUIT)
-            {
-                m_gameRunning = false;
-                break;
-            }
+            m_running = false;
+            break;
+        }
             
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-
-        // Advance Game Frame.
-        m_timer.frameAdvanced();
-        int err = glGetError();
-        if (err != GL_NO_ERROR)
-            std::cout << "MsgLoop: ERROR bitches\n";
-
-        if (!m_timer.isCap())
-        {
-            drawing();
-        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
-
-    return 0;
-
 }
 
 //-----------------------------------------------------------------------------

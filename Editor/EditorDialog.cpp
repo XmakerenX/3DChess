@@ -4,10 +4,8 @@
 //-----------------------------------------------------------------------------
 // Name : EditorDialogUI (constructor)
 //-----------------------------------------------------------------------------
-EditDialogUI::EditDialogUI(GameWin* window)
-{
-    m_window = window;
-    
+EditDialogUI::EditDialogUI()
+{    
     m_GenControlNum = 0;
     m_curControlID = IDC_GENCONTROLID + m_GenControlNum;
     m_controlInCreation = false;
@@ -941,4 +939,12 @@ void EditDialogUI::SetComboBoxGUI(bool ControlSelected /* = false */)
         getButton(IDC_CREATECONTROL)->setVisible(false);
         getButton(IDC_DELETEBUTTON)->setEnabled(true);
     }
+}
+
+//-----------------------------------------------------------------------------
+// Name : SetWindow ()
+//-----------------------------------------------------------------------------
+void EditDialogUI::SetWindow(BaseWindow* window)
+{
+    m_window = window;
 }

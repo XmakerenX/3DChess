@@ -1,7 +1,8 @@
 #ifndef  _LINUXGAMEWIN_H
 #define  _LINUXGAMEWIN_H
 
-#include "../BaseGameWin.h"
+#include "../BaseGame.h"
+#include "../BaseWindow.h"
 #include <future>
 
 #include <X11/Xlib.h>
@@ -50,14 +51,14 @@ struct MonitorInfo
     std::vector<RROutput> outputs;
 };
 
-class LinuxGameWin : public BaseGameWin
+class LinuxX11Window : public BaseWindow
 {
 public:
-    LinuxGameWin();
-    virtual ~LinuxGameWin();
+    LinuxX11Window();
+    virtual ~LinuxX11Window();
     
-    int  BeginGame      ();
-    bool Shutdown       ();
+    void  pumpMessages      ();
+    bool  closeWindow       ();
     
     void setFullScreenMode(bool fullscreen);
     bool setMonitorResolution(int monitorIndex, Resolution newResolution);
@@ -70,10 +71,13 @@ public:
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
     
-    static void copyToClipboard(const std::string& text);
-    static std::string PasteClipboard();
+    void copyToClipboard(const std::string& text);
+    std::string PasteClipboard();
     
     std::vector<std::vector<Mode1>> getMonitorsModes() const;
+    
+    virtual std::function<void (const std::string&)> getCopyToClipboardFunc();
+    virtual std::function<std::string (void)> getPasteClipboardFunc();
 
 private:
     static bool isExtensionSupported    (const char *extList, const char *extension);

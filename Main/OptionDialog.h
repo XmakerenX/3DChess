@@ -3,18 +3,20 @@
 
 #include "../GUI/DialogUI.h"
 #include "../GameWin.h"
+#include "../BaseWindow.h"
 #include "settingsDef.h"
 
 class OptionDialog : public DialogUI
 {
 public:
-    OptionDialog(const GameWin& parentWindow);
+    OptionDialog();
     
     bool init(GLuint width, GLuint height, int nCaptionHeight, std::string captionText, std::string newTexturePath, glm::vec4 dialogColor, AssetManager& assetManger);
     
     void initGUI();
     void initResolutionCombobox();
     
+    void setParentWindow(const BaseWindow* parentWindow);
     void setResoultionCombobox(int monitorIndex);
     
     void onWindowedPressed(ButtonUI* windowedButton);
@@ -22,7 +24,7 @@ public:
     void onMonitorSelectChange(ComboBoxUI<int>* monitorCombobox);
     
 private:
-    const GameWin& m_parentWindow;
+    const BaseWindow* m_parentWindow;
     std::vector<std::vector<Mode1>> m_monitorsModes;
     
 };

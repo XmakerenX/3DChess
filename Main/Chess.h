@@ -1,15 +1,15 @@
-#ifndef  _CHESSWINDOW_H
-#define  _CHESSWINDOW_H
+#ifndef  _Chess_H
+#define  _Chess_H
 
 #include "../GameWin.h"
 #include "OptionDialog.h"
 #include "ChessScene.h"
 
-class ChessWindow : public GameWin
+class Chess : public BaseGame
 {
 public:
-    ChessWindow();
-    ~ChessWindow();
+    Chess();
+    ~Chess();
         
 protected:
     virtual void initGUI();
@@ -38,4 +38,4 @@ protected:
     DialogUI m_promotionGUI;
 };
 
-#endif  //_CHESSWINDOW_H
+#endif  //_Chess_H

@@ -4,7 +4,7 @@
 #include "DialogUI.h"
 #include "ListBoxUI.cpp"
 #include "ComboBoxUI.cpp"
-#include "../BaseGameWin.h"
+#include "../BaseGame.h"
 #include <iostream>
 #include <limits>
 

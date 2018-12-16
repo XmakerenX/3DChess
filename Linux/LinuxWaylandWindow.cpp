@@ -1,4 +1,4 @@
-#include "LinuxWaylandGameWin.h"
+#include "LinuxWaylandWindow.h"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -14,64 +14,64 @@
 #include <unistd.h>
 #include <poll.h>
 
-const double LinuxWaylandGameWin::s_doubleClickTime = 0.5;
-const wl_registry_listener LinuxWaylandGameWin::registry_listener = 
+const double LinuxWaylandWindow::s_doubleClickTime = 0.5;
+const wl_registry_listener LinuxWaylandWindow::registry_listener = 
 {
-    reinterpret_cast<void (*)(void*, wl_registry*, uint32_t, const char*, uint32_t)>(&LinuxWaylandGameWin::registry_handle_global),
-    reinterpret_cast<void (*)(void*, wl_registry*, uint32_t)>(&LinuxWaylandGameWin::registry_handle_global_remove)
+    reinterpret_cast<void (*)(void*, wl_registry*, uint32_t, const char*, uint32_t)>(&LinuxWaylandWindow::registry_handle_global),
+    reinterpret_cast<void (*)(void*, wl_registry*, uint32_t)>(&LinuxWaylandWindow::registry_handle_global_remove)
 };
-const zxdg_surface_v6_listener LinuxWaylandGameWin::xdg_surface_listener = 
+const zxdg_surface_v6_listener LinuxWaylandWindow::xdg_surface_listener = 
 {
-    reinterpret_cast<void (*)(void*, zxdg_surface_v6*, uint32_t)>(&LinuxWaylandGameWin::handle_surface_configure)
+    reinterpret_cast<void (*)(void*, zxdg_surface_v6*, uint32_t)>(&LinuxWaylandWindow::handle_surface_configure)
 };
        
-const zxdg_toplevel_v6_listener LinuxWaylandGameWin::xdg_toplevel_listener = 
+const zxdg_toplevel_v6_listener LinuxWaylandWindow::xdg_toplevel_listener = 
 {
-    reinterpret_cast<void (*)(void*, zxdg_toplevel_v6*, int32_t, int32_t, wl_array*)>(&LinuxWaylandGameWin::handle_toplevel_configure),
-    reinterpret_cast<void (*)(void*, zxdg_toplevel_v6*)>(&LinuxWaylandGameWin::handle_toplevel_close)
+    reinterpret_cast<void (*)(void*, zxdg_toplevel_v6*, int32_t, int32_t, wl_array*)>(&LinuxWaylandWindow::handle_toplevel_configure),
+    reinterpret_cast<void (*)(void*, zxdg_toplevel_v6*)>(&LinuxWaylandWindow::handle_toplevel_close)
 };
     
-const wl_pointer_listener LinuxWaylandGameWin::pointer_listener = 
+const wl_pointer_listener LinuxWaylandWindow::pointer_listener = 
 {
-    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, wl_surface*, wl_fixed_t, wl_fixed_t)>(&LinuxWaylandGameWin::pointer_handle_enter),
-    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, wl_surface*)>(&LinuxWaylandGameWin::pointer_handle_leave),
-    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, wl_fixed_t, wl_fixed_t)>(&LinuxWaylandGameWin::pointer_handle_motion),
-    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, uint32_t, uint32_t, uint32_t)>(&LinuxWaylandGameWin::pointer_handle_button),
-    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, uint32_t, wl_fixed_t)>(&LinuxWaylandGameWin::pointer_handle_axis)
+    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, wl_surface*, wl_fixed_t, wl_fixed_t)>(&LinuxWaylandWindow::pointer_handle_enter),
+    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, wl_surface*)>(&LinuxWaylandWindow::pointer_handle_leave),
+    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, wl_fixed_t, wl_fixed_t)>(&LinuxWaylandWindow::pointer_handle_motion),
+    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, uint32_t, uint32_t, uint32_t)>(&LinuxWaylandWindow::pointer_handle_button),
+    reinterpret_cast<void (*)(void*, wl_pointer*, uint32_t, uint32_t, wl_fixed_t)>(&LinuxWaylandWindow::pointer_handle_axis)
 };
-const wl_keyboard_listener LinuxWaylandGameWin::keyboard_listener = 
+const wl_keyboard_listener LinuxWaylandWindow::keyboard_listener = 
 {
-    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, int ,uint32_t)>(&LinuxWaylandGameWin::keyboard_handle_keymap),
-    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, wl_surface*, wl_array*)>(&LinuxWaylandGameWin::keyboard_handle_enter),
-    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, wl_surface*)>(&LinuxWaylandGameWin::keyboard_handle_leave),
-    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, uint32_t, uint32_t, uint32_t)>(&LinuxWaylandGameWin::keyboard_handle_key),
-    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)>(&LinuxWaylandGameWin::keyboard_handle_modifiers),
-    reinterpret_cast<void (*)(void*, wl_keyboard*, int32_t, int32_t)>(&LinuxWaylandGameWin::keyboard_handle_repeat_info)
+    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, int ,uint32_t)>(&LinuxWaylandWindow::keyboard_handle_keymap),
+    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, wl_surface*, wl_array*)>(&LinuxWaylandWindow::keyboard_handle_enter),
+    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, wl_surface*)>(&LinuxWaylandWindow::keyboard_handle_leave),
+    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, uint32_t, uint32_t, uint32_t)>(&LinuxWaylandWindow::keyboard_handle_key),
+    reinterpret_cast<void (*)(void*, wl_keyboard*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)>(&LinuxWaylandWindow::keyboard_handle_modifiers),
+    reinterpret_cast<void (*)(void*, wl_keyboard*, int32_t, int32_t)>(&LinuxWaylandWindow::keyboard_handle_repeat_info)
 };
-const zxdg_shell_v6_listener LinuxWaylandGameWin::xdg_shell_listener = 
+const zxdg_shell_v6_listener LinuxWaylandWindow::xdg_shell_listener = 
 {
-    reinterpret_cast<void (*)(void*, zxdg_shell_v6*, uint32_t)>(&LinuxWaylandGameWin::xdg_shell_ping)
+    reinterpret_cast<void (*)(void*, zxdg_shell_v6*, uint32_t)>(&LinuxWaylandWindow::xdg_shell_ping)
 };
-const wl_seat_listener LinuxWaylandGameWin::seat_listener = 
+const wl_seat_listener LinuxWaylandWindow::seat_listener = 
 {
-    reinterpret_cast<void (*)(void*, wl_seat*, unsigned int)>(&LinuxWaylandGameWin::seat_handle_capabilities),
-    reinterpret_cast<void (*)(void*, wl_seat*, const char *)>(&LinuxWaylandGameWin::seat_handle_name)
+    reinterpret_cast<void (*)(void*, wl_seat*, unsigned int)>(&LinuxWaylandWindow::seat_handle_capabilities),
+    reinterpret_cast<void (*)(void*, wl_seat*, const char *)>(&LinuxWaylandWindow::seat_handle_name)
 };
 
-const wl_data_source_listener LinuxWaylandGameWin::data_source_listener = {
+const wl_data_source_listener LinuxWaylandWindow::data_source_listener = {
     data_source_target,
     data_source_send,
     data_source_cancelled
 };
 
-const wl_data_offer_listener LinuxWaylandGameWin::data_offer_listener = {
+const wl_data_offer_listener LinuxWaylandWindow::data_offer_listener = {
     data_offer_offer,
     data_offer_source_actions,
     data_offer_action
 };
 
 
-const wl_data_device_listener LinuxWaylandGameWin::data_device_listener = {
+const wl_data_device_listener LinuxWaylandWindow::data_device_listener = {
     data_device_data_offer,
     data_device_enter,
     data_device_leave,
@@ -80,19 +80,19 @@ const wl_data_device_listener LinuxWaylandGameWin::data_device_listener = {
     data_device_selection
 };
 
-uint32_t LinuxWaylandGameWin::s_sourceActions = 0;
-wl_data_offer * LinuxWaylandGameWin::selectionOffer = nullptr;
+uint32_t LinuxWaylandWindow::s_sourceActions = 0;
+wl_data_offer * LinuxWaylandWindow::selectionOffer = nullptr;
 
-wl_data_device * LinuxWaylandGameWin::s_dataDevice = nullptr;
-wl_data_device_manager * LinuxWaylandGameWin::m_dataDeviceMan = nullptr;
-wl_data_source * LinuxWaylandGameWin::s_dataSource = nullptr;
+wl_data_device * LinuxWaylandWindow::s_dataDevice = nullptr;
+wl_data_device_manager * LinuxWaylandWindow::m_dataDeviceMan = nullptr;
+wl_data_source * LinuxWaylandWindow::s_dataSource = nullptr;
 
-std::string LinuxWaylandGameWin::s_clipboardString;
-std::vector<wl_data_offer*> LinuxWaylandGameWin::s_offers;
-uint32_t LinuxWaylandGameWin::s_serial = 0;
-std::vector<std::string> LinuxWaylandGameWin::s_offerMimeTypes;
+std::string LinuxWaylandWindow::s_clipboardString;
+std::vector<wl_data_offer*> LinuxWaylandWindow::s_offers;
+uint32_t LinuxWaylandWindow::s_serial = 0;
+std::vector<std::string> LinuxWaylandWindow::s_offerMimeTypes;
 
-wl_display * LinuxWaylandGameWin::s_display = nullptr;
+wl_display * LinuxWaylandWindow::s_display = nullptr;
 // double calculateXRefreshRate(const XRRModeInfo *info)
 // {
 //     return (info->hTotal && info->vTotal) ?
@@ -102,13 +102,12 @@ wl_display * LinuxWaylandGameWin::s_display = nullptr;
 //-----------------------------------------------------------------------------
 // Name : LinuxGameWin (constructor)
 //-----------------------------------------------------------------------------
-LinuxWaylandGameWin::LinuxWaylandGameWin()
+LinuxWaylandWindow::LinuxWaylandWindow()
     :m_modifiersStates(false, false, false)
 {
     m_display = nullptr;
     
-    bool m_fullscreen = false;
-    bool m_maximized = false;
+    m_fullscreen = false;
     
     m_xdg_toplevel = nullptr;
     m_registry = nullptr;
@@ -150,14 +149,14 @@ LinuxWaylandGameWin::LinuxWaylandGameWin()
 //-----------------------------------------------------------------------------
 // Name : LinuxGameWin (destructor)
 //-----------------------------------------------------------------------------
-LinuxWaylandGameWin::~LinuxWaylandGameWin()
+LinuxWaylandWindow::~LinuxWaylandWindow()
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : platformInit ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::platformInit(int width, int height)
+bool LinuxWaylandWindow::platformInit(int width, int height)
 {
     if (!initDisplay())
         return false;
@@ -174,7 +173,7 @@ bool LinuxWaylandGameWin::platformInit(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : initDisplay ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::initDisplay()
+bool LinuxWaylandWindow::initDisplay()
 {    
     m_display = wl_display_connect(NULL);
     s_display = m_display;
@@ -201,7 +200,7 @@ bool LinuxWaylandGameWin::initDisplay()
 //-----------------------------------------------------------------------------
 // Name : create_xdg_surface ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::create_xdg_surface()
+void LinuxWaylandWindow::create_xdg_surface()
 {    
     m_xdg_surface = zxdg_shell_v6_get_xdg_surface(m_shell, m_surface);
     zxdg_surface_v6_add_listener(m_xdg_surface, &xdg_surface_listener, this);
@@ -217,14 +216,14 @@ void LinuxWaylandGameWin::create_xdg_surface()
 //-----------------------------------------------------------------------------
 // Name : getMonitorsInfo ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::getMonitorsInfo()
+void LinuxWaylandWindow::getMonitorsInfo()
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : getMonitorsModes ()
 //-----------------------------------------------------------------------------
-std::vector<std::vector<Mode1>> LinuxWaylandGameWin::getMonitorsModes() const
+std::vector<std::vector<Mode1>> LinuxWaylandWindow::getMonitorsModes() const
 {
     std::vector<std::vector<Mode1>> monitorsModes;
 //     for (MonitorInfo monitor : m_monitors)
@@ -242,7 +241,7 @@ std::vector<std::vector<Mode1>> LinuxWaylandGameWin::getMonitorsModes() const
 //-----------------------------------------------------------------------------
 // Name : createWindow ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::createWindow(int width, int height)
+bool LinuxWaylandWindow::createWindow(int width, int height)
 {
     m_surface = wl_compositor_create_surface(m_compositor);
     m_native = wl_egl_window_create(m_surface, width, height);
@@ -280,7 +279,7 @@ bool LinuxWaylandGameWin::createWindow(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : createOpenGLContext ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::createOpenGLContext()
+bool LinuxWaylandWindow::createOpenGLContext()
 {   
     const EGLint context_attribs[] = 
     {
@@ -369,7 +368,7 @@ bool LinuxWaylandGameWin::createOpenGLContext()
 //-----------------------------------------------------------------------------
 // Name : createEmptyCursorPixmap ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::createEmptyCursorPixmap()
+bool LinuxWaylandWindow::createEmptyCursorPixmap()
 {    
     return true;
 }
@@ -377,7 +376,7 @@ bool LinuxWaylandGameWin::createEmptyCursorPixmap()
 //-----------------------------------------------------------------------------
 // Name : glSwapBuffers ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::glSwapBuffers()
+void LinuxWaylandWindow::glSwapBuffers()
 {
     glColorMask(FALSE, FALSE, FALSE, TRUE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -390,7 +389,7 @@ void LinuxWaylandGameWin::glSwapBuffers()
 //-----------------------------------------------------------------------------
 // Name : setFullScreenMode ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::setFullScreenMode(bool fullscreen)
+void LinuxWaylandWindow::setFullScreenMode(bool fullscreen)
 {
 
 }
@@ -398,7 +397,7 @@ void LinuxWaylandGameWin::setFullScreenMode(bool fullscreen)
 //-----------------------------------------------------------------------------
 // Name : setMonitorResolution ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
+bool LinuxWaylandWindow::setMonitorResolution(int monitorIndex, Resolution newResolution)
 {
     return false;
 }
@@ -406,7 +405,7 @@ bool LinuxWaylandGameWin::setMonitorResolution(int monitorIndex, Resolution newR
 //-----------------------------------------------------------------------------
 // Name : setWindowPosition ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::setWindowPosition(int x, int y)
+void LinuxWaylandWindow::setWindowPosition(int x, int y)
 {
 
 }
@@ -414,7 +413,7 @@ void LinuxWaylandGameWin::setWindowPosition(int x, int y)
 //-----------------------------------------------------------------------------
 // Name : moveWindowToMonitor ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::moveWindowToMonitor(int monitorIndex)
+void LinuxWaylandWindow::moveWindowToMonitor(int monitorIndex)
 {
 
 }
@@ -422,7 +421,7 @@ void LinuxWaylandGameWin::moveWindowToMonitor(int monitorIndex)
 //-----------------------------------------------------------------------------
 // Name : isExtensionSupported ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::isExtensionSupported(const char *extList, const char *extension)
+bool LinuxWaylandWindow::isExtensionSupported(const char *extList, const char *extension)
 {
     return false;
 }
@@ -430,7 +429,7 @@ bool LinuxWaylandGameWin::isExtensionSupported(const char *extList, const char *
 //-----------------------------------------------------------------------------
 // Name : checkEglExtension ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::checkEglExtension(const char *extensions, const char *extension)
+bool LinuxWaylandWindow::checkEglExtension(const char *extensions, const char *extension)
 {
     size_t extlen = strlen(extension);
     const char *end = extensions + strlen(extensions);
@@ -462,7 +461,7 @@ bool LinuxWaylandGameWin::checkEglExtension(const char *extensions, const char *
 //-----------------------------------------------------------------------------
 // Name : xdg_shell_ping ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::xdg_shell_ping(zxdg_shell_v6 *shell, uint32_t serial)
+void LinuxWaylandWindow::xdg_shell_ping(zxdg_shell_v6 *shell, uint32_t serial)
 {
     zxdg_shell_v6_pong(shell, serial);
 }
@@ -470,7 +469,7 @@ void LinuxWaylandGameWin::xdg_shell_ping(zxdg_shell_v6 *shell, uint32_t serial)
 //-----------------------------------------------------------------------------
 // Name : pointer_handle_enter ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::pointer_handle_enter(struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t sx, wl_fixed_t sy)
+void LinuxWaylandWindow::pointer_handle_enter(struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t sx, wl_fixed_t sy)
 {    
     m_lastCursorLocation = Point(wl_fixed_to_int(sx), wl_fixed_to_int(sy));
     
@@ -501,7 +500,7 @@ void LinuxWaylandGameWin::pointer_handle_enter(struct wl_pointer *pointer, uint3
 //-----------------------------------------------------------------------------
 // Name : pointer_handle_leave ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::pointer_handle_leave(wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
+void LinuxWaylandWindow::pointer_handle_leave(wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
     s_serial = serial;
 }
@@ -509,16 +508,16 @@ void LinuxWaylandGameWin::pointer_handle_leave(wl_pointer *pointer, uint32_t ser
 //-----------------------------------------------------------------------------
 // Name : pointer_handle_motion ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::pointer_handle_motion(wl_pointer *pointer, uint32_t time, wl_fixed_t sx, wl_fixed_t sy)
+void LinuxWaylandWindow::pointer_handle_motion(wl_pointer *pointer, uint32_t time, wl_fixed_t sx, wl_fixed_t sy)
 {
     m_lastCursorLocation = Point(wl_fixed_to_int(sx), wl_fixed_to_int(sy));
-    sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, m_lastCursorLocation, false, m_timer.getCurrentTime(), 0), m_modifiersStates);
+    sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, m_lastCursorLocation, false, m_timer->getCurrentTime(), 0), m_modifiersStates);
 }
 
 //-----------------------------------------------------------------------------
 // Name : pointer_handle_button ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::pointer_handle_button(wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+void LinuxWaylandWindow::pointer_handle_button(wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {    
     if (!m_xdg_toplevel)
         return;
@@ -531,14 +530,14 @@ void LinuxWaylandGameWin::pointer_handle_button(wl_pointer *wl_pointer, uint32_t
             m_oldCursorLoc = m_lastCursorLocation;
             //m_mouseDrag = true;
             
-            double curTime = m_timer.getCurrentTime();
+            double curTime = m_timer->getCurrentTime();
             if (curTime - lastLeftClickTime < s_doubleClickTime)
             {
                 std::cout << "left button was double clicked\n";
-                sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, m_lastCursorLocation, true, m_timer.getCurrentTime(), 0), m_modifiersStates);
+                sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, m_lastCursorLocation, true, m_timer->getCurrentTime(), 0), m_modifiersStates);
             }
             else
-                sendMouseEvent(MouseEvent(MouseEventType::LeftButton, m_lastCursorLocation, true, m_timer.getCurrentTime(), 0), m_modifiersStates);
+                sendMouseEvent(MouseEvent(MouseEventType::LeftButton, m_lastCursorLocation, true, m_timer->getCurrentTime(), 0), m_modifiersStates);
             lastLeftClickTime = curTime;
         }
         
@@ -546,14 +545,14 @@ void LinuxWaylandGameWin::pointer_handle_button(wl_pointer *wl_pointer, uint32_t
         {
             std::cout << "right button pressed\n";
 
-            double curTime = m_timer.getCurrentTime();
+            double curTime = m_timer->getCurrentTime();
             if (curTime - lastRightClickTime < s_doubleClickTime)
             {
                 std::cout << "right button was double clicked\n";
-                sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, m_lastCursorLocation, true, m_timer.getCurrentTime(), 0), m_modifiersStates);
+                sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, m_lastCursorLocation, true, m_timer->getCurrentTime(), 0), m_modifiersStates);
             }
             else
-                sendMouseEvent(MouseEvent(MouseEventType::RightButton, m_lastCursorLocation,true, m_timer.getCurrentTime(), 0), m_modifiersStates);
+                sendMouseEvent(MouseEvent(MouseEventType::RightButton, m_lastCursorLocation,true, m_timer->getCurrentTime(), 0), m_modifiersStates);
             lastRightClickTime = curTime;
         }
     }
@@ -563,13 +562,13 @@ void LinuxWaylandGameWin::pointer_handle_button(wl_pointer *wl_pointer, uint32_t
         {
             std::cout << "left button released\n";
             m_mouseDrag = false;
-            sendMouseEvent(MouseEvent(MouseEventType::LeftButton, m_lastCursorLocation, false, m_timer.getCurrentTime(), 0), m_modifiersStates);
+            sendMouseEvent(MouseEvent(MouseEventType::LeftButton, m_lastCursorLocation, false, m_timer->getCurrentTime(), 0), m_modifiersStates);
         }
         
         if (button == BTN_RIGHT)
         {
             std::cout << "right button released\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, m_lastCursorLocation, false, m_timer.getCurrentTime(), 0), m_modifiersStates);
+                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, m_lastCursorLocation, false, m_timer->getCurrentTime(), 0), m_modifiersStates);
         }
     }
     
@@ -580,14 +579,14 @@ void LinuxWaylandGameWin::pointer_handle_button(wl_pointer *wl_pointer, uint32_t
 //-----------------------------------------------------------------------------
 // Name : pointer_handle_axis ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::pointer_handle_axis(wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
+void LinuxWaylandWindow::pointer_handle_axis(wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : keyboard_handle_keymap ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::keyboard_handle_keymap(wl_keyboard *keyboard, uint32_t format, int fd, uint32_t size)
+void LinuxWaylandWindow::keyboard_handle_keymap(wl_keyboard *keyboard, uint32_t format, int fd, uint32_t size)
 {
     if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) 
     {
@@ -630,7 +629,7 @@ void LinuxWaylandGameWin::keyboard_handle_keymap(wl_keyboard *keyboard, uint32_t
 //-----------------------------------------------------------------------------
 // Name : keyboard_handle_enter ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::keyboard_handle_enter(wl_keyboard *keyboard, uint32_t serial, wl_surface *surface, struct wl_array *keys)
+void LinuxWaylandWindow::keyboard_handle_enter(wl_keyboard *keyboard, uint32_t serial, wl_surface *surface, struct wl_array *keys)
 {
     s_serial = serial;
 }
@@ -638,7 +637,7 @@ void LinuxWaylandGameWin::keyboard_handle_enter(wl_keyboard *keyboard, uint32_t 
 //-----------------------------------------------------------------------------
 // Name : keyboard_handle_leave ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::keyboard_handle_leave(wl_keyboard *keyboard, uint32_t serial, wl_surface *surface)
+void LinuxWaylandWindow::keyboard_handle_leave(wl_keyboard *keyboard, uint32_t serial, wl_surface *surface)
 {
     s_serial = serial;
 }
@@ -646,7 +645,7 @@ void LinuxWaylandGameWin::keyboard_handle_leave(wl_keyboard *keyboard, uint32_t 
 //-----------------------------------------------------------------------------
 // Name : keyboard_handle_key ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::keyboard_handle_key(wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+void LinuxWaylandWindow::keyboard_handle_key(wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
 {   
     s_serial = serial;
     if (!m_shell)
@@ -685,8 +684,8 @@ void LinuxWaylandGameWin::keyboard_handle_key(wl_keyboard *keyboard, uint32_t se
         std::cout << "key pressed " << key << "\n";
         std::cout << "//-----------------------------------------\n";
         if (m_alaramToRemove)
-            m_timer.removeAlarm(m_keyAlarmIterator);
-        m_keyAlarmIterator = m_timer.addAlram(m_timer.convertTime(0, 600000), std::bind(&LinuxWaylandGameWin::key_repeat, this, buffer[0], key), m_timer.convertTime(0, 40000));
+            m_timer->removeAlarm(m_keyAlarmIterator);
+        m_keyAlarmIterator = m_timer->addAlram(m_timer->convertTime(0, 600000), std::bind(&LinuxWaylandWindow::key_repeat, this, buffer[0], key), m_timer->convertTime(0, 40000));
         m_alaramToRemove = true;
     }
     else
@@ -695,7 +694,7 @@ void LinuxWaylandGameWin::keyboard_handle_key(wl_keyboard *keyboard, uint32_t se
         std::cout << "key released " << key << "\n";
         std::cout << "//-----------------------------------------\n";
         if (m_alaramToRemove)
-            m_timer.removeAlarm(m_keyAlarmIterator);
+            m_timer->removeAlarm(m_keyAlarmIterator);
         m_alaramToRemove = false;
     }
     
@@ -723,7 +722,7 @@ void LinuxWaylandGameWin::keyboard_handle_key(wl_keyboard *keyboard, uint32_t se
 //-----------------------------------------------------------------------------
 // Name : keyboard_handle_modifiers ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::keyboard_handle_modifiers(wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched,
+void LinuxWaylandWindow::keyboard_handle_modifiers(wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched,
                                uint32_t mods_locked, uint32_t group)
 {
     xkb_state_update_mask(m_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
@@ -737,7 +736,7 @@ void LinuxWaylandGameWin::keyboard_handle_modifiers(wl_keyboard *keyboard, uint3
 //-----------------------------------------------------------------------------
 // Name : keyboard_handle_repeat_info ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::keyboard_handle_repeat_info(wl_keyboard *wl_keyboard, int32_t rate, int32_t delay)
+void LinuxWaylandWindow::keyboard_handle_repeat_info(wl_keyboard *wl_keyboard, int32_t rate, int32_t delay)
 {
     std::cout << "Rate = " << rate << " delay = " << delay << "\n";
 }
@@ -745,7 +744,7 @@ void LinuxWaylandGameWin::keyboard_handle_repeat_info(wl_keyboard *wl_keyboard, 
 //-----------------------------------------------------------------------------
 // Name : key_repeat ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::key_repeat(char key, uint32_t keyCode)
+void LinuxWaylandWindow::key_repeat(char key, uint32_t keyCode)
 {
     std::cout << "//-----------------------------------------\n";
     std::cout << "key repeated " << key     << "\n";
@@ -762,7 +761,7 @@ void LinuxWaylandGameWin::key_repeat(char key, uint32_t keyCode)
 //-----------------------------------------------------------------------------
 // Name : seat_handle_capabilities ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::seat_handle_capabilities(wl_seat *seat, unsigned int caps)
+void LinuxWaylandWindow::seat_handle_capabilities(wl_seat *seat, unsigned int caps)
 {        
     if ( (caps & WL_SEAT_CAPABILITY_POINTER) && !m_pointer)
     {
@@ -790,14 +789,14 @@ void LinuxWaylandGameWin::seat_handle_capabilities(wl_seat *seat, unsigned int c
 //-----------------------------------------------------------------------------
 // Name : seat_handle_name ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::seat_handle_name(wl_seat *wl_seat, const char *name)
+void LinuxWaylandWindow::seat_handle_name(wl_seat *wl_seat, const char *name)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : registry_handle_global ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::registry_handle_global(wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
+void LinuxWaylandWindow::registry_handle_global(wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
 {
     uint32_t minVersion = 4;
     
@@ -867,14 +866,14 @@ void LinuxWaylandGameWin::registry_handle_global(wl_registry *registry, uint32_t
 //-----------------------------------------------------------------------------
 // Name : registry_handle_global_remove ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::registry_handle_global_remove(wl_registry *registry, uint32_t name)
+void LinuxWaylandWindow::registry_handle_global_remove(wl_registry *registry, uint32_t name)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : handle_surface_configure ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::handle_surface_configure(zxdg_surface_v6 *surface, uint32_t serial)
+void LinuxWaylandWindow::handle_surface_configure(zxdg_surface_v6 *surface, uint32_t serial)
 {
     zxdg_surface_v6_ack_configure(surface, serial);
     wait_for_configure = false;
@@ -883,7 +882,7 @@ void LinuxWaylandGameWin::handle_surface_configure(zxdg_surface_v6 *surface, uin
 //-----------------------------------------------------------------------------
 // Name : handle_toplevel_configure ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::handle_toplevel_configure(zxdg_toplevel_v6 *toplevel, int32_t width, int32_t height, wl_array *states)
+void LinuxWaylandWindow::handle_toplevel_configure(zxdg_toplevel_v6 *toplevel, int32_t width, int32_t height, wl_array *states)
 {
     m_fullscreen = false;
     m_maximized = false;
@@ -913,22 +912,22 @@ void LinuxWaylandGameWin::handle_toplevel_configure(zxdg_toplevel_v6 *toplevel, 
 //-----------------------------------------------------------------------------
 // Name : handle_toplevel_close ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::handle_toplevel_close(zxdg_toplevel_v6 *xdg_toplevel)
+void LinuxWaylandWindow::handle_toplevel_close(zxdg_toplevel_v6 *xdg_toplevel)
 {
-    m_gameRunning = false;
+    m_running = false;
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_source_target ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_source_target(void *data, wl_data_source *source, const char *mime_type)
+void LinuxWaylandWindow::data_source_target(void *data, wl_data_source *source, const char *mime_type)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_source_send ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_source_send(void *data, wl_data_source *source, const char *mime_type, int32_t fd)
+void LinuxWaylandWindow::data_source_send(void *data, wl_data_source *source, const char *mime_type, int32_t fd)
 {
     FILE * fp = fdopen(fd, "w");
     if (fp == nullptr)
@@ -944,7 +943,7 @@ void LinuxWaylandGameWin::data_source_send(void *data, wl_data_source *source, c
 //-----------------------------------------------------------------------------
 // Name : data_source_cancelled ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_source_cancelled(void *data, wl_data_source *source)
+void LinuxWaylandWindow::data_source_cancelled(void *data, wl_data_source *source)
 {
     wl_data_source_destroy(source);
 }
@@ -952,28 +951,28 @@ void LinuxWaylandGameWin::data_source_cancelled(void *data, wl_data_source *sour
 //-----------------------------------------------------------------------------
 // Name : data_offer_offer ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_offer_offer(void *data, wl_data_offer *wl_data_offer, const char *type)
+void LinuxWaylandWindow::data_offer_offer(void *data, wl_data_offer *wl_data_offer, const char *type)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_offer_source_actions ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_offer_source_actions(void *data, wl_data_offer *wl_data_offer, uint32_t source_actions)
+void LinuxWaylandWindow::data_offer_source_actions(void *data, wl_data_offer *wl_data_offer, uint32_t source_actions)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_offer_action ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_offer_action(void *data, wl_data_offer *wl_data_offer, uint32_t dnd_action)
+void LinuxWaylandWindow::data_offer_action(void *data, wl_data_offer *wl_data_offer, uint32_t dnd_action)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_device_data_offer ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_device_data_offer(void *data, wl_data_device *data_device, struct wl_data_offer *_offer)
+void LinuxWaylandWindow::data_device_data_offer(void *data, wl_data_device *data_device, struct wl_data_offer *_offer)
 {
      wl_data_offer_add_listener(_offer, &data_offer_listener, _offer);
 }
@@ -981,28 +980,28 @@ void LinuxWaylandGameWin::data_device_data_offer(void *data, wl_data_device *dat
 //-----------------------------------------------------------------------------
 // Name : data_device_enter ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_device_enter(void *data, wl_data_device *data_device, uint32_t serial, wl_surface *surface, wl_fixed_t x_w, wl_fixed_t y_w, wl_data_offer *offer)
+void LinuxWaylandWindow::data_device_enter(void *data, wl_data_device *data_device, uint32_t serial, wl_surface *surface, wl_fixed_t x_w, wl_fixed_t y_w, wl_data_offer *offer)
 {    
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_device_leave ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_device_leave(void *data, wl_data_device *data_device)
+void LinuxWaylandWindow::data_device_leave(void *data, wl_data_device *data_device)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_device_motion ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_device_motion(void *data, wl_data_device *data_device, uint32_t time, wl_fixed_t x_w, wl_fixed_t y_w)
+void LinuxWaylandWindow::data_device_motion(void *data, wl_data_device *data_device, uint32_t time, wl_fixed_t x_w, wl_fixed_t y_w)
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : data_device_drop ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_device_drop(void *data, wl_data_device *data_device)
+void LinuxWaylandWindow::data_device_drop(void *data, wl_data_device *data_device)
 {
     
 }
@@ -1010,7 +1009,7 @@ void LinuxWaylandGameWin::data_device_drop(void *data, wl_data_device *data_devi
 //-----------------------------------------------------------------------------
 // Name : data_device_selection ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::data_device_selection(void *data, wl_data_device *wl_data_device, wl_data_offer *offer)
+void LinuxWaylandWindow::data_device_selection(void *data, wl_data_device *wl_data_device, wl_data_offer *offer)
 {
     if (selectionOffer)
         wl_data_offer_destroy(selectionOffer);
@@ -1031,7 +1030,7 @@ void LinuxWaylandGameWin::data_device_selection(void *data, wl_data_device *wl_d
 //-----------------------------------------------------------------------------
 // Name : copyToClipboard ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::copyToClipboard(const std::string &text)
+void LinuxWaylandWindow::copyToClipboard(const std::string& text)
 {
     s_clipboardString = text;
     
@@ -1050,7 +1049,7 @@ void LinuxWaylandGameWin::copyToClipboard(const std::string &text)
 //-----------------------------------------------------------------------------
 // Name : PasteClipboard ()
 //-----------------------------------------------------------------------------
-std::string LinuxWaylandGameWin::PasteClipboard()
+std::string LinuxWaylandWindow::PasteClipboard()
 {
     if (!selectionOffer)
         return std::string();
@@ -1097,12 +1096,29 @@ std::string LinuxWaylandGameWin::PasteClipboard()
         return std::string(buffer, bytesToRead);
     else
         return std::string();
+
+}
+
+//-----------------------------------------------------------------------------
+// Name : getCopyToClipboardFunc ()
+//-----------------------------------------------------------------------------
+std::function<void (const std::string&)> LinuxWaylandWindow::getCopyToClipboardFunc()
+{
+    return boost::bind(&LinuxWaylandWindow::copyToClipboard, this, _1);
+}
+
+//-----------------------------------------------------------------------------
+// Name : getPasteClipboardFunc ()
+//-----------------------------------------------------------------------------
+std::function<std::string (void)> LinuxWaylandWindow::getPasteClipboardFunc()
+{
+    return std::bind(&LinuxWaylandWindow::PasteClipboard, this);
 }
 
 //-----------------------------------------------------------------------------
 // Name : setCursorPos ()
 //-----------------------------------------------------------------------------
-void LinuxWaylandGameWin::setCursorPos(Point newPos)
+void LinuxWaylandWindow::setCursorPos(Point newPos)
 {
 
 }
@@ -1110,7 +1126,7 @@ void LinuxWaylandGameWin::setCursorPos(Point newPos)
 //-----------------------------------------------------------------------------
 // Name : getCursorPos ()
 //-----------------------------------------------------------------------------
-Point LinuxWaylandGameWin::getCursorPos()
+Point LinuxWaylandWindow::getCursorPos()
 {
     return Point(0, 0);
 }
@@ -1118,36 +1134,41 @@ Point LinuxWaylandGameWin::getCursorPos()
 //-----------------------------------------------------------------------------
 // Name : BeginGame ()
 //-----------------------------------------------------------------------------
-int LinuxWaylandGameWin::BeginGame()
+void LinuxWaylandWindow::pumpMessages()
 {
-    while (m_gameRunning)
-    {
-        if (wait_for_configure)
-            wl_display_dispatch(m_display);
-        else
-        {
-            wl_display_dispatch_pending(m_display);
-            
-            m_timer.frameAdvanced();
-
-            int err = glGetError();
-            if (err != GL_NO_ERROR)
-                std::cout <<"MsgLoop: ERROR bitches\n";
-
-            if (!m_timer.isCap())
-            {
-                drawing();
-            }
-        }
-    }
+    if (wait_for_configure)
+        wl_display_dispatch(m_display);
+    else
+        wl_display_dispatch_pending(m_display);
     
-    return 0;
+//     while (m_gameRunning)
+//     {
+//         if (wait_for_configure)
+//             wl_display_dispatch(m_display);
+//         else
+//         {
+//             wl_display_dispatch_pending(m_display);
+//             
+//             m_timer.frameAdvanced();
+// 
+//             int err = glGetError();
+//             if (err != GL_NO_ERROR)
+//                 std::cout <<"MsgLoop: ERROR bitches\n";
+// 
+//             if (!m_timer.isCap())
+//             {
+//                 drawing();
+//             }
+//         }
+//     }
+//     
+//     return 0;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Shutdown ()
 //-----------------------------------------------------------------------------
-bool LinuxWaylandGameWin::Shutdown()
+bool LinuxWaylandWindow::closeWindow()
 {        
     eglMakeCurrent(m_eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroySurface(m_display, m_egl_surface);
@@ -1168,7 +1189,7 @@ bool LinuxWaylandGameWin::Shutdown()
 //-----------------------------------------------------------------------------
 // Name : getWindowPosition ()
 //-----------------------------------------------------------------------------
-Point LinuxWaylandGameWin::getWindowPosition()
+Point LinuxWaylandWindow::getWindowPosition()
 {    
     return Point(0, 0);
 }
@@ -1176,7 +1197,7 @@ Point LinuxWaylandGameWin::getWindowPosition()
 //-----------------------------------------------------------------------------
 // Name : getWindowCurrentMonitor ()
 //-----------------------------------------------------------------------------
-GLuint LinuxWaylandGameWin::getWindowCurrentMonitor()
+GLuint LinuxWaylandWindow::getWindowCurrentMonitor()
 {        
     return 0;
 }

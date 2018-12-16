@@ -1,4 +1,4 @@
-#include "LinuxGameWin.h"
+#include "LinuxX11Window.h"
 #include <cmath>
 #include <GL/glut.h>
 #include <unistd.h>
@@ -8,15 +8,15 @@
 #include "virtualKeysLinux.h"
 
 
-bool LinuxGameWin::ctxErrorOccurred = false;
-Display * LinuxGameWin::s_clipboardDisplay = nullptr;
-Atom LinuxGameWin::s_utf8 = None ;
-Atom LinuxGameWin::s_targets = None;
-Atom LinuxGameWin::s_selection = None;
-std::future<void> LinuxGameWin::s_clipboardSender;
-Window LinuxGameWin::s_clipboardWindow = 0;
-std::string LinuxGameWin::s_clipboardString;
-const double LinuxGameWin::s_doubleClickTime = 0.5;
+bool LinuxX11Window::ctxErrorOccurred = false;
+Display * LinuxX11Window::s_clipboardDisplay = nullptr;
+Atom LinuxX11Window::s_utf8 = None ;
+Atom LinuxX11Window::s_targets = None;
+Atom LinuxX11Window::s_selection = None;
+std::future<void> LinuxX11Window::s_clipboardSender;
+Window LinuxX11Window::s_clipboardWindow = 0;
+std::string LinuxX11Window::s_clipboardString;
+const double LinuxX11Window::s_doubleClickTime = 0.5;
 
 double calculateXRefreshRate(const XRRModeInfo *info)
 {
@@ -27,7 +27,7 @@ double calculateXRefreshRate(const XRRModeInfo *info)
 //-----------------------------------------------------------------------------
 // Name : LinuxGameWin (constructor)
 //-----------------------------------------------------------------------------
-LinuxGameWin::LinuxGameWin()
+LinuxX11Window::LinuxX11Window()
 {
     ctx = nullptr;
 
@@ -40,14 +40,14 @@ LinuxGameWin::LinuxGameWin()
 //-----------------------------------------------------------------------------
 // Name : LinuxGameWin (destructor)
 //-----------------------------------------------------------------------------
-LinuxGameWin::~LinuxGameWin()
+LinuxX11Window::~LinuxX11Window()
 {
 }
 
 //-----------------------------------------------------------------------------
 // Name : platformInit ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::platformInit(int width, int height)
+bool LinuxX11Window::platformInit(int width, int height)
 {
     if (!initDisplay())
         return false;
@@ -72,7 +72,7 @@ bool LinuxGameWin::platformInit(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : initDisplay ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::initDisplay()
+bool LinuxX11Window::initDisplay()
 {
     std::cout << "initDisplay started\n";
     
@@ -109,7 +109,7 @@ bool LinuxGameWin::initDisplay()
 //-----------------------------------------------------------------------------
 // Name : getBestFBConfig ()
 //-----------------------------------------------------------------------------
-GLXFBConfig LinuxGameWin::getBestFBConfig()
+GLXFBConfig LinuxX11Window::getBestFBConfig()
 {
     // Get a matching FB config
     int visual_attribs[] =
@@ -186,7 +186,8 @@ GLXFBConfig LinuxGameWin::getBestFBConfig()
         XFree( vi );
     }
     
-    GLXFBConfig bestFbc = fbc[ fbx4x ];
+    //GLXFBConfig bestFbc = fbc[ fbx4x ];
+    GLXFBConfig bestFbc = fbc[ best_fbc ];
     // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
     XFree( fbc );
     return bestFbc;
@@ -195,7 +196,7 @@ GLXFBConfig LinuxGameWin::getBestFBConfig()
 //-----------------------------------------------------------------------------
 // Name : getMonitorsInfo ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::getMonitorsInfo()
+void LinuxX11Window::getMonitorsInfo()
 {
     int nMonitors;
     XRRMonitorInfo* monitorInfo = XRRGetMonitors(m_display, DefaultRootWindow(m_display), true, &nMonitors);
@@ -272,7 +273,7 @@ void LinuxGameWin::getMonitorsInfo()
 //-----------------------------------------------------------------------------
 // Name : getMonitorsModes ()
 //-----------------------------------------------------------------------------
-std::vector<std::vector<Mode1>> LinuxGameWin::getMonitorsModes() const
+std::vector<std::vector<Mode1>> LinuxX11Window::getMonitorsModes() const
 {
     std::vector<std::vector<Mode1>> monitorsModes;
     for (MonitorInfo monitor : m_monitors)
@@ -288,9 +289,25 @@ std::vector<std::vector<Mode1>> LinuxGameWin::getMonitorsModes() const
 }
 
 //-----------------------------------------------------------------------------
+// Name : getCopyToClipboardFunc ()
+//-----------------------------------------------------------------------------
+std::function<void (const std::string&)> LinuxX11Window::getCopyToClipboardFunc()
+{
+    return boost::bind(&LinuxX11Window::copyToClipboard, this, _1);
+}
+
+//-----------------------------------------------------------------------------
+// Name : getPasteClipboardFunc ()
+//-----------------------------------------------------------------------------
+std::function<std::string (void)> LinuxX11Window::getPasteClipboardFunc()
+{
+    return boost::bind(&LinuxX11Window::PasteClipboard, this);
+}
+
+//-----------------------------------------------------------------------------
 // Name : createWindow ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
+bool LinuxX11Window::createWindow(int width, int height ,GLXFBConfig bestFbc)
 {
     if (!bestFbc)
         return false;
@@ -358,7 +375,7 @@ bool LinuxGameWin::createWindow(int width, int height ,GLXFBConfig bestFbc)
 //-----------------------------------------------------------------------------
 // Name : createOpenGLContext ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::createOpenGLContext(GLXFBConfig bestFbc)
+bool LinuxX11Window::createOpenGLContext(GLXFBConfig bestFbc)
 {
     // Get the default screen's GLX extension list
     const char *glxExts = glXQueryExtensionsString( m_display,
@@ -445,7 +462,7 @@ bool LinuxGameWin::createOpenGLContext(GLXFBConfig bestFbc)
 //-----------------------------------------------------------------------------
 // Name : createEmptyCursorPixmap ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::createEmptyCursorPixmap()
+bool LinuxX11Window::createEmptyCursorPixmap()
 {
     XColor color = { 0 };
     const char data[] = { 0 };
@@ -464,7 +481,7 @@ bool LinuxGameWin::createEmptyCursorPixmap()
 //-----------------------------------------------------------------------------
 // Name : glSwapBuffers ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::glSwapBuffers()
+void LinuxX11Window::glSwapBuffers()
 {
     glXSwapBuffers(m_display, m_win);
 }
@@ -472,7 +489,7 @@ void LinuxGameWin::glSwapBuffers()
 //-----------------------------------------------------------------------------
 // Name : setFullScreenMode ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::setFullScreenMode(bool fullscreen)
+void LinuxX11Window::setFullScreenMode(bool fullscreen)
 {
     Atom wm_state = XInternAtom(m_display, "_NET_WM_STATE", False);
     Atom fullscreenAtom = XInternAtom(m_display, "_NET_WM_STATE_FULLSCREEN", False);
@@ -505,7 +522,7 @@ void LinuxGameWin::setFullScreenMode(bool fullscreen)
 //-----------------------------------------------------------------------------
 // Name : setMonitorResolution ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::setMonitorResolution(int monitorIndex, Resolution newResolution)
+bool LinuxX11Window::setMonitorResolution(int monitorIndex, Resolution newResolution)
 {
     if (monitorIndex > m_monitors.size())
         return false;
@@ -554,7 +571,7 @@ bool LinuxGameWin::setMonitorResolution(int monitorIndex, Resolution newResoluti
 //-----------------------------------------------------------------------------
 // Name : setWindowPosition ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::setWindowPosition(int x, int y)
+void LinuxX11Window::setWindowPosition(int x, int y)
 {
     XWindowChanges xWinChanges = {0};
     xWinChanges.x = x;
@@ -567,7 +584,7 @@ void LinuxGameWin::setWindowPosition(int x, int y)
 //-----------------------------------------------------------------------------
 // Name : moveWindowToMonitor ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::moveWindowToMonitor(int monitorIndex)
+void LinuxX11Window::moveWindowToMonitor(int monitorIndex)
 {
     Point windowPosition = getWindowPosition();
     if (!m_monitors[monitorIndex].positionRect.isPointInRect(windowPosition))
@@ -580,7 +597,7 @@ void LinuxGameWin::moveWindowToMonitor(int monitorIndex)
 //-----------------------------------------------------------------------------
 // Name : isExtensionSupported ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::isExtensionSupported(const char *extList, const char *extension)
+bool LinuxX11Window::isExtensionSupported(const char *extList, const char *extension)
 {
     const char *start;
     const char *where, *terminator;
@@ -615,7 +632,7 @@ bool LinuxGameWin::isExtensionSupported(const char *extList, const char *extensi
 //-----------------------------------------------------------------------------
 // Name : ctxErrorHandler ()
 //-----------------------------------------------------------------------------
-int LinuxGameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev)
+int LinuxX11Window::ctxErrorHandler( Display *dpy, XErrorEvent *ev)
 {
     ctxErrorOccurred = true;
     return 0;
@@ -626,7 +643,7 @@ int LinuxGameWin::ctxErrorHandler( Display *dpy, XErrorEvent *ev)
 // Desc : sends a SelectionNotify event to X Window with the given data
 //        if type is None it means there was no data that could be sent
 //-----------------------------------------------------------------------------
-void LinuxGameWin::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength)
+void LinuxX11Window::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, int bitsPerDataElement, unsigned char *data, int dataLength)
 {
     XSelectionEvent ssev;
 
@@ -654,7 +671,7 @@ void LinuxGameWin::sendEventToXWindow(XSelectionRequestEvent *sev, Atom type, in
 //-----------------------------------------------------------------------------
 // Name : sendClipboardLoop ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::sendClipboardLoop(Window clipboardWindow)
+void LinuxX11Window::sendClipboardLoop(Window clipboardWindow)
 {
     while(1)
     {
@@ -701,7 +718,7 @@ void LinuxGameWin::sendClipboardLoop(Window clipboardWindow)
 //-----------------------------------------------------------------------------
 // Name : copyToClipboard ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::copyToClipboard(const std::string &text)
+void LinuxX11Window::copyToClipboard(const std::string &text)
 {
     s_clipboardString = text;
 
@@ -726,14 +743,14 @@ void LinuxGameWin::copyToClipboard(const std::string &text)
     // Claim ownership of the clipboard.
     XSetSelectionOwner( s_clipboardDisplay, s_selection, s_clipboardWindow, CurrentTime);
     // Create a thread to send the clipboard while we are the owners of it
-    s_clipboardSender = std::async(std::launch::async, LinuxGameWin::sendClipboardLoop, s_clipboardWindow );
+    s_clipboardSender = std::async(std::launch::async, LinuxX11Window::sendClipboardLoop, s_clipboardWindow );
 
 }
 
 //-----------------------------------------------------------------------------
 // Name : PasteClipboard ()
 //-----------------------------------------------------------------------------
-std::string LinuxGameWin::PasteClipboard()
+std::string LinuxX11Window::PasteClipboard()
 {
     Display * pasteDisplay = XOpenDisplay(NULL);
     Timer timer;
@@ -844,7 +861,7 @@ std::string LinuxGameWin::PasteClipboard()
 //-----------------------------------------------------------------------------
 // Name : setCursorPos ()
 //-----------------------------------------------------------------------------
-void LinuxGameWin::setCursorPos(Point newPos)
+void LinuxX11Window::setCursorPos(Point newPos)
 {
     XWarpPointer(m_display, None, m_win, 0, 0, 0, 0, newPos.x, newPos.y);
     XFlush(m_display);
@@ -853,7 +870,7 @@ void LinuxGameWin::setCursorPos(Point newPos)
 //-----------------------------------------------------------------------------
 // Name : getCursorPos ()
 //-----------------------------------------------------------------------------
-Point LinuxGameWin::getCursorPos()
+Point LinuxX11Window::getCursorPos()
 {
     Window root,child;
     int cursorX  = 0, cursorY = 0 ,x = 0,y = 0;
@@ -866,25 +883,23 @@ Point LinuxGameWin::getCursorPos()
 }
 
 //-----------------------------------------------------------------------------
-// Name : BeginGame ()
+// Name : pumpMessages ()
 //-----------------------------------------------------------------------------
-int LinuxGameWin::BeginGame()
+void LinuxX11Window::pumpMessages()
 {
-    while ( m_gameRunning ) 
+    XEvent event;
+
+    // Handle all messages before rendering the next frame
+    while (XPending(m_display) > 0 && m_running )
     {
-        XEvent event;
+        XNextEvent(m_display, &event);
 
-         // Handle all messages before rendering the next frame
-        while (XPending(m_display) > 0 && m_gameRunning )
+        ModifierKeysStates modifierKeys( m_keysStatus[KEY_LEFTSHIFT] || m_keysStatus[KEY_RIGHTSHIFT],
+                                         m_keysStatus[KEY_LEFTCTRL] ||  m_keysStatus[KEY_RIGHTCTRL],
+                                         m_keysStatus[KEY_LEFTALT || m_keysStatus[KEY_RIGHTALT]]);
+
+        switch(event.type)
         {
-            XNextEvent(m_display, &event);
-
-            ModifierKeysStates modifierKeys( m_keysStatus[KEY_LEFTSHIFT] || m_keysStatus[KEY_RIGHTSHIFT],
-                                              m_keysStatus[KEY_LEFTCTRL] ||  m_keysStatus[KEY_RIGHTCTRL],
-                                              m_keysStatus[KEY_LEFTALT || m_keysStatus[KEY_RIGHTALT]]);
-
-            switch(event.type)
-            {
             case Expose:
             {
                 XWindowAttributes gwa;
@@ -942,7 +957,7 @@ int LinuxGameWin::BeginGame()
             
             case MotionNotify:
             {
-                sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 0), modifierKeys);
+                sendMouseEvent(MouseEvent(MouseEventType::MouseMoved, Point(event.xbutton.x, event.xbutton.y), false, m_timer->getCurrentTime(), 0), modifierKeys);
             }break;
 
             case ButtonPress:
@@ -956,14 +971,14 @@ int LinuxGameWin::BeginGame()
                     m_mouseDrag = true;
                     XDefineCursor(m_display, m_win, emptyCursorPixmap);
 
-                    double curTime = m_timer.getCurrentTime();
+                    double curTime = m_timer->getCurrentTime();
                     if (curTime - lastLeftClickTime < s_doubleClickTime)
                     {
                         std::cout << "left button was double clicked\n";
-                        sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::DoubleLeftButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer->getCurrentTime(), 0), modifierKeys);
                     }
                     else
-                        sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer->getCurrentTime(), 0), modifierKeys);
                     lastLeftClickTime = curTime;
                 }
 
@@ -971,14 +986,14 @@ int LinuxGameWin::BeginGame()
                 {
                     std::cout << "right button pressed\n";
 
-                    double curTime = m_timer.getCurrentTime();
+                    double curTime = m_timer->getCurrentTime();
                     if (curTime - lastRightClickTime < s_doubleClickTime)
                     {
                         std::cout << "right button was double clicked\n";
-                        sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::DoubleRightButton, Point(event.xbutton.x, event.xbutton.y), true, m_timer->getCurrentTime(), 0), modifierKeys);
                     }
                     else
-                        sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, m_timer.getCurrentTime(), 0), modifierKeys);
+                        sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y),true, m_timer->getCurrentTime(), 0), modifierKeys);
                     lastRightClickTime = curTime;
 
                 }
@@ -986,13 +1001,13 @@ int LinuxGameWin::BeginGame()
                 if (event.xbutton.button == Button4)
                 {
                     std::cout << "mouse scroll up\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 1), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), false, m_timer->getCurrentTime(), 1), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button5)
                 {
                     std::cout << "mouse scroll down\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, m_timer.getCurrentTime(), -1), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::ScrollVert, Point(event.xbutton.x, event.xbutton.y), true, m_timer->getCurrentTime(), -1), modifierKeys);
                 }
 
             }break;
@@ -1004,13 +1019,13 @@ int LinuxGameWin::BeginGame()
                     std::cout << "left button released\n";
                     m_mouseDrag = false;
                     XUndefineCursor(m_display, m_win);
-                    sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 0), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::LeftButton, Point(event.xbutton.x, event.xbutton.y), false, m_timer->getCurrentTime(), 0), modifierKeys);
                 }
 
                 if (event.xbutton.button == Button3)
                 {
                     std::cout << "right button released\n";
-                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, m_timer.getCurrentTime(), 0), modifierKeys);
+                    sendMouseEvent(MouseEvent(MouseEventType::RightButton, Point(event.xbutton.x, event.xbutton.y), false, m_timer->getCurrentTime(), 0), modifierKeys);
                 }
 
             }break;
@@ -1018,32 +1033,18 @@ int LinuxGameWin::BeginGame()
             // got quit message, quitting the game loop
             case ClientMessage:
                 std::cout << "Shutting down now!!!\n";
-                m_gameRunning = false;
+                m_running = false;
             break;
 
-            }
-
         }
-        
-        m_timer.frameAdvanced();
 
-       int err = glGetError();
-       if (err != GL_NO_ERROR)
-           std::cout <<"MsgLoop: ERROR bitches\n";
-
-        if (!m_timer.isCap())
-        {
-            drawing();
-        }
     }
-    
-    return 0;
 }
 
 //-----------------------------------------------------------------------------
 // Name : Shutdown ()
 //-----------------------------------------------------------------------------
-bool LinuxGameWin::Shutdown()
+bool LinuxX11Window::closeWindow()
 {
     // send event to the clipboard window to make the clipboard thread to shutdown
     if ( s_clipboardWindow != 0)
@@ -1073,7 +1074,7 @@ bool LinuxGameWin::Shutdown()
 //-----------------------------------------------------------------------------
 // Name : getWindowPosition ()
 //-----------------------------------------------------------------------------
-Point LinuxGameWin::getWindowPosition()
+Point LinuxX11Window::getWindowPosition()
 {
         XWindowAttributes windowAttributes;
     int x,y;
@@ -1087,7 +1088,7 @@ Point LinuxGameWin::getWindowPosition()
 //-----------------------------------------------------------------------------
 // Name : getWindowCurrentMonitor ()
 //-----------------------------------------------------------------------------
-GLuint LinuxGameWin::getWindowCurrentMonitor()
+GLuint LinuxX11Window::getWindowCurrentMonitor()
 {    
     for (GLuint i = 0; i < m_monitors.size(); i++)
     {

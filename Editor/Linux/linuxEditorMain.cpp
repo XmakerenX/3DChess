@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
-#include "../GUIEditorWin.h"
+#include "../GUIEditor.h"
+#include "../../Linux/LinuxX11Window.h"
 
 int main(int argc, char* argv[])
 {
-    GUIEditorWin gamewin;
+    GUIEditor gamewin;
+    BaseWindow* window = new LinuxX11Window();
     std::string fontName = "NotoMono";
     std::string path;
 
@@ -13,7 +15,7 @@ int main(int argc, char* argv[])
     std::cout << "--------------------------------\n";
 
     std::cout << "starting init OpenGL\n";
-    if (!gamewin.initGame(1024, 768))
+    if (!gamewin.initGame(window, 1024, 768))
     {
         std::cout << "Error occured, Quiting..\n";
         return 1;

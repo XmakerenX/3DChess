@@ -1,7 +1,7 @@
 #ifndef  _LINUXWAYLANDGAMEWIN_H
 #define  _LINUXWAYLANDGAMEWIN_H
 
-#include "../BaseGameWin.h"
+#include "../BaseWindow.h"
 
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
@@ -57,14 +57,14 @@ typedef EGLSurface (EGLAPIENTRYP eglCreatePlatformWindowSurfaceEXTProc) (EGLDisp
 //     std::vector<RROutput> outputs;
 // };
 
-class LinuxWaylandGameWin : public BaseGameWin
+class LinuxWaylandWindow : public BaseWindow
 {
 public:
-    LinuxWaylandGameWin();
-    virtual ~LinuxWaylandGameWin();
+    LinuxWaylandWindow();
+    virtual ~LinuxWaylandWindow();
     
-    int  BeginGame      ();
-    bool Shutdown       ();
+    void pumpMessages      ();
+    bool closeWindow       ();
     
     void setFullScreenMode(bool fullscreen);
     bool setMonitorResolution(int monitorIndex, Resolution newResolution);
@@ -77,8 +77,11 @@ public:
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
     
-    static void copyToClipboard(const std::string& text);
-    static std::string PasteClipboard();
+    void copyToClipboard(const std::string& text);
+    std::string PasteClipboard();
+    
+    virtual std::function<void (const std::string&)> getCopyToClipboardFunc();
+    virtual std::function<std::string (void)> getPasteClipboardFunc();
     
     std::vector<std::vector<Mode1>> getMonitorsModes() const;
 
@@ -181,13 +184,13 @@ private:
     xkb_mod_mask_t m_altMask;
     ModifierKeysStates m_modifiersStates;
 
+    bool m_maximized;
+    
     wl_data_device_manager * m_dataDeviceManager;
     static wl_data_device * s_dataDevice;
     static wl_data_device_manager * m_dataDeviceMan;
     static wl_data_source * s_dataSource;
     
-    bool m_fullscreen;
-    bool m_maximized;
     zxdg_toplevel_v6 * m_xdg_toplevel;
     
     wl_registry * m_registry;

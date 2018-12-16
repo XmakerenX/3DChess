@@ -3,6 +3,7 @@
 
 #include "../GUI/DialogUI.h"
 #include "../GameWin.h"
+#include "../BaseWindow.h"
 
 #define IDC_CONTROLTYPESTATIC   101
 #define IDC_COMBOX              102
@@ -54,7 +55,7 @@
 class EditDialogUI : public DialogUI
 {
 public:
-        EditDialogUI(GameWin* window);
+        EditDialogUI();
         virtual ~EditDialogUI(void);
 
         bool handleKeyEvent(unsigned char key, bool down);
@@ -86,9 +87,10 @@ public:
         void             SetSliderGUI                   (bool ControlSelected = false);
         void             SetListBoxGUI                  (bool ControlSelected = false);
         void             SetComboBoxGUI                 (bool ControlSelected = false);
+        void             SetWindow                      (BaseWindow* window);
 
 private:
-        GameWin* m_window;
+        BaseWindow* m_window;
         
         DialogUI m_GenDialog;
         unsigned long m_GenControlNum;

@@ -4,8 +4,7 @@
 //-----------------------------------------------------------------------------
 // Name : OptionDialog (constructor)
 //-----------------------------------------------------------------------------
-OptionDialog::OptionDialog(const GameWin& parentWindow)
-    : m_parentWindow(parentWindow)
+OptionDialog::OptionDialog()
 {}
 
 //-----------------------------------------------------------------------------
@@ -32,7 +31,7 @@ bool OptionDialog::init(GLuint width, GLuint height, int nCaptionHeight, std::st
 //-----------------------------------------------------------------------------
 void OptionDialog::initGUI()
 {
-    m_monitorsModes = m_parentWindow.getMonitorsModes();
+    m_monitorsModes = m_parentWindow->getMonitorsModes();
     for (int i = 0; i < m_monitorsModes.size(); i++)
         getComboBox<int>(IDC_MONITOR)->AddItem(std::to_string(i) ,i);
     
@@ -75,6 +74,14 @@ void OptionDialog::initResolutionCombobox()
     
     addComboBox<Resolution>(ID, "", x, y, width, height, 0);
     getComboBox<Resolution>(IDC_RESOLUTIONCOM)->setEnabled(false);
+}
+
+//-----------------------------------------------------------------------------
+// Name : setParentWindow ()
+//-----------------------------------------------------------------------------
+void OptionDialog::setParentWindow(const BaseWindow* parentWindow)
+{
+    m_parentWindow = parentWindow;
 }
 
 //-----------------------------------------------------------------------------

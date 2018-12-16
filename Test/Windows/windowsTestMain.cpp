@@ -1,11 +1,11 @@
 #include <iostream>
 #include <string>
-#include "../TestingWin.h"
+#include "../TestingGame.h"
 #include "../../WindowsConsole.h"
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    TestingWin gamewin;
+    TestingGame gamewin;
     std::string fontName = "NotoMono";
     std::string path;
 

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <string>
-#include "../GUIEditorWin.h"
+#include "../GUIEditor.h"
 #include "../../WindowsConsole.h"
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    GUIEditorWin gamewin;
+    GUIEditor gamewin;
     std::string fontName = "NotoMono";
     std::string path;
 

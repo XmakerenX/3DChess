@@ -5,12 +5,12 @@
 #undef min
 #include <iostream>
 #include <string>
-#include "../ChessWindow.h"
+#include "../Chess.h"
 #include "../../WindowsConsole.h"
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    ChessWindow gamewin;
+    Chess gamewin;
     std::string fontName = "NotoMono";
     std::string path;
 

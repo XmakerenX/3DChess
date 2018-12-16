@@ -1,15 +1,18 @@
-#include "TestingWin.h" 
+#include "TestingGame.h" 
 #include "../GUI/DialogUI.cpp"
 
-TestingWin::TestingWin()
+TestingGame::TestingGame()
 {
-	m_scene = new Scene();
+    m_scene = new Scene();
 }
 
-void TestingWin::initGUI()
+void TestingGame::initGUI()
 {
     m_testDialog.init(500, 735, 18, "Edit Dialog", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
-    m_testDialog.setClipboardFunctions(copyToClipboard, PasteClipboard);
+    m_testDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    
+    //void setClipboardFunctions(std::function<void (std::string)> clipboardCopyFunc, std::function<std::string (void)> clipboardPasteFunc);
+    
     m_testDialog.setLocation(50, 50);
     m_testDialog.initDefControlElements(m_asset);
 //     ListBoxUI<int>* listbox;
@@ -30,23 +33,23 @@ void TestingWin::initGUI()
     
 }
 
-void TestingWin::renderGUI()
+void TestingGame::renderGUI()
 {
     m_testDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
 }
 
-void TestingWin::sendKeyEvent(unsigned char key, bool down)
+void TestingGame::sendKeyEvent(unsigned char key, bool down)
 {
     m_testDialog.handleKeyEvent(key, down);
 }
 
-void TestingWin::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
+void TestingGame::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
 {
     m_testDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
 }
 
-void TestingWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+void TestingGame::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
-    GameWin::sendMouseEvent(event, modifierStates);
+    BaseGame::sendMouseEvent(event, modifierStates);
     m_testDialog.handleMouseEvent(event, modifierStates);
 }

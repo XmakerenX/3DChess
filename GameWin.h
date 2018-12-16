@@ -5,8 +5,11 @@
     #include "Windows/WindowsGameWin.h"
     typedef WindowsGameWin GameWin;
 #else
-    #include "Linux/LinuxGameWin.h"
-    typedef LinuxGameWin GameWin;
+    #include "Linux/LinuxX11Window.h"
+    #include "Linux/LinuxWaylandWindow.h"
+    typedef LinuxWaylandWindow GameWin;
+    typedef LinuxX11Window GameWinX11;
+    typedef LinuxWaylandWindow GameWinWayland;
 #endif
 
 #endif  //_GAMEWIN_H

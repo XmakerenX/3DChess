@@ -1,19 +1,41 @@
 #include <iostream>
 #include <string>
-#include "../ChessWindow.h"
+#include <cstdlib>
+#include "../Chess.h"
+#include "../../BaseWindow.h"
+#include "../../Linux/LinuxX11Window.h"
 
 int main(int argc, char* argv[])
 {
-    ChessWindow gamewin;
+    Chess gamewin;
+    BaseWindow * window = nullptr;
     std::string fontName = "NotoMono";
     std::string path;
+    
 
+    char* waylandDisplay;
+    waylandDisplay = std::getenv("WAYLAND_DISPLAY");
+    if (waylandDisplay != nullptr)
+    {
+        std::cout << waylandDisplay << "\n";
+        window = new LinuxWaylandWindow();
+    }
+    else
+    {
+        char* display = std::getenv("DISPLAY");
+        if (display != nullptr)
+        {
+            window = new LinuxX11Window();
+            std::cout << display << "\n";
+        }
+    }
+    
     std::cout << "--------------------------------\n";
     std::cout << "starting init window\n";
     std::cout << "--------------------------------\n";
 
     std::cout << "starting init OpenGL\n";
-    if (!gamewin.initGame(1024, 768))
+    if (!gamewin.initGame(window, 1024, 768))
     {
         std::cout << "Error occured, Quiting..\n";
         return 1;

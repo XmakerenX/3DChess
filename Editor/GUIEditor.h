@@ -1,23 +1,23 @@
-#ifndef  _TESTINGWIN_H
-#define  _TESTINGWIN_H
+#ifndef  _GUIEditor_H
+#define  _GUIEditor_H
 
 #include "../GameWin.h"
-#include "../GUI/DialogUI.h"
+#include "../BaseGame.h"
+#include "EditorDialog.h"
 
-class TestingWin : public GameWin
+class GUIEditor : public BaseGame
 {
 public:
-    TestingWin();
+    GUIEditor();
 protected:
-    virtual void initGUI();
+    void initGUI();
     virtual void renderGUI();
     
     virtual void sendKeyEvent(unsigned char key, bool down);
     virtual void sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates);
     virtual void sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates);  
     
-    DialogUI m_testDialog;
-    
+    EditDialogUI m_editDialog;
 };
 
-#endif  //_TESTINGWIN_H
+#endif  //_GUIEditor_H

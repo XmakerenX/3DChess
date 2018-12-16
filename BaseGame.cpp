@@ -1,22 +1,9 @@
-#include "BaseGameWin.h"
-
-std::ostream& operator<<(std::ostream& os, const Resolution res)
-{
-    os << res.width << " " << res.height;
-    return os;
-}
-
-std::istream& operator>>(std::istream& is, Resolution res)
-{
-    is >> res.width;
-    is >> res.height;
-    return is;
-}
+#include "BaseGame.h"
 
 //-----------------------------------------------------------------------------
-// Name : BaseGameWin (constructor)
+// Name : BaseGame (constructor)
 //-----------------------------------------------------------------------------
-BaseGameWin::BaseGameWin()
+BaseGame::BaseGame()
 {
     m_gameRunning = true;
     m_font = nullptr;
@@ -34,21 +21,72 @@ BaseGameWin::BaseGameWin()
 }
 
 //-----------------------------------------------------------------------------
-// Name : BaseGameWin (destructor)
+// Name : BaseGame (destructor)
 //-----------------------------------------------------------------------------
-BaseGameWin::~BaseGameWin()
+BaseGame::~BaseGame()
 {
 
 }
 
 //-----------------------------------------------------------------------------
+// Name : BeginGame 
+//-----------------------------------------------------------------------------
+int BaseGame::BeginGame()
+{
+    while (m_gameRunning && m_window->isRunning())
+    {
+        m_window->pumpMessages();
+            
+        m_timer.frameAdvanced();
+
+        int err = glGetError();
+        if (err != GL_NO_ERROR)
+            std::cout <<"MsgLoop: ERROR bitches\n";
+
+        if (!m_timer.isCap())
+        {
+            drawing();
+        }
+    }
+    
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Name : Shutdown 
+//-----------------------------------------------------------------------------
+bool BaseGame::Shutdown()
+{
+    if (m_window)
+    {
+        bool ret = m_window->closeWindow();
+        delete m_window;
+        m_window = nullptr;
+        return ret;
+    }
+    else
+        return true;
+}
+
+//-----------------------------------------------------------------------------
 // Name : initGame 
 //-----------------------------------------------------------------------------
-bool BaseGameWin::initGame(int width, int height)
+bool BaseGame::initGame(BaseWindow* window,int width, int height)
 {
     std::cout << "InitGame started\n";
+
+    if (window == nullptr)
+        return false;
     
-    if(!platformInit(width, height))
+    m_window = window;
+    m_window->setTimer(&m_timer);
+    
+    m_window->connectToSizeChangedEvent(boost::bind(&BaseGame::reshape, this, _1, _2));
+    m_window->connectToKeyEvent(boost::bind(&BaseGame::sendKeyEvent, this, _1, _2));
+    m_window->connectToVritaulKeyEvent(boost::bind(&BaseGame::sendVirtualKeyEvent, this, _1, _2, _3));
+    m_window->connectToMouseEvent(boost::bind(&BaseGame::sendMouseEvent, this, _1, _2));
+    
+    if(!m_window->platformInit(width, height))
         return false;
     
     glewInit();
@@ -71,7 +109,7 @@ bool BaseGameWin::initGame(int width, int height)
     // init our font
     m_font = m_asset.getFont("NotoMono", 40);
     // make sure the viewport is updated
-    reshape(width,height);
+    m_window->reshape(width,height);
     
     int err = glGetError();
     if (err != GL_NO_ERROR)
@@ -86,7 +124,7 @@ bool BaseGameWin::initGame(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : setRenderStates 
 //-----------------------------------------------------------------------------
-void BaseGameWin::setRenderStates()
+void BaseGame::setRenderStates()
 {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -98,11 +136,15 @@ void BaseGameWin::setRenderStates()
 //-----------------------------------------------------------------------------
 // Name : drawing 
 //-----------------------------------------------------------------------------
-void BaseGameWin::drawing()
+void BaseGame::drawing()
 {
     int err;
 
-    ProcessInput( m_timer.getTimeElapsed());
+    if (m_scene && m_sceneInput)
+    {
+        MouseDrift mouseDrift = m_window->processInput();
+        m_scene->processInput(m_timer.getTimeElapsed(), m_window->getKeyStatus(), mouseDrift.x, mouseDrift.y);
+    }
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -160,13 +202,13 @@ void BaseGameWin::drawing()
         std::cout << gluErrorString(err) << "\n";
     }
 
-    glSwapBuffers();
+    m_window->glSwapBuffers();
 }
 
 //-----------------------------------------------------------------------------
 // Name : renderFPS 
 //-----------------------------------------------------------------------------
-void BaseGameWin::renderFPS(Sprite& textSprite, mkFont& font)
+void BaseGame::renderFPS(Sprite& textSprite, mkFont& font)
 {
     font.renderToRect(textSprite, std::to_string( m_timer.getFPS()), 
                       Rect(0, 0, 200, 60), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -175,15 +217,10 @@ void BaseGameWin::renderFPS(Sprite& textSprite, mkFont& font)
 //-----------------------------------------------------------------------------
 // Name : reshape 
 //-----------------------------------------------------------------------------
-void BaseGameWin::reshape(int width, int height)
+void BaseGame::reshape(int width, int height)
 {
-    std::cout << "reshape called\n";
-    std::cout << "New window size is " << width << "X" << height << "\n";
-    m_winWidth = width;
-    m_winHeight = height;
-
     if (m_scene)
-        m_scene->reshape(m_winWidth, m_winHeight);
+        m_scene->reshape(width, height);
     else
         glViewport(0, 0, width, height);
 
@@ -205,37 +242,26 @@ void BaseGameWin::reshape(int width, int height)
 //-----------------------------------------------------------------------------
 // Name : ProcessInput 
 //-----------------------------------------------------------------------------
-void BaseGameWin::ProcessInput(double timeDelta)
+void BaseGame::ProcessInput(double timeDelta, bool keyStatus[256], float X, float Y)
 {
-    float X = 0.0f, Y = 0.0f;
-    if ( m_mouseDrag )
-    {
-        Point currentCursorPos = getCursorPos();
-
-        X = (float)(currentCursorPos.x - m_oldCursorLoc.x) / 3.0f;
-        Y = (float)(currentCursorPos.y - m_oldCursorLoc.y) / 3.0f;
-
-        setCursorPos( m_oldCursorLoc );
-    }
-
     if (m_scene && m_sceneInput)
-        m_scene->processInput(timeDelta, m_keysStatus, X, Y);
+        m_scene->processInput(timeDelta, keyStatus, X, Y);
 }
 
 //-----------------------------------------------------------------------------
 // Name : handleMouseEvent 
 //-----------------------------------------------------------------------------
-bool BaseGameWin::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+bool BaseGame::handleMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
-	return false;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
 // Name : sendMouseEvent ()
 //-----------------------------------------------------------------------------
-void BaseGameWin::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
+void BaseGame::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
-	handleMouseEvent(event, modifierStates);
-	if (m_scene != nullptr && m_sceneInput)
-		m_scene->handleMouseEvent(event, modifierStates);
+    handleMouseEvent(event, modifierStates);
+    if (m_scene != nullptr && m_sceneInput)
+        m_scene->handleMouseEvent(event, modifierStates);
 }

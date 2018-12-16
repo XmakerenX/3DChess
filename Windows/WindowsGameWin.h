@@ -4,8 +4,7 @@
 #include <windows.h>
 #undef min
 #undef max
-// must be included first becuase of conflict between x11 and fbxsdk.h
-#include "../BaseGameWin.h"
+#include "../BaseWindow.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -64,14 +63,14 @@ struct MonitorInfo
     std::vector<Mode> modes;
 };
 
-class WindowsGameWin : public BaseGameWin
+class WindowsGameWin : public BaseWindow
 {
 public:
     WindowsGameWin();
     virtual ~WindowsGameWin();
     void setHINSTANCE(HINSTANCE hInstance);
     
-    int  BeginGame      ();
+    void pumpMessages   ();
     bool Shutdown       ();
 
     void setFullScreenMode(bool fullscreen);
@@ -86,10 +85,13 @@ public:
     Point getWindowPosition();
     GLuint getWindowCurrentMonitor();
     
-    static void copyToClipboard(const std::string& text);
-    static std::string PasteClipboard();
+    void copyToClipboard(const std::string& text);
+     std::string PasteClipboard();
     
     std::vector<std::vector<Mode1>> getMonitorsModes() const;
+    
+    virtual std::function<void (const std::string&)> getCopyToClipboardFunc();
+    virtual std::function<std::string (void)> getPasteClipboardFunc();
     
 private:    
     LRESULT CALLBACK windowProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
