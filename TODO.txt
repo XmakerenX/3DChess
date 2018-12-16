@@ -1,0 +1,11 @@
+ - when loading GUI from file avoid getting stuck in loop and using all computer memory - done
+ - Arrange all assets in folders - done
+ - make skybox look better and not be affected by the scene light - done
+ - make the game handle errors better - 90% done
+ - Pass over code and check for unNeeded copies that happen in vectors - 50% done 
+ - clean the code and make it more efficient - 10% done
+ - Added Wayland support
+ - Make Full screen mode work better when changing resoultion and monitors
+ - add ai to the chess engine
+ - add networking support for the chess game
+ - add en passant move to the chess engine
