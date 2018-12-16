@@ -73,18 +73,21 @@ void Timer::frameAdvanced()
     double curTimeDelta=(currTime - m_lastTime) * m_TimeScale;
     m_lastTime = currTime;
 
-    for (std::list<alarm>::iterator it = --m_alarms.end(); it != --m_alarms.begin(); --it)
-    {
-        if (it->fireTime <= currTime)
-        {
-            std::cout << "fireing callback\n";
-            it->callback();
-            if (it->repeat > 0)
-                it->fireTime = currTime + it->repeat;
-            else
-                m_alarms.erase(it);
-        }
-    }
+	if (!m_alarms.empty())
+	{
+		for (std::list<alarm>::iterator it = --m_alarms.end(); it != --m_alarms.begin(); --it)
+		{
+			if (it->fireTime <= currTime)
+			{
+				std::cout << "fireing callback\n";
+				it->callback();
+				if (it->repeat > 0)
+					it->fireTime = currTime + it->repeat;
+				else
+					m_alarms.erase(it);
+			}
+		}
+	}
     
     if (!m_cap)
     {
