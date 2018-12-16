@@ -71,7 +71,7 @@ public:
     void setHINSTANCE(HINSTANCE hInstance);
     
     void pumpMessages   ();
-    bool Shutdown       ();
+    bool closeWindow    ();
 
     void setFullScreenMode(bool fullscreen);
     bool setMonitorResolution(int monitorIndex, Resolution newResolution);

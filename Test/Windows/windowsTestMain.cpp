@@ -6,6 +6,8 @@
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TestingGame gamewin;
+	WindowsGameWin* window = new WindowsGameWin();
+
     std::string fontName = "NotoMono";
     std::string path;
 
@@ -15,9 +17,9 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     std::cout << "starting init window\n";
     std::cout << "--------------------------------\n";
 
-    gamewin.setHINSTANCE(hInstance);
+	window->setHINSTANCE(hInstance);
     std::cout << "starting init OpenGL\n";
-    if (!gamewin.initGame(1024, 768))
+    if (!gamewin.initGame(window, 1024, 768))
     {
         std::cout << "Error occured, Quiting..\n";
         return 1;

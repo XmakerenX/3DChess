@@ -214,7 +214,7 @@ LRESULT CALLBACK WindowsGameWin::windowProc(HWND hWnd, UINT message, WPARAM wPar
                                       Point(GET_X_LPARAM(lParam),
                                             GET_Y_LPARAM(lParam)),
                                       message == WM_LBUTTONDOWN || message == WM_LBUTTONDBLCLK,
-                                      m_timer.getCurrentTime(),
+                                      m_timer->getCurrentTime(),
                                       0), 
                            modifierKeys);
 
@@ -235,7 +235,7 @@ LRESULT CALLBACK WindowsGameWin::windowProc(HWND hWnd, UINT message, WPARAM wPar
                                       Point(GET_X_LPARAM(lParam),
                                             GET_Y_LPARAM(lParam)),
                                       message == WM_RBUTTONDOWN || message == WM_RBUTTONDBLCLK,
-                                      m_timer.getCurrentTime(),
+                                      m_timer->getCurrentTime(),
                                       0),
                            modifierKeys);
             
@@ -265,7 +265,7 @@ LRESULT CALLBACK WindowsGameWin::windowProc(HWND hWnd, UINT message, WPARAM wPar
                                       Point(GET_X_LPARAM(lParam),
                                             GET_Y_LPARAM(lParam)),
                                       down,
-                                      m_timer.getCurrentTime(),
+                                      m_timer->getCurrentTime(),
                                       wheelDelta),
                            modifierKeys);
 
@@ -278,7 +278,7 @@ LRESULT CALLBACK WindowsGameWin::windowProc(HWND hWnd, UINT message, WPARAM wPar
                                       Point(GET_X_LPARAM(lParam),
                                             GET_Y_LPARAM(lParam)), 
                                       false,
-                                      m_timer.getCurrentTime(),
+                                      m_timer->getCurrentTime(),
                                       0),
                            modifierKeys);
             return 0;
@@ -673,7 +673,7 @@ Point WindowsGameWin::getCursorPos()
 //-----------------------------------------------------------------------------
 // Name : pumpMessages ()
 //-----------------------------------------------------------------------------
-int WindowsGameWin::pumpMessages()
+void WindowsGameWin::pumpMessages()
 {
     MSG msg;
 
@@ -692,9 +692,9 @@ int WindowsGameWin::pumpMessages()
 }
 
 //-----------------------------------------------------------------------------
-// Name : Shutdown ()
+// Name : closeWindow ()
 //-----------------------------------------------------------------------------
-bool WindowsGameWin::Shutdown()
+bool WindowsGameWin::closeWindow()
 {
     wglMakeCurrent(m_hDC, NULL);
     wglDeleteContext(m_hRC);

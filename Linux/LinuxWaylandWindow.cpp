@@ -158,6 +158,9 @@ LinuxWaylandWindow::~LinuxWaylandWindow()
 //-----------------------------------------------------------------------------
 bool LinuxWaylandWindow::platformInit(int width, int height)
 {
+	m_winWidth = width;
+	m_winHeight = height;
+
     if (!initDisplay())
         return false;
     

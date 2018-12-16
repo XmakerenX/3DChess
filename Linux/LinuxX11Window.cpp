@@ -49,6 +49,9 @@ LinuxX11Window::~LinuxX11Window()
 //-----------------------------------------------------------------------------
 bool LinuxX11Window::platformInit(int width, int height)
 {
+	m_winWidth = width;
+	m_winHeight = height;
+
     if (!initDisplay())
         return false;
     
