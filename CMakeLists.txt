@@ -57,7 +57,7 @@ macro(generateWaylandFiles)
 endmacro(generateWaylandFiles)
 
 # make cmake find our *.cmake files
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake/)
 
 set(CHESS_ENGINE_NAME "ChessEngine")
 set(ENGINE_NAME "Engine")
