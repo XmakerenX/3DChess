@@ -1,6 +1,5 @@
 #include "EditBoxUI.h"
 #include "DialogUI.h"
-#include "../GameWin.h"
 #include <iostream>
 
 bool EditBoxUI::s_bHideCaret;

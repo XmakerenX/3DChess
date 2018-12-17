@@ -1,7 +1,6 @@
 #ifndef  _TestingGame_H
 #define  _TestingGame_H
 
-#include "../GameWin.h"
 #include "../BaseGame.h"
 #include "../GUI/DialogUI.h"
 

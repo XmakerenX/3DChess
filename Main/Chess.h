@@ -1,7 +1,6 @@
 #ifndef  _Chess_H
 #define  _Chess_H
 
-#include "../GameWin.h"
 #include "../BaseGame.h"
 #include "OptionDialog.h"
 #include "ChessScene.h"

@@ -2,7 +2,6 @@
 #define  _EDITORDIALOGUI_H
 
 #include "../GUI/DialogUI.h"
-#include "../GameWin.h"
 #include "../BaseWindow.h"
 
 #define IDC_CONTROLTYPESTATIC   101

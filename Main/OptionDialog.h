@@ -2,7 +2,6 @@
 #define  _OPTIONDIALOG_H
 
 #include "../GUI/DialogUI.h"
-#include "../GameWin.h"
 #include "../BaseWindow.h"
 #include "settingsDef.h"
 

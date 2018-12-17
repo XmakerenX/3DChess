@@ -1,7 +1,6 @@
 #ifndef  _GUIEditor_H
 #define  _GUIEditor_H
 
-#include "../GameWin.h"
 #include "../BaseGame.h"
 #include "EditorDialog.h"
 

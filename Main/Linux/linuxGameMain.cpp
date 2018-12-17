@@ -4,6 +4,7 @@
 #include "../Chess.h"
 #include "../../BaseWindow.h"
 #include "../../Linux/LinuxX11Window.h"
+#include "../../Linux/LinuxWaylandWindow.h"
 
 int main(int argc, char* argv[])
 {
