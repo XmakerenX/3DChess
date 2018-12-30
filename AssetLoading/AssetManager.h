@@ -1,30 +1,28 @@
 #ifndef  _ASSETMANAGER_H
 #define  _ASSETMANAGER_H
 
-#include<iostream>
-#include<fstream>
-#include<sstream>
-#include<unordered_map>
-#include<vector>
-#include<string>
-#include<sstream>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <sstream>
 
-#include<cstdio>
+#include <cstdio>
 
-#include<GL/glew.h>
-#include<glm/glm.hpp>
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
-#include"FbxLoader.h"
+#include <png.h>
+#include <jpeglib.h>
 
-#include<png.h>
-#include<jpeglib.h>
-
-#include "RenderTypes.h"
-#include "Shader.h"
-#include "Mesh.h"
+#include "../RenderTypes.h"
+#include "../Shader.h"
+#include "../Mesh.h"
+#include "../Font.h"
+#include "FbxLoader.h"
 #include "ObjLoader.h"
-
-#include "Font.h"
 
 #ifndef _WIN32
 #define MAX_PATH 256

@@ -1,7 +1,7 @@
 #ifndef  _BaseWindowN_H
 #define  _BaseWindowN_H
 
-#include "AssetManager.h"
+#include "AssetLoading/AssetManager.h"
 #include <boost/signals2/signal.hpp>
 
 #include <iostream>

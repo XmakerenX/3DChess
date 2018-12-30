@@ -7,7 +7,7 @@
 #include <functional>
 #include <boost/signals2/signal.hpp>
 #include <boost/bind/bind.hpp>
-#include "../AssetManager.h"
+#include "../AssetLoading/AssetManager.h"
 #include "ControlUI.h"
 #include "ButtonUI.h"
 #include "StaticUI.h"

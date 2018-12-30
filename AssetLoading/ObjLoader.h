@@ -1,12 +1,12 @@
 #ifndef  _OBJLOADER_H
 #define  _OBJLOADER_H
 
-#include<unordered_map>
-#include<GL/glew.h>
-#include<glm/glm.hpp>
-#include"RenderTypes.h"
+#include <unordered_map>
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+#include "../RenderTypes.h"
 // for vertex
-#include "Mesh.h"
+#include "../Mesh.h"
 #include "AssetManager.h"
 
 

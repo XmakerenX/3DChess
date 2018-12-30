@@ -1,7 +1,7 @@
 #ifndef  _BaseGame_H
 #define  _BaseGame_H
 
-#include "AssetManager.h"
+#include "AssetLoading/AssetManager.h"
 
 #include <iostream>
 #include <sstream>

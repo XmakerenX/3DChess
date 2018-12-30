@@ -8,7 +8,7 @@
 #include "../input.h"
 #include "../mouseEventsGame.h"
 #include "../timer.h"
-#include "../AssetManager.h"
+#include "../AssetLoading/AssetManager.h"
 #include "../Sprite.h"
 #include "../Font.h"
 

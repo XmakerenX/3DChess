@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include "Mesh.h"
-#include "AssetManager.h"
+#include "AssetLoading/AssetManager.h"
 
 class Object
 {

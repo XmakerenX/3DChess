@@ -2,7 +2,7 @@
 #define  _SCENE_H
 
 #include <vector>
-#include "AssetManager.h"
+#include "AssetLoading/AssetManager.h"
 #include "FreeCam.h"
 #include "Object.h"
 #include "input.h"

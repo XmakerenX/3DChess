@@ -142,6 +142,7 @@ endif(UNIX)
 #------------------------------------------------------------------------
 message("adiing source files")
 aux_source_directory(. SRC_LIST)
+aux_source_directory(./AssetLoading SRC_LIST)
 aux_source_directory(./GUI SRC_LIST)
 aux_source_directory(./ChessEngine/ CHESS_SRC_LIST)
 aux_source_directory(./Main MAIN_SRC_LIST)

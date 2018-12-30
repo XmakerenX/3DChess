@@ -5,7 +5,7 @@
 #include <fbxsdk.h>
 #include<vector>
 #include<string>
-#include "subMesh.h"
+#include "../subMesh.h"
 
 class FbxLoader
 {
