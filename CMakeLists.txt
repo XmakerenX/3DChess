@@ -1,13 +1,18 @@
 project(GlxOpenGL)
 cmake_minimum_required(VERSION 3.2)
 
+#------------------------------------------------------------------------
+# was_found - prints error when packge was not found
+#------------------------------------------------------------------------
 function(was_found package_name isfound) 
-    #message("was_found was called " ${package_name} " " ${isfound})
     if(NOT isfound)
         message("The package " ${package_name} " was not found")
     endif(NOT isfound)
 endfunction(was_found)
 
+#------------------------------------------------------------------------
+# generateWaylandFiles - generate c files for wayland unstable protocols
+#------------------------------------------------------------------------
 macro(generateWaylandFiles)
     if(WAYLAND_FOUND)
         execute_process(
@@ -56,6 +61,9 @@ macro(generateWaylandFiles)
     include_directories("${CMAKE_CURRENT_BINARY_DIR}/WaylandGen")
 endmacro(generateWaylandFiles)
 
+#------------------------------------------------------------------------
+# start of main script
+#------------------------------------------------------------------------
 # make cmake find our *.cmake files
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake/)
 
@@ -64,6 +72,9 @@ set(ENGINE_NAME "Engine")
 set(EDITOR_EXE_NAME "Editor")
 set(TEST_EXE_NAME "Test")
 
+#------------------------------------------------------------------------
+# Find all the needed packages
+#------------------------------------------------------------------------
 message("Loading libraries")
 if (UNIX)
     find_package(X11 QUIET REQUIRED)
@@ -84,6 +95,7 @@ find_package(Boost QUIET REQUIRED)
 find_package(GLEW QUIET REQUIRED)
 find_package(PNG QUIET REQUIRED)
 find_package(JPEG QUIET REQUIRED)
+find_package(LibXml2 QUIET REQUIRED)
 find_package(FBX QUIET REQUIRED)
 # Print error if one of the packges was not found
 was_found("Threads" ${Threads_FOUND})
@@ -93,6 +105,7 @@ was_found("Boost" ${Boost_FOUND})
 was_found("GLEW" ${GLEW_FOUND})
 was_found("PNG" ${PNG_FOUND})
 was_found("JPEG" ${JPEG_FOUND})
+was_found("LibXml2" ${LIBXML2_FOUND})
 was_found("FBXSDK" ${FBXSDK_FOUND})
 if (UNIX)
     was_found("X11" ${X11_FOUND})
@@ -103,12 +116,16 @@ if (UNIX)
     was_found("EGL" ${EGL_FOUND})
 endif(UNIX)
 
+#------------------------------------------------------------------------
+# set include paths
+#------------------------------------------------------------------------
 message("Setting include directories")
 include_directories(${FREETYPE_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${GLEW_INCLUDE_DIR})
 include_directories(${PNG_INCLUDE_DIRS})
 include_directories(${JPEG_INCLUDE_DIRS})
+include_directories(${LIBXML2_INCLUDE_DIRS})
 include_directories(${FBXSDK_INCLUDE_DIR})
 if (UNIX)
     include_directories(${X11_INCLUDE_DIR})
@@ -120,6 +137,9 @@ if (UNIX)
     include_directories(${EGL_INCLUDE_DIR})
 endif(UNIX)
 
+#------------------------------------------------------------------------
+# set source files
+#------------------------------------------------------------------------
 message("adiing source files")
 aux_source_directory(. SRC_LIST)
 aux_source_directory(./GUI SRC_LIST)
@@ -143,6 +163,9 @@ endif(WIN32)
 message("setting chess library")
 add_library(${CHESS_ENGINE_NAME} ${CHESS_SRC_LIST})
 
+#------------------------------------------------------------------------
+# set how to link for engine library
+#------------------------------------------------------------------------
 message("setting engine library")
 add_library(${ENGINE_NAME} ${SRC_LIST})
 target_link_libraries(${ENGINE_NAME} ${OPENGL_LIBRARIES})
@@ -150,6 +173,7 @@ target_link_libraries(${ENGINE_NAME} ${FREETYPE_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${GLEW_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${PNG_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${JPEG_LIBRARIES})
+target_link_libraries(${ENGINE_NAME} ${LIBXML2_LIBRARIES})
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(${ENGINE_NAME} ${FBXSDK_LIBRARY_DEBUG})
 else()
@@ -166,6 +190,9 @@ if (UNIX)
 endif(UNIX)
 target_link_libraries(${ENGINE_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
+#------------------------------------------------------------------------
+# set executables
+#------------------------------------------------------------------------
 message("setting executable")
 if (WIN32)
     add_executable(${PROJECT_NAME} WIN32 ${MAIN_SRC_LIST})
