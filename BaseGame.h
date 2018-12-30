@@ -11,9 +11,9 @@
 
 #include "timer.h"
 #include "BaseWindow.h"
-#include "Scene.h"
+#include "Graphics/Scene.h"
 #include "input.h"
-#include "Sprite.h"
+#include "Graphics/Sprite.h"
 
 class BaseGame
 {

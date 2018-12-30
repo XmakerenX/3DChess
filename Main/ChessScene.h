@@ -1,9 +1,9 @@
 #ifndef _CHESSSCENE_H_
 #define _CHESSSCENE_H_
 
-#include "../Scene.h"
+#include "../Graphics/Scene.h"
 #include "../ChessEngine/Board.h"
-#include "../GUI/DialogUI.h"
+#include "../Graphics/GUI/DialogUI.h"
 #include "pawnsDef.h"
 
 class ChessScene : public Scene

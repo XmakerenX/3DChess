@@ -1,7 +1,7 @@
 #ifndef  _OPTIONDIALOG_H
 #define  _OPTIONDIALOG_H
 
-#include "../GUI/DialogUI.h"
+#include "../Graphics/GUI/DialogUI.h"
 #include "../BaseWindow.h"
 #include "settingsDef.h"
 

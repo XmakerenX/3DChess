@@ -1,5 +1,5 @@
 #include "OptionDialog.h"
-#include "../GUI/DialogUI.cpp"
+#include "../Graphics/GUI/DialogUI.cpp"
 
 //-----------------------------------------------------------------------------
 // Name : OptionDialog (constructor)

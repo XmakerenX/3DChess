@@ -2,8 +2,8 @@
 #define  _BUTTONUI_H
 
 #include "../RenderTypes.h"
-#include "../AssetLoading/AssetManager.h"
-#include "../timer.h"
+#include "../../AssetLoading/AssetManager.h"
+#include "../../timer.h"
 #include "StaticUI.h"
 
 class ButtonUI : public StaticUI

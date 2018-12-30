@@ -2,11 +2,11 @@
 #define  _SCENE_H
 
 #include <vector>
-#include "AssetLoading/AssetManager.h"
-#include "FreeCam.h"
+#include "../AssetLoading/AssetManager.h"
+#include "Camera/FreeCam.h"
 #include "Object.h"
-#include "input.h"
-#include "mouseEventsGame.h"
+#include "../input.h"
+#include "../mouseEventsGame.h"
 
 struct LIGHT_PREFS
 {

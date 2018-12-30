@@ -17,10 +17,10 @@
 #include <png.h>
 #include <jpeglib.h>
 
-#include "../RenderTypes.h"
-#include "../Shader.h"
-#include "../Mesh.h"
-#include "../Font.h"
+#include "../Graphics/RenderTypes.h"
+#include "../Graphics/Shader.h"
+#include "../Graphics/Mesh.h"
+#include "../Graphics/Font.h"
 #include "FbxLoader.h"
 #include "ObjLoader.h"
 

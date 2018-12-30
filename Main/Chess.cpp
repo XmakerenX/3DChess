@@ -1,6 +1,6 @@
 #include "Chess.h"
-#include "../GUI/ListBoxUI.cpp"
-#include "../GUI/ComboBoxUI.cpp"
+#include "../Graphics/GUI/ListBoxUI.cpp"
+#include "../Graphics/GUI/ComboBoxUI.cpp"
 #include "MainMenuDef.h"
 #include "pawnsDef.h"
 #include <fstream>

@@ -1,7 +1,7 @@
 #ifndef  _EDITORDIALOGUI_H
 #define  _EDITORDIALOGUI_H
 
-#include "../GUI/DialogUI.h"
+#include "../Graphics/GUI/DialogUI.h"
 #include "../BaseWindow.h"
 
 #define IDC_CONTROLTYPESTATIC   101

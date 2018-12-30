@@ -12,9 +12,9 @@
 #include <GL/glew.h>
 
 #include "timer.h"
-#include "Scene.h"
+#include "Graphics/Scene.h"
 #include "input.h"
-#include "Sprite.h"
+#include "Graphics/Sprite.h"
 #include <boost/signals2.hpp>
 #include <boost/signals2.hpp>
 #include <boost/signals2.hpp>

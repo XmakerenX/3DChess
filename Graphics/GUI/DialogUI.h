@@ -7,12 +7,12 @@
 #include <functional>
 #include <boost/signals2/signal.hpp>
 #include <boost/bind/bind.hpp>
-#include "../AssetLoading/AssetManager.h"
+#include "../../AssetLoading/AssetManager.h"
 #include "ControlUI.h"
 #include "ButtonUI.h"
 #include "StaticUI.h"
-#include "../virtualKeysGame.h"
-#include "../mouseEventsGame.h"
+#include "../../virtualKeysGame.h"
+#include "../../mouseEventsGame.h"
 #include "CheckboxUI.h"
 #include "RadioButtonUI.h"
 #include "ComboBoxUI.h"

@@ -2,7 +2,7 @@
 #define  _TestingGame_H
 
 #include "../BaseGame.h"
-#include "../GUI/DialogUI.h"
+#include "../Graphics/GUI/DialogUI.h"
 
 class TestingGame : public BaseGame
 {
