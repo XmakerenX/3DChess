@@ -15,29 +15,32 @@ public:
     void InitObject (const glm::vec3& pos, const glm::vec3& angle, const glm::vec3& scale, Mesh* pMesh, std::vector<unsigned int> meshAttribute);
     ~Object         ();
 
-    glm::mat4x4 GetWorldMatrix  ();
-    glm::vec3   GetPosition     ();
-    Mesh*       GetMesh         ();
+    const glm::mat4x4& GetWorldMatrix          ();
+    const glm::mat4x4& GetInverseWorldMatrix   ();
+    glm::vec3          GetPosition             ();
+    Mesh*              GetMesh                 ();
 
-    bool        IsObjectHidden  ();
-    void        SetObjectHidden (bool newStatus);
-    void        SetPos          (glm::vec3 newPos);
-    void        SetRotAngles    (glm::vec3 newRotAngles);
-    void        SetScale  (glm::vec3 newScale);
+    bool               IsObjectHidden          ();
+    void               SetObjectHidden         (bool newStatus);
+    void               SetPos                  (glm::vec3 newPos);
+    void               SetRotAngles            (glm::vec3 newRotAngles);
+    void               SetScale                (glm::vec3 newScale);
 
-    void        Rotate          (float x, float y, float z);
-    void        TranslatePos    (float x ,float y, float z);
+    void               Rotate                  (float x, float y, float z);
+    void               TranslatePos            (float x ,float y, float z);
     
-    void        AttachMesh      (Mesh* pMesh);
-    void        SetObjectAttributes(std::vector<unsigned int> meshAttribute);
-    void        AddObjectAttribute(unsigned int attribute);
+    void               AttachMesh              (Mesh* pMesh);
+    void               SetObjectAttributes     (std::vector<unsigned int> meshAttribute);
+    void               AddObjectAttribute      (unsigned int attribute);
     
-    void        Draw            (Shader* shader, unsigned int attributeIndex, const glm::mat4x4 &matViewProj);
-    void        Draw            (GLuint projectionLoc, GLuint matWorldLoc, GLuint matWorldInverseLoc, unsigned int attributeIndex, const glm::mat4x4& matViewProj);
+    void               Draw                    (Shader* shader, unsigned int attributeIndex, const glm::mat4x4 &matViewProj);
+    void               Draw                    (GLuint projectionLoc, GLuint matWorldLoc, GLuint matWorldInverseLoc, unsigned int attributeIndex, const glm::mat4x4& matViewProj);
 
 private:
+    void CalculateWorldMatrix();
     glm::vec3   m_pos;
     glm::mat4x4 m_mthxWorld;
+    glm::mat4x4 m_mthxInverseWorld;
     glm::mat4x4 m_mtxRot;
     glm::mat4x4 m_mtxScale;
     glm::vec3   m_rotAngles;
