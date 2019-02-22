@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <utility>
-#include <map>
+#include <unordered_map>
 #include <fstream>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -88,13 +88,12 @@ private:
     void createFontAtlas(FT_Library ft, FT_Face face);
 
     std::string fontPath;
-    std::map<GLchar, CharGlyph> charGlyphs;
-    std::map<GLchar, CharGlyphAtlas> charGlyphsAtlas;
+    std::unordered_map<GLchar, CharGlyph> charGlyphs;
+    std::unordered_map<GLchar, CharGlyphAtlas> charGlyphsAtlas;
     GLuint VAO;
     GLuint VBO;
     VertexIndex indices[6];
 
-    //GLuint m_maxWidth;
     GLuint m_maxRows;
     GLuint m_avgWidth;
 
