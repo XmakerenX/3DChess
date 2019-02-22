@@ -142,7 +142,7 @@ void Scene::Drawing(double frameTimeDelta)
     for (GLuint i = 0; i < attribVector.size(); i++)
     {
         SetAttribute(attribVector[i]);
-        for (Object obj : m_objects)
+        for (Object& obj : m_objects)
         {
             obj.Draw( m_projectionLoc, m_matWorldLoc, m_matWorldInverseLoc, i, projViewMat);
         }
