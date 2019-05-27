@@ -175,12 +175,12 @@ void BaseGame::drawing()
     }
 
     glDisable(GL_DEPTH_TEST);
-    renderFPS(m_sprites[1], *m_font );
-    m_font->renderToRect(m_sprites[1], ss.str(), Rect(0, 65, 500, 200),
-                        glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-    if (m_scene)
-        m_font->renderToRect(m_sprites[1], m_scene->getStatus(), Rect(0, 130, 2000, 200), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+//     renderFPS(m_sprites[1], *m_font );
+//     m_font->renderToRect(m_sprites[1], ss.str(), Rect(0, 65, 500, 200),
+//                         glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+// 
+//     if (m_scene)
+//         m_font->renderToRect(m_sprites[1], m_scene->getStatus(), Rect(0, 130, 2000, 200), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
     renderGUI();
 
