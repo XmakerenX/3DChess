@@ -3,7 +3,7 @@ A cross platform Chess game for 2 players made using OpenGL and c++.
 
 ## Screenshot
 
-put link to screen shot
+![Alt text](screenshot.png)
 
 ## Controls
 | Key | Symbol |
