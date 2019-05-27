@@ -188,7 +188,7 @@ GLuint AssetManager::loadPng(const std::string &filePath)
         row_pointers[height - 1 - i] = image_data + i * rowBytes;
 
     // read the png into image data through row_pointers
-        png_read_image(png_ptr, row_pointers);
+    png_read_image(png_ptr, row_pointers);
 
 
     // now generate the OpenGL texture

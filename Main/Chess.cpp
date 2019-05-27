@@ -35,6 +35,7 @@ void Chess::initGUI()
     initMainMenu();
     initOptionsMenu();
     initPromotionMenu();
+    initKeysMenu();
 }
 
 //-----------------------------------------------------------------------------
@@ -42,31 +43,30 @@ void Chess::initGUI()
 //-----------------------------------------------------------------------------
 void Chess::initMainMenu()
 {
-    m_dialog.init(200,320, 18, "Main Menu", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
-    m_dialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
-    m_dialog.setCaption(false);
-    m_dialog.setLocation( (m_window->getWidth() / 2) - (m_dialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_dialog.getHeight() / 2) );
-    //m_dialog.initDefControlElements(m_asset);
-    m_dialog.initWoodControlElements(m_asset);
-    if (!m_dialog.LoadDialogFromFile("data/dialogs/MainMenu.txt"))
+    m_mainMenuDialog.init(200,320, 18, "Main Menu", "", glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), m_asset);
+    m_mainMenuDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    m_mainMenuDialog.setCaption(false);
+    m_mainMenuDialog.setLocation( (m_window->getWidth() / 2) - (m_mainMenuDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_mainMenuDialog.getHeight() / 2) );
+    m_mainMenuDialog.initWoodControlElements(m_asset);
+    if (!m_mainMenuDialog.LoadDialogFromFile("data/dialogs/MainMenu.txt"))
         return;
         
     StaticUI* gameTitle;
-    m_dialog.addStatic(50, "Chess", -100, -150, 380, 100, &gameTitle);
+    m_mainMenuDialog.addStatic(50, "Chess", -100, -150, 380, 100, &gameTitle);
     std::vector<ELEMENT_FONT> gameTitleFont;
     gameTitleFont.emplace_back(FontInfo("data/fonts/RosewoodStd-Regular.otf", 64) , m_asset.getFont("data/fonts/RosewoodStd-Regular.otf", 64, true));
     gameTitle->setControlFonts(gameTitleFont);
     gameTitle->setTextOrientation(mkFont::TextFormat::Center);
     
-    m_dialog.getButton(IDC_NEWGAME)->connectToClick(boost::bind(&Chess::onNewGame, this , _1));
-    m_dialog.getButton(IDC_Continue)->connectToClick(boost::bind(&Chess::onContinueGame, this , _1));
-    m_dialog.getButton(IDC_OPTIONS)->connectToClick(boost::bind(&Chess::onOptions, this , _1));
-    m_dialog.getButton(IDC_CREDITS)->connectToClick(boost::bind(&Chess::onCredits, this , _1));
-    m_dialog.getButton(IDC_EXIT)->connectToClick(boost::bind(&Chess::onExitPressed, this , _1));
+    m_mainMenuDialog.getButton(IDC_NEWGAME)->connectToClick(boost::bind(&Chess::onNewGame, this , _1));
+    m_mainMenuDialog.getButton(IDC_Continue)->connectToClick(boost::bind(&Chess::onContinueGame, this , _1));
+    m_mainMenuDialog.getButton(IDC_OPTIONS)->connectToClick(boost::bind(&Chess::onOptions, this , _1));
+    m_mainMenuDialog.getButton(IDC_CREDITS)->connectToClick(boost::bind(&Chess::onCredits, this , _1));
+    m_mainMenuDialog.getButton(IDC_EXIT)->connectToClick(boost::bind(&Chess::onExitPressed, this , _1));
     
     std::ifstream saveFile("board.sav");
     if (!saveFile.good())
-        m_dialog.getButton(IDC_Continue)->setEnabled(false);
+        m_mainMenuDialog.getButton(IDC_Continue)->setEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ void Chess::initOptionsMenu()
 {
     m_optionDialog.setParentWindow(m_window);
     m_optionDialog.init(100, 100, 18, "Options", "data/textures/GUI/woodBack.png", glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
-    m_dialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    m_mainMenuDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
     m_optionDialog.setLocation( (m_window->getWidth() / 2) - (m_optionDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_optionDialog.getHeight() / 2) );
     m_optionDialog.setVisible(false);
     m_optionDialog.setCaption(false);
@@ -91,7 +91,7 @@ void Chess::initOptionsMenu()
 void Chess::initPromotionMenu()
 {
     m_promotionGUI.init(500, 100, 18,"Select Pawn", "data/textures/GUI/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
-    m_dialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    m_mainMenuDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
     m_promotionGUI.setCaption(false);
     m_promotionGUI.initWoodControlElements(m_asset);
     if(!m_promotionGUI.LoadDialogFromFile("data/dialogs/pawns.txt"))
@@ -124,13 +124,27 @@ void Chess::initPromotionMenu()
 }
 
 //-----------------------------------------------------------------------------
+// Name : initKeysMenu
+//-----------------------------------------------------------------------------
+void Chess::initKeysMenu()
+{
+    m_keysDialog.init(100, 100, 18, "Options", "", glm::vec4(1.0f,1.0f,1.0f, 0.0), m_asset);
+    m_keysDialog.initWoodControlElements(m_asset);
+    m_keysDialog.setLocation( m_window->getWidth() - 400,  (m_window->getHeight() / 2) - (m_keysDialog.getHeight() / 2) - 130 );
+    m_keysDialog.LoadDialogFromFile("data/dialogs/keys.txt");
+    m_keysDialog.setVisible(true);
+    m_keysDialog.setCaption(false);
+}
+
+//-----------------------------------------------------------------------------
 // Name : renderGUI
 //-----------------------------------------------------------------------------
 void Chess::renderGUI()
 {
-      m_dialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
+      m_mainMenuDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
       m_optionDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
       m_promotionGUI.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
+      m_keysDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
 }
 
 //-----------------------------------------------------------------------------
@@ -142,18 +156,20 @@ void Chess::sendKeyEvent(unsigned char key, bool down)
     {
         if (!m_optionDialog.getVisible() && !m_promotionGUI.getVisible())
         {
-            m_dialog.setVisible(!m_dialog.getVisible());
-            if (m_dialog.getVisible())
+            m_mainMenuDialog.setVisible(!m_mainMenuDialog.getVisible());
+            m_keysDialog.setVisible(!m_keysDialog.getVisible());
+            if (m_mainMenuDialog.getVisible())
                 static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::Infinite);
             else
                 static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::ReturnToWhite);
-            m_sceneInput = !m_dialog.getVisible();
+            m_sceneInput = !m_mainMenuDialog.getVisible();
         }
     }
         
-    m_dialog.handleKeyEvent(key, down);
+    m_mainMenuDialog.handleKeyEvent(key, down);
     m_optionDialog.handleKeyEvent(key, down);
     m_promotionGUI.handleKeyEvent(key, down);
+    m_keysDialog.handleKeyEvent(key, down);
 }
 
 //-----------------------------------------------------------------------------
@@ -161,9 +177,10 @@ void Chess::sendKeyEvent(unsigned char key, bool down)
 //-----------------------------------------------------------------------------
 void Chess::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const ModifierKeysStates& modifierStates)
 {
-    m_dialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
+    m_mainMenuDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
     m_optionDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
     m_promotionGUI.handleVirtualKeyEvent(virtualKey, down, modifierStates);
+    m_keysDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
 }
 
 //-----------------------------------------------------------------------------
@@ -172,9 +189,10 @@ void Chess::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const Modif
 void Chess::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierStates)
 {
     BaseGame::sendMouseEvent(event, modifierStates);
-    m_dialog.handleMouseEvent(event, modifierStates);
+    m_mainMenuDialog.handleMouseEvent(event, modifierStates);
     m_optionDialog.handleMouseEvent(event, modifierStates);
     m_promotionGUI.handleMouseEvent(event, modifierStates);
+    m_keysDialog.handleMouseEvent(event, modifierStates);
 }
 
 //-----------------------------------------------------------------------------
@@ -182,9 +200,10 @@ void Chess::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierS
 //-----------------------------------------------------------------------------
 void Chess::onSizeChanged()
 {
-    m_dialog.setLocation( (m_window->getWidth() / 2) - (m_dialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_dialog.getHeight() / 2) );
+    m_mainMenuDialog.setLocation( (m_window->getWidth() / 2) - (m_mainMenuDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_mainMenuDialog.getHeight() / 2) );
     m_promotionGUI.setLocation( (m_window->getWidth() / 2) - (m_promotionGUI.getWidth() / 2), (m_window->getHeight() / 2) - (m_promotionGUI.getHeight() / 2) );
     m_optionDialog.setLocation( (m_window->getWidth() / 2) - (m_optionDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_optionDialog.getHeight() / 2) );
+    m_keysDialog.setLocation( m_window->getWidth() - 400,  (m_window->getHeight() / 2) - (m_keysDialog.getHeight() / 2) - 130 );
 }
 
 //-----------------------------------------------------------------------------
@@ -192,7 +211,8 @@ void Chess::onSizeChanged()
 //-----------------------------------------------------------------------------
 void Chess::onNewGame(ButtonUI* newGameButton)
 {
-    m_dialog.setVisible(false);
+    m_mainMenuDialog.setVisible(false);
+    m_keysDialog.setVisible(false);
     m_sceneInput = true;
     static_cast<ChessScene*>(m_scene)->newGame();
     static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::ReturnToWhite);
@@ -203,7 +223,8 @@ void Chess::onNewGame(ButtonUI* newGameButton)
 //-----------------------------------------------------------------------------
 void Chess::onContinueGame(ButtonUI* continuButton)
 {
-    m_dialog.setVisible(false);
+    m_mainMenuDialog.setVisible(false);
+    m_keysDialog.setVisible(false);
     m_sceneInput = true;
     static_cast<ChessScene*>(m_scene)->loadGame();
     static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::ReturnToWhite);
@@ -214,7 +235,8 @@ void Chess::onContinueGame(ButtonUI* continuButton)
 //-----------------------------------------------------------------------------
 void Chess::onOptions(ButtonUI* optionsButton)
 {
-    m_dialog.setVisible(false);
+    m_mainMenuDialog.setVisible(false);
+    m_keysDialog.setVisible(false);
     m_optionDialog.setVisible(true);
 }
 
@@ -241,7 +263,8 @@ void Chess::onExitPressed(ButtonUI* exitButton)
 void Chess::onOptionMenuCancel(ButtonUI* cancelButton)
 {
     m_optionDialog.setVisible(false);
-    m_dialog.setVisible(true);
+    m_mainMenuDialog.setVisible(true);
+    m_keysDialog.setVisible(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -250,7 +273,8 @@ void Chess::onOptionMenuCancel(ButtonUI* cancelButton)
 void Chess::onOptionMenuOK(ButtonUI* okButton)
 {
     m_optionDialog.setVisible(false);
-    m_dialog.setVisible(true);
+    m_mainMenuDialog.setVisible(true);
+    m_keysDialog.setVisible(true);
     
     bool fullscreen  = m_optionDialog.getRadioButton(IDC_FULLSCREENRADIO)->getChecked();
     int monitorIndex = *(m_optionDialog.getComboBox<int>(IDC_MONITOR)->GetSelectedData());

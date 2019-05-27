@@ -16,6 +16,7 @@ protected:
     void initMainMenu();
     void initOptionsMenu();
     void initPromotionMenu();
+    void initKeysMenu();
     
     virtual void renderGUI();
     
@@ -33,9 +34,10 @@ protected:
     void onOptionMenuCancel(ButtonUI* cancelButton);
     void onOptionMenuOK(ButtonUI* okButton);
     
-    DialogUI m_dialog;
+    DialogUI m_mainMenuDialog;
     OptionDialog m_optionDialog;
     DialogUI m_promotionGUI;
+    DialogUI m_keysDialog;
 };
 
 #endif  //_Chess_H
