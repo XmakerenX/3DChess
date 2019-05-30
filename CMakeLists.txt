@@ -1,4 +1,4 @@
-project(GlxOpenGL)
+project(3DChess)
 cmake_minimum_required(VERSION 3.2)
 
 #------------------------------------------------------------------------
@@ -151,6 +151,8 @@ aux_source_directory(./Main MAIN_SRC_LIST)
 aux_source_directory(./Editor EDITOR_SRC_LIST)
 aux_source_directory(./Test/ TEST_SRC_LIST)
 if (WIN32)
+	set(MAIN_SRC_LIST ${MAIN_SRC_LIST} rc.rc)
+	set_source_files_properties(pawn.iso rc.rc2 PROPERTIES LANGUAGE RC)
     aux_source_directory(./Windows SRC_LIST)
     aux_source_directory(./Main/Windows MAIN_SRC_LIST)
     aux_source_directory(./Editor/Windows EDITOR_SRC_LIST)
