@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "../Chess.h"
+#include "../../Windows/WindowsGameWin.h"
 #include "../../Windows/WindowsConsole.h"
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)

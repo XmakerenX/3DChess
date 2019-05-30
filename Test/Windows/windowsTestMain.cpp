@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 #include "../TestingGame.h"
-#include "../../WindowsConsole.h"
+#include "../../Windows/WindowsGameWin.h"
+#include "../../Windows/WindowsConsole.h"
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
