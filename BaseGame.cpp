@@ -140,11 +140,11 @@ void BaseGame::drawing()
 {
     int err;
 
-    if (m_scene && m_sceneInput)
-    {
-        MouseDrift mouseDrift = m_window->processInput();
-        m_scene->processInput(m_timer.getTimeElapsed(), m_window->getKeyStatus(), mouseDrift.x, mouseDrift.y);
-    }
+    //if (m_scene && m_sceneInput)
+    //{
+    //    MouseDrift mouseDrift = m_window->processInput();
+    //    m_scene->processInput(m_timer.getTimeElapsed(), m_window->getKeyStatus(), mouseDrift.x, mouseDrift.y);
+    //}
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
