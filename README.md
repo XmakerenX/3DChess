@@ -11,6 +11,12 @@ A cross platform Chess game for 2 players made using OpenGL and c++.
 |ESC| open/close the main menu |
 |Left mouse button| select what game piece to move and to where |
 
+## Installation
+The game can be download as zip file from [here](https://github.com/XmakerenX/3DChess/releases/download/v1.0.0/3DChess.zip)
+or as a setup file from [here](https://github.com/XmakerenX/3DChess/releases/download/v1.0.0/ChessSetup.exe)     
+The game requires [Microsoft Visual C++ Redistributable 2017](https://aka.ms/vs/15/release/VC_redist.x64.exe)
+
+
 ## Building Dependencies
 * Cmake(at least 3.2) and a C++11 or better compiler  
 * In order to build the project the following libraries are required:   
