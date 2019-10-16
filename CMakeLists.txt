@@ -11,6 +11,41 @@ function(was_found package_name isfound)
 endfunction(was_found)
 
 #------------------------------------------------------------------------
+# createPreCompiledheader - create the precompiled header pch/gch file
+#------------------------------------------------------------------------
+macro(createPreCompiledheaders headerName sourcePath pchPath)
+	if (MSVC)
+		set_source_files_properties(${sourcePath} PROPERTIES
+			COMPILE_FLAGS "/Fp${pchPath} /Yc${headerName}"
+			OBJECT_OUTPUTS "${pchPath}")
+	elseif(CMAKE_COMPLIER_IS_GNUCXX)
+		add_custom_command(
+		OUTPUT "${pchPath}"
+		COMMAND "${CMAKE_CXX_COMPILER}" -x c++-header "${CMAKE_CURRENT_SOURCE_DIR}/${headerName}" -o "${pchPath}"
+		DEPENDS "${headerName}"
+		COMMENT "Precompiling pre compiled header")
+	endif(MSVC)
+endmacro(createPreCompiledheader)
+
+#------------------------------------------------------------------------
+# setPrecompliedHeader - set sourceList to use the given precompiled
+#						 header and force include it
+#------------------------------------------------------------------------
+macro(setPrecompliedHeaders headerPath pchPath sourceList)
+	foreach(_source ${sourceList})
+		if(MSVC)
+			set_source_files_properties(${_source} PROPERTIES
+				  COMPILE_FLAGS "/Fp${pchPath} /Yu${headerPath} /FI${headerPath}"
+				  OBJECT_DEPENDS "${pchPath}")
+		elseif(CMAKE_COMPLIER_IS_GNUCXX)
+			set_source_files_properties(${_source} PROPERTIES
+				COMPILE_FLAGS "-include ${CMAKE_CURRENT_SOURCE_DIR}/${headerName}"
+				OBJECT_DEPENDS "${pchPath}")
+		endif(MSVC)
+	endforeach()
+endmacro(setPrecompliedHeader)
+
+#------------------------------------------------------------------------
 # generateWaylandFiles - generate c files for wayland unstable protocols
 #------------------------------------------------------------------------
 macro(generateWaylandFiles)
@@ -66,6 +101,15 @@ endmacro(generateWaylandFiles)
 #------------------------------------------------------------------------
 # make cmake find our *.cmake files
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake/)
+
+set(PrecompiledHeaderName "pch")
+set(PrecompiledHeaderSource "${PrecompiledHeaderName}.cpp")
+set(PrecompiledHeaderHeader "${PrecompiledHeaderName}.h")
+if(MSVC)
+	set(PrecompiledHeaderBinary "${PrecompiledHeaderName}.pch")
+elseif(CMAKE_COMPLIER_IS_GNUCXX)
+	set(PrecompiledHeaderBinary "${PrecompiledHeaderName}.gch")
+endif(MSVC)
 
 set(CHESS_ENGINE_NAME "ChessEngine")
 set(ENGINE_NAME "Engine")
@@ -173,6 +217,11 @@ add_library(${CHESS_ENGINE_NAME} ${CHESS_SRC_LIST})
 #------------------------------------------------------------------------
 message("setting engine library")
 add_library(${ENGINE_NAME} ${SRC_LIST})
+
+createPreCompiledheaders(${PrecompiledHeaderHeader} ./${PrecompiledHeaderSource} ./${PrecompiledHeaderBinary})
+list(REMOVE_ITEM SRC_LIST ./${PrecompiledHeaderSource})
+setPrecompliedHeaders(${PrecompiledHeaderHeader} ./${PrecompiledHeaderBinary} "${SRC_LIST}")
+
 target_link_libraries(${ENGINE_NAME} ${OPENGL_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${FREETYPE_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${GLEW_LIBRARIES})

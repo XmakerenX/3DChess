@@ -12,9 +12,9 @@
     static const unsigned usec_per_msec = 1000;
 #endif
 
-#include <inttypes.h>
-#include <assert.h>
-#include <string.h>
+#include <cinttypes>
+#include <cassert>
+#include <cstring>
 #include <iostream>
 #include <list>
 #include <functional>
