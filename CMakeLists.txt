@@ -303,3 +303,19 @@ target_link_libraries(${PROJECT_NAME} ${CHESS_ENGINE_NAME})
 target_link_libraries(${PROJECT_NAME} ${ENGINE_NAME})
 target_link_libraries(${EDITOR_EXE_NAME} ${ENGINE_NAME}) 
 target_link_libraries(${TEST_EXE_NAME} ${ENGINE_NAME})
+
+message(STATUS "${FBXSDK_DIR}")
+
+if(WIN32)
+	if (CMAKE_BUILD_TYPE MATCHES Debug)
+		string(REPLACE "libfbxsdk-md.lib" "libfbxsdk.dll" fbx_dll_path ${FBXSDK_LIBRARY_DEBUG})
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+						   COMMAND ${CMAKE_COMMAND} -E copy
+						   ${fbx_dll_path} $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	else()
+		string(REPLACE "libfbxsdk-md.lib" "libfbxsdk.dll" fbx_dll_path ${FBXSDK_LIBRARY})
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+						   COMMAND ${CMAKE_COMMAND} -E copy
+						   ${fbx_dll_path} $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	endif(CMAKE_BUILD_TYPE MATCHES Debug)
+endif(WIN32)
