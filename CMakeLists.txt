@@ -10,40 +10,78 @@ function(was_found package_name isfound)
     endif(NOT isfound)
 endfunction(was_found)
 
+function(get_cxx_flags ret)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(${ret} ${CMAKE_CXX_FLAGS_DEBUG} PARENT_SCOPE)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(${ret} ${CMAKE_CXX_FLAGS_RELEASE} PARENT_SCOPE)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo") 
+        set(${ret} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO} PARENT_SCOPE)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        set(${ret} ${CMAKE_CXX_FLAGS_MINSIZEREL} PARENT_SCOPE)
+    else()
+    set(${ret} ${CMAKE_CXX_FLAGS_DEBUG} PARENT_SCOPE)
+    endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+endfunction(get_cxx_flags)
+
 #------------------------------------------------------------------------
 # createPreCompiledheader - create the precompiled header pch/gch file
 #------------------------------------------------------------------------
-macro(createPreCompiledheaders headerName sourcePath pchPath)
-	if (MSVC)
-		set_source_files_properties(${sourcePath} PROPERTIES
-			COMPILE_FLAGS "/Fp${pchPath} /Yc${headerName}"
-			OBJECT_OUTPUTS "${pchPath}")
-	elseif(CMAKE_COMPLIER_IS_GNUCXX)
-		add_custom_command(
-		OUTPUT "${pchPath}"
-		COMMAND "${CMAKE_CXX_COMPILER}" -x c++-header "${CMAKE_CURRENT_SOURCE_DIR}/${headerName}" -o "${pchPath}"
-		DEPENDS "${headerName}"
-		COMMENT "Precompiling pre compiled header")
-	endif(MSVC)
-endmacro(createPreCompiledheader)
+macro(createPreCompiledheaders target headerName sourcePath pchPath)
+    if (MSVC)
+        set_source_files_properties(${sourcePath} PROPERTIES
+        COMPILE_FLAGS "/Fp${pchPath} /Yc${headerName}"
+        OBJECT_OUTPUTS "${pchPath}")        
+    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        # copy header file to build folder
+        add_custom_command(OUTPUT ${headerName}
+                           COMMAND ${CMAKE_COMMAND} -E copy
+                           ${CMAKE_CURRENT_SOURCE_DIR}/${headerName} ${CMAKE_CURRENT_BINARY_DIR}/${headerName}
+                           DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${headerName}"
+                           COMMENT "Copying ${headerName} to ${CMAKE_CURRENT_BINARY_DIR}")
+        
+        # get target include flags
+        get_target_property(includeDirs ${target} INCLUDE_DIRECTORIES)
+        set(includeFlags "")
+        foreach(includeDir ${includeDirs})
+            list(APPEND includeFlags "-I${includeDir}")
+        endforeach(includeDir)
+        
+        # get complie flags
+        get_cxx_flags(complie_flags)
+        string(REGEX REPLACE " " ";" complie_flags ${complie_flags})
+        
+        # create precomplied header command
+        set(complie_cmd COMMAND "${CMAKE_CXX_COMPILER}" )
+        list(APPEND complie_cmd "${complie_flags}" ${includeFlags})
+        list(APPEND complie_cmd -x c++-header ${CMAKE_CURRENT_BINARY_DIR}/${headerName} -o ${pchPath})
+                        
+        add_custom_command(
+        OUTPUT "${pchPath}"
+        ${complie_cmd}
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${headerName}"
+        COMMENT "Precompiling pre compiled header")
+    endif(MSVC)
+endmacro(createPreCompiledheaders)
 
 #------------------------------------------------------------------------
 # setPrecompliedHeader - set sourceList to use the given precompiled
 #						 header and force include it
 #------------------------------------------------------------------------
 macro(setPrecompliedHeaders headerPath pchPath sourceList)
-	foreach(_source ${sourceList})
-		if(MSVC)
-			set_source_files_properties(${_source} PROPERTIES
-				  COMPILE_FLAGS "/Fp${pchPath} /Yu${headerPath} /FI${headerPath}"
-				  OBJECT_DEPENDS "${pchPath}")
-		elseif(CMAKE_COMPLIER_IS_GNUCXX)
-			set_source_files_properties(${_source} PROPERTIES
-				COMPILE_FLAGS "-include ${CMAKE_CURRENT_SOURCE_DIR}/${headerName}"
-				OBJECT_DEPENDS "${pchPath}")
-		endif(MSVC)
-	endforeach()
-endmacro(setPrecompliedHeader)
+    foreach(_source ${sourceList})
+        if(MSVC)
+            set_source_files_properties(${_source} PROPERTIES
+                COMPILE_FLAGS "/Fp${pchPath} /Yu${headerPath} /FI${headerPath}"
+                OBJECT_DEPENDS "${pchPath}")
+        elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            message(${_source})
+            set_source_files_properties(${_source} PROPERTIES
+                COMPILE_FLAGS "-include ${CMAKE_CURRENT_BINARY_DIR}/${headerPath}"
+                OBJECT_DEPENDS "${pchPath}")
+        endif(MSVC)
+    endforeach()
+endmacro(setPrecompliedHeaders)
 
 #------------------------------------------------------------------------
 # generateWaylandFiles - generate c files for wayland unstable protocols
@@ -92,8 +130,9 @@ macro(generateWaylandFiles)
         
     )
     
-    set(SRC_LIST ${SRC_LIST} "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.c")
+    set(SRC_WAYLAND_LIST "${CMAKE_CURRENT_BINARY_DIR}/WaylandGen/xdg-shell-unstable-v6-protocol.c")
     include_directories("${CMAKE_CURRENT_BINARY_DIR}/WaylandGen")
+    add_library(${Wayland_PROTOCOLS} ${SRC_WAYLAND_LIST})
 endmacro(generateWaylandFiles)
 
 #------------------------------------------------------------------------
@@ -106,15 +145,16 @@ set(PrecompiledHeaderName "pch")
 set(PrecompiledHeaderSource "${PrecompiledHeaderName}.cpp")
 set(PrecompiledHeaderHeader "${PrecompiledHeaderName}.h")
 if(MSVC)
-	set(PrecompiledHeaderBinary "${PrecompiledHeaderName}.pch")
-elseif(CMAKE_COMPLIER_IS_GNUCXX)
-	set(PrecompiledHeaderBinary "${PrecompiledHeaderName}.gch")
+    set(PrecompiledHeaderBinary "${PrecompiledHeaderName}.pch")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(PrecompiledHeaderBinary "${PrecompiledHeaderName}.h.gch")
 endif(MSVC)
 
 set(CHESS_ENGINE_NAME "ChessEngine")
 set(ENGINE_NAME "Engine")
 set(EDITOR_EXE_NAME "Editor")
 set(TEST_EXE_NAME "Test")
+set(Wayland_PROTOCOLS "WaylandProtocols")
 
 #------------------------------------------------------------------------
 # Find all the needed packages
@@ -127,7 +167,7 @@ if (UNIX)
     find_package(Wayland QUIET REQUIRED)
     find_package(XKBCommon QUIET REQUIRED)
     find_package(EGL QUIET REQUIRED)
-	find_package(LibXml2 QUIET REQUIRED)
+    find_package(LibXml2 QUIET REQUIRED)
     set(OpenGL_GL_PREFERENCE GLVND)
     find_package(PkgConfig QUIET REQUIRED)
     was_found("PkgConfig" ${PKG_CONFIG_FOUND})
@@ -157,7 +197,7 @@ if (UNIX)
     was_found("Wayland" ${WAYLAND_FOUND})
     was_found("XKBCommon" ${XKBCOMMON_FOUND})
     was_found("EGL" ${EGL_FOUND})
-	was_found("LibXml2" ${LIBXML2_FOUND})
+    was_found("LibXml2" ${LIBXML2_FOUND})
 endif(UNIX)
 
 #------------------------------------------------------------------------
@@ -178,7 +218,7 @@ if (UNIX)
     include_directories(${WAYLAND_EGL_INCLUDE_DIR})
     include_directories(${XKBCOMMON_INCLUDE_DIRS})
     include_directories(${EGL_INCLUDE_DIR})
-	include_directories(${LIBXML2_INCLUDE_DIRS})
+    include_directories(${LIBXML2_INCLUDE_DIRS})
 endif(UNIX)
 
 #------------------------------------------------------------------------
@@ -195,8 +235,8 @@ aux_source_directory(./Main MAIN_SRC_LIST)
 aux_source_directory(./Editor EDITOR_SRC_LIST)
 aux_source_directory(./Test/ TEST_SRC_LIST)
 if (WIN32)
-	set(MAIN_SRC_LIST ${MAIN_SRC_LIST} rc.rc)
-	set_source_files_properties(pawn.iso rc.rc2 PROPERTIES LANGUAGE RC)
+    set(MAIN_SRC_LIST ${MAIN_SRC_LIST} rc.rc)
+    set_source_files_properties(pawn.iso rc.rc2 PROPERTIES LANGUAGE RC)
     aux_source_directory(./Windows SRC_LIST)
     aux_source_directory(./Main/Windows MAIN_SRC_LIST)
     aux_source_directory(./Editor/Windows EDITOR_SRC_LIST)
@@ -218,9 +258,9 @@ add_library(${CHESS_ENGINE_NAME} ${CHESS_SRC_LIST})
 message("setting engine library")
 add_library(${ENGINE_NAME} ${SRC_LIST})
 
-createPreCompiledheaders(${PrecompiledHeaderHeader} ./${PrecompiledHeaderSource} ./${PrecompiledHeaderBinary})
+createPreCompiledheaders(${ENGINE_NAME} ${PrecompiledHeaderHeader} ./${PrecompiledHeaderSource} ${PrecompiledHeaderBinary})
 list(REMOVE_ITEM SRC_LIST ./${PrecompiledHeaderSource})
-setPrecompliedHeaders(${PrecompiledHeaderHeader} ./${PrecompiledHeaderBinary} "${SRC_LIST}")
+setPrecompliedHeaders(${PrecompiledHeaderHeader} ${PrecompiledHeaderBinary} "${SRC_LIST}")
 
 target_link_libraries(${ENGINE_NAME} ${OPENGL_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${FREETYPE_LIBRARIES})
@@ -240,7 +280,8 @@ if (UNIX)
     target_link_libraries(${ENGINE_NAME} ${WAYLAND_EGL_LIBRARIES})
     target_link_libraries(${ENGINE_NAME} ${XKBCOMMON_LIBRARIES})
     target_link_libraries(${ENGINE_NAME} ${EGL_LIBRARY})
-	target_link_libraries(${ENGINE_NAME} ${LIBXML2_LIBRARIES})
+    target_link_libraries(${ENGINE_NAME} ${LIBXML2_LIBRARIES})
+    target_link_libraries(${ENGINE_NAME} ${Wayland_PROTOCOLS})
 endif(UNIX)
 target_link_libraries(${ENGINE_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
