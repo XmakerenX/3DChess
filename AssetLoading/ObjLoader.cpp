@@ -271,10 +271,9 @@ void objFirstPass(AssetManager& asset, std::ifstream& in ,Model& model)
                         in >> buf;
                     }
                 }
-                else if (std::count(buf.begin(), buf.end(), '/') == 3)
+                else if (std::count(buf.begin(), buf.end(), '/') == 2)
                 {
                     // v/t/
-                    in >> buf;
                     std::replace(buf.begin(), buf.end(), '/', ' ');
                     std::stringstream s(buf);
                     s >> v;
@@ -287,13 +286,20 @@ void objFirstPass(AssetManager& asset, std::ifstream& in ,Model& model)
                     s >> v;
                     s >> t;
                     s >> n;
+                    
+                    in >> buf;
+                    std::replace(buf.begin(), buf.end(), '/', ' ');
+                    s = std::stringstream(buf);
+                    s >> v;
+                    s >> t;
+                    s >> n;
 
                     model.numTrinagles++;
                     group->numTrinagles++;
 
                     in >> buf;
                     readNextLine = false;
-                    while ( std::count(buf.begin(), buf.end(), '/') > 0 )
+                    while (buf.find("/") != std::string::npos && !in.eof())
                     {
                         model.numTrinagles++;
                         group->numTrinagles++;
@@ -301,10 +307,9 @@ void objFirstPass(AssetManager& asset, std::ifstream& in ,Model& model)
                         in >> buf;
                     }
                 }
-                else if (std::count(buf.begin(), buf.end(), '/') == 2)
+                else if (std::count(buf.begin(), buf.end(), '/') == 1)
                 {
                     // v/t
-                    in >> buf;
                     std::replace(buf.begin(), buf.end(), '/', ' ');
                     std::stringstream s(buf);
                     s >> v;
@@ -511,7 +516,7 @@ void objSecondPass(std::ifstream& in, Model& model)
                     }
 
                 }
-                else if (std::count(buf.begin(), buf.end(), '/') == 3)
+                else if (std::count(buf.begin(), buf.end(), '/') == 2)
                 {
                     // v/t/n
                     GLushort index;
@@ -550,7 +555,7 @@ void objSecondPass(std::ifstream& in, Model& model)
                     }
 
                 }
-                else if (std::count(buf.begin(), buf.end(), '/') == 2)
+                else if (std::count(buf.begin(), buf.end(), '/') == 1)
                 {
                     // v/t
                     GLushort index;
