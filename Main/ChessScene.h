@@ -55,6 +55,7 @@ private:
     GLuint m_blackAttribute;
     GLuint m_blueAttribute;
     GLuint m_redAttribute;
+    GLuint m_redEyesAttribute;
     GLuint m_yellowAttribute;
     
     int m_lastIndex;

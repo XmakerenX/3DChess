@@ -95,10 +95,11 @@ void ChessScene::InitObjects()
     skyboxIndex = m_objects.size() - 1;
         
     // get attribute needed for the board pawns and highlighted squares
-    Material black(glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
-                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f),
-                   glm::vec4(0.428f, 0.2667f, 0.18f, 1.0f),
-                   glm::vec4(0.385f, 0.239f, 0.157f, 1.0f), 8.0f);
+    Material black(glm::vec4(0.349019f, 0.215686f, 0.145098f, 1.0f),
+                   glm::vec4(0.278431f, 0.168627f, 0.113725f, 1.0f),
+                   glm::vec4(0.349019f, 0.215686f, 0.145098f, 1.0f),
+                   glm::vec4(0.349019f, 0.215686f, 0.145098f, 1.0f), 79.083539f);
+    
     m_blackAttribute = m_assetManager.getAttribute("", GL_REPEAT ,black, s_meshShaderPath2 );
     
     Material blue (glm::vec4(0.0f, 0.0f, 0.8f, 0.4f),
@@ -118,6 +119,13 @@ void ChessScene::InitObjects()
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f),
                    glm::vec4(0.8f, 0.8f, 0.0f, 0.4f), 8.0f);
     m_yellowAttribute = m_assetManager.getAttribute("", GL_REPEAT, yellow, s_meshShaderPath2 );
+    
+    
+    Material redEye (glm::vec4(1.0f, 0.14f, 0.0f, 1.0f),
+                     glm::vec4(1.0f, 0.14f, 0.0f, 1.0f),
+                     glm::vec4(1.0f, 0.14f, 0.0f, 1.0f),
+                     glm::vec4(1.0f, 0.14f, 0.0f, 1.0f), 8.0f);
+    m_redEyesAttribute = m_assetManager.getAttribute("", GL_REPEAT, redEye, s_meshShaderPath2 );;
     
     gameBoard = new board();
     gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
@@ -426,35 +434,45 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
     switch (pPiece->getType())
     {
         case PAWN:
-            meshPath = "data/models/pawn.fbx";
+            meshPath = "data/models/pawn.obj";
+            pieceScale = glm::vec3(2.0f, 2.0f, 2.0f);
+            piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 4.2f, pieceBoardPoint.y * 10 + 5);
             break;
             
         case BISHOP:
-            meshPath = "data/models/bishop.fbx";
-            if (pPiece->getColor() == BLACK)
-                pieceRotaion.y = glm::half_pi<float>();
-            else
-                pieceRotaion.y = -glm::half_pi<float>();
+            meshPath = "data/models/bishop.obj";
+             if (pPiece->getColor() == WHITE)
+                 pieceRotaion.y = glm::pi<float>();
+            
+            pieceScale = glm::vec3(2.5f, 2.5f, 2.5f);
+            piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 7.5f, pieceBoardPoint.y * 10 + 5);
             break;
             
         case KNIGHT:
-            meshPath = "data/models/knight.fbx";
+            meshPath = "data/models/knight.obj";
             if (pPiece->getColor() == BLACK)
                 pieceRotaion.y = glm::pi<float>();
+                
+            pieceScale = glm::vec3(4.0f, 4.0f, 4.0f);
+            piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 5.0f, pieceBoardPoint.y * 10 + 5);
             break;
             
         case ROOK:
-            meshPath = "data/models/rook.fbx";
-            pieceScale = pieceScale * glm::vec3(0.269f, 0.422f, 0.269f);
-            piecePosition.y += 3.4f;
+            meshPath = "data/models/rook.obj";
+            pieceScale = glm::vec3(2.5f, 2.5f, 2.5f);
+            piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 7.5f, pieceBoardPoint.y * 10 + 5);
             break;
             
         case QUEEN:
-            meshPath = "data/models/queen.fbx";
+            meshPath = "data/models/queen.obj";
+            pieceScale = glm::vec3(3.0f, 3.0f, 3.0f);
+            piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 10.9f, pieceBoardPoint.y * 10 + 5);
             break;
             
         case KING:
-            meshPath = "data/models/king.fbx";
+            meshPath = "data/models/king.obj";
+            pieceScale = glm::vec3(3.0f, 3.0f, 3.0f);
+            piecePosition = glm::vec3(pieceBoardPoint.x * 10 + 5, 8.4f, pieceBoardPoint.y * 10 + 5);
             break;
     }
     
@@ -476,6 +494,11 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
     {
         std::vector<unsigned int> blackAttribute;
         blackAttribute.push_back(m_blackAttribute);
+        // set the attribute for the knight eyes
+        if (pPiece->getType() == KNIGHT)
+        {
+            blackAttribute.push_back(m_redEyesAttribute);
+        }
         m_objects[m_objects.size() - 1].SetObjectAttributes(blackAttribute);
     }
 }
@@ -484,14 +507,13 @@ void ChessScene::onChessPieceCreated(piece* pPiece)
 // Name : onChessPieceMoved
 //-----------------------------------------------------------------------------
 void ChessScene::onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint, BOARD_POINT pieceNewBoardPoint)
-{
+{    
      Point pieceOldPoint = boardPointToPoint(pieceOldBoardPoint);
      Point pieceNewPoint = boardPointToPoint(pieceNewBoardPoint);
-    glm::vec3 piecePosition = glm::vec3(pieceNewPoint.x * 10 + 5, 0.001f, pieceNewPoint.y * 10 + 5);
-    
-    if (pPiece->getType() == ROOK)
-        piecePosition.y += 3.4f;
-    
+     glm::vec3 piecePosition = glm::vec3(pieceNewPoint.x * 10 + 5,
+                                         m_objects[pieceObjects[pieceOldPoint.y][pieceOldPoint.x]].GetPosition().y,
+                                         pieceNewPoint.y * 10 + 5);
+        
     if (pieceObjects[pieceNewPoint.y][pieceNewPoint.x] != -1)
         deletePieceObject(pieceNewPoint);
     
@@ -501,6 +523,7 @@ void ChessScene::onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint
     
     if (!gameBoard->isUnitPromotion())
         setCameraRotationMode(RotationMode::ReturnToWhite);
+    
 }
 
 //-----------------------------------------------------------------------------
