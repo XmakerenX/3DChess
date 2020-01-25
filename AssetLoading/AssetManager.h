@@ -21,7 +21,9 @@
 #include "../Graphics/Shader.h"
 #include "../Graphics/Mesh.h"
 #include "../Graphics/Font.h"
+#ifdef FBX
 #include "FbxLoader.h"
+#endif
 #include "ObjLoader.h"
 
 #ifndef _WIN32
@@ -86,7 +88,9 @@ private:
     std::vector<Material> m_materials;
     std::vector<Attribute> m_attributes;
 
+    #ifdef FBX
     FbxLoader m_fbxLoader;
+    #endif
 };
 
 #endif  //_ASSETMANAGER_H

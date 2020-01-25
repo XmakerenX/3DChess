@@ -426,8 +426,10 @@ Mesh* AssetManager::getMesh(const std::string& meshPath)
         }
         if (suffix == "fbx")
         {
+            #ifdef FBX
             ret = loadFBXMesh(meshPath);
             knowSuffix = true;
+            #endif
         }
         if (suffix == "gen")
         {
@@ -441,7 +443,6 @@ Mesh* AssetManager::getMesh(const std::string& meshPath)
         if (ret != nullptr)
             return ret;
         else
-            //return getMesh("cube.obj");
             return getMesh("cube.gen");
     }
 }
@@ -490,6 +491,7 @@ Mesh* AssetManager::loadObjMesh(const std::string& meshPath)
     return &m_meshCache[meshPath];
 }
 
+#ifdef FBX
 //-----------------------------------------------------------------------------
 // Name : loadFBXMesh
 //-----------------------------------------------------------------------------
@@ -507,6 +509,7 @@ Mesh *AssetManager::loadFBXMesh(const std::string &meshPath)
     else
         return nullptr;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Name : generateMesh

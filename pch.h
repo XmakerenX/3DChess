@@ -25,7 +25,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <fbxsdk.h>
+#ifdef FBX
+    #include <fbxsdk.h>
+#endif
 
 #include<png.h>
 #include<jpeglib.h>
