@@ -67,7 +67,7 @@ void Scene::InitCamera(int width, int height, const glm::vec3& position, const g
 void Scene::InitLights()
 {
     m_light[0].dir = glm::vec4(0.1f, -0.3f, 0.4f, 0.0f);
-    m_light[0].ambient = glm::vec4(0.4f, 0.4f, 0.4f, 0.4f) * 0.6f;
+    m_light[0].ambient = glm::vec4(0.4f, 0.4f, 0.4f, 0.4f) * 0.4f;
     m_light[0].ambient.a = 1.0f;
     m_light[0].diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     m_light[0].specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
