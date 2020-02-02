@@ -2,7 +2,7 @@
 #define  _TIMER_H
 
 #ifdef _WIN32
-    #include <Windows.h>
+    #include <windows.h>
     #undef max
     #undef min
 #else

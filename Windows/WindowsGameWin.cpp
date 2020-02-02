@@ -333,7 +333,7 @@ bool WindowsGameWin::createWindow(int width, int height)
     if (!RegisterClass(&wc))
     {
         ::MessageBox(0, "RegisterClass() - FAILED", 0, 0);
-        return nullptr;
+        return false;
     }
 
     m_hWnd = ::CreateWindowEx(WS_EX_CLIENTEDGE, "Chess", "3D Chess", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, width, height, NULL, NULL, m_hInstance, (void*)this);

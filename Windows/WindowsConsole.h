@@ -1,7 +1,7 @@
 #ifndef  _WINDOWCONSOLE_H
 #define  _WINDOWCONSOLE_H
 
-#include<Windows.h>
+#include<windows.h>
 #include <io.h>
 #include <fcntl.h>
 #undef max

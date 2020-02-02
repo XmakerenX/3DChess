@@ -75,7 +75,6 @@ macro(setPrecompliedHeaders headerPath pchPath sourceList)
                 COMPILE_FLAGS "/Fp${pchPath} /Yu${headerPath} /FI${headerPath}"
                 OBJECT_DEPENDS "${pchPath}")
         elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-            message(${_source})
             set_source_files_properties(${_source} PROPERTIES
                 COMPILE_FLAGS "-include ${CMAKE_CURRENT_BINARY_DIR}/${headerPath}"
                 OBJECT_DEPENDS "${pchPath}")
@@ -265,6 +264,10 @@ add_library(${ENGINE_NAME} ${SRC_LIST})
 if (FBX)
     target_compile_definitions(${ENGINE_NAME} PUBLIC FBX)
 endif(FBX)
+if (WIN32)
+    target_compile_definitions(${ENGINE_NAME} PUBLIC _WIN32_WINNT=0x0A00
+                                              PUBLIC  WINVER=0x0A00)
+endif(WIN32)
 
 createPreCompiledheaders(${ENGINE_NAME} ${PrecompiledHeaderHeader} ./${PrecompiledHeaderSource} ${PrecompiledHeaderBinary})
 list(REMOVE_ITEM SRC_LIST ./${PrecompiledHeaderSource})
@@ -272,7 +275,7 @@ setPrecompliedHeaders(${PrecompiledHeaderHeader} ${PrecompiledHeaderBinary} "${S
 
 target_link_libraries(${ENGINE_NAME} ${OPENGL_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${FREETYPE_LIBRARIES})
-target_link_libraries(${ENGINE_NAME} ${GLEW_LIBRARIES})
+target_link_libraries(${ENGINE_NAME} GLEW::glew)
 target_link_libraries(${ENGINE_NAME} ${PNG_LIBRARIES})
 target_link_libraries(${ENGINE_NAME} ${JPEG_LIBRARIES})
 if (FBX)
