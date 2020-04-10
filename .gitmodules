@@ -1,0 +1,3 @@
+[submodule "GameEngine"]
+	path = GameEngine
+	url = https://github.com/XmakerenX/GameEngine.git
