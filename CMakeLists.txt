@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CHESS_ENGINE_NAME "ChessEngine")
 
+find_package(Boost QUIET REQUIRED)
+
 #------------------------------------------------------------------------
 # set source files
 #------------------------------------------------------------------------
@@ -38,6 +40,7 @@ endif(WIN32)
 # set libraries
 #------------------------------------------------------------------------
 add_library(${CHESS_ENGINE_NAME} ${CHESS_ENGINE_SRC_LIST})
+target_include_directories(${CHESS_ENGINE_NAME} SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(GameEngine)
 
