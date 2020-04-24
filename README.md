@@ -18,7 +18,7 @@ The game requires [Microsoft Visual C++ Redistributable 2017](https://aka.ms/vs/
 
 
 ## Building Dependencies
-* Cmake(at least 3.2) and a C++11 or better compiler  
+* Cmake(at least 3.17) and a C++11 or better compiler  
 * In order to build the project the following libraries are required:   
   * boost  
   * freeType2  
@@ -43,3 +43,6 @@ Any bugs you come by please send to xmakerenx@gmail.com.
 * Game Pieces were made By : Adin Schnall  
 * GUI Textures were made By : www.medialoot.com  
 * SkyBox Textures made By : Emil Persson www.humus.name  
+
+## License
+3D Chess is licensed under the GNU Public License, Version 3.
