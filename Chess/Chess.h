@@ -15,8 +15,10 @@ protected:
     virtual void initGUI();
     void initMainMenu();
     void initOptionsMenu();
+    void initCreditsMenu();
     void initPromotionMenu();
     void initKeysMenu();
+    void initGameOverMenu();
     
     virtual void renderGUI();
     
@@ -34,10 +36,15 @@ protected:
     void onOptionMenuCancel(ButtonUI* cancelButton);
     void onOptionMenuOK(ButtonUI* okButton);
     
+    void onCreditsOkClicked(ButtonUI* okbutton);
+    void onMainMenuClicked(ButtonUI* mainMenuButton);
+    
     DialogUI m_mainMenuDialog;
     OptionDialog m_optionDialog;
+    DialogUI m_creditsDialog;
     DialogUI m_promotionGUI;
     DialogUI m_keysDialog;
+    DialogUI m_gameOverDialog;
 };
 
 #endif  //_Chess_H

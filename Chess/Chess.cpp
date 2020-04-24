@@ -3,6 +3,8 @@
 #include <Render/GUI/ComboBoxUI.cpp>
 #include "MainMenuDef.h"
 #include "pawnsDef.h"
+#include "creditsDef.h"
+#include "gameoverDef.h"
 #include <fstream>
 
 //-----------------------------------------------------------------------------
@@ -10,7 +12,7 @@
 //-----------------------------------------------------------------------------
 Chess::Chess()
 {
-    m_scene = new ChessScene(m_promotionGUI);
+    m_scene = new ChessScene(m_promotionGUI, m_gameOverDialog);
     m_sceneInput = false;
 }
 
@@ -34,8 +36,10 @@ void Chess::initGUI()
 {
     initMainMenu();
     initOptionsMenu();
+    initCreditsMenu();
     initPromotionMenu();
     initKeysMenu();
+    initGameOverMenu();
 }
 
 //-----------------------------------------------------------------------------
@@ -76,7 +80,7 @@ void Chess::initOptionsMenu()
 {
     m_optionDialog.setParentWindow(m_window);
     m_optionDialog.init(100, 100, 18, "Options", "data/textures/GUI/woodBack.png", glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
-    m_mainMenuDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    m_optionDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
     m_optionDialog.setLocation( (m_window->getWidth() / 2) - (m_optionDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_optionDialog.getHeight() / 2) );
     m_optionDialog.setVisible(false);
     m_optionDialog.setCaption(false);
@@ -86,12 +90,28 @@ void Chess::initOptionsMenu()
 }
 
 //-----------------------------------------------------------------------------
+// Name : initCreditsMenu
+//-----------------------------------------------------------------------------
+void Chess::initCreditsMenu()
+{
+    //m_creditsDialog.init(200, 320, 18, "Credits", "data/textures/woodBack.png" ,glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
+    m_creditsDialog.init(200, 320, 18, "Credits", "data/textures/GUI/woodBack.png" ,glm::vec4(1.0f,1.0f,1.0f, 0.8), m_asset);
+    m_creditsDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    m_creditsDialog.setLocation( (m_window->getWidth() / 2) - (m_creditsDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_creditsDialog.getHeight() / 2) );
+    m_creditsDialog.initWoodControlElements(m_asset);
+    m_creditsDialog.LoadDialogFromFile("data/dialogs/credits.txt");
+    m_creditsDialog.getButton(IDC_CREDITSOK)->connectToClick( boost::bind(&Chess::onCreditsOkClicked, this, _1) );
+    m_creditsDialog.setVisible(false);
+    m_creditsDialog.setCaption(false);
+}
+
+//-----------------------------------------------------------------------------
 // Name : initPromotionMenu
 //-----------------------------------------------------------------------------
 void Chess::initPromotionMenu()
 {
     m_promotionGUI.init(500, 100, 18,"Select Pawn", "data/textures/GUI/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f, 0.8), m_asset);
-    m_mainMenuDialog.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
+    m_promotionGUI.setClipboardFunctions(m_window->getCopyToClipboardFunc(), m_window->getPasteClipboardFunc());
     m_promotionGUI.setCaption(false);
     m_promotionGUI.initWoodControlElements(m_asset);
     if(!m_promotionGUI.LoadDialogFromFile("data/dialogs/pawns.txt"))
@@ -137,14 +157,31 @@ void Chess::initKeysMenu()
 }
 
 //-----------------------------------------------------------------------------
+// Name : initGameOverMenu
+//-----------------------------------------------------------------------------
+void Chess::initGameOverMenu()
+{
+    m_gameOverDialog.init(200,320, 18,"Game Over", "data/textures/GUI/woodBack.png", glm::vec4(1.0f, 1.0f, 1.0f ,0.8f), m_asset);
+    m_gameOverDialog.initWoodControlElements(m_asset);
+    m_gameOverDialog.LoadDialogFromFile("data/dialogs/gameover.txt");
+    m_gameOverDialog.setVisible(false);
+    m_gameOverDialog.setCaption(false);
+    m_gameOverDialog.setLocation( (m_window->getWidth() / 2) - (m_gameOverDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_gameOverDialog.getHeight() / 2) );
+
+    m_gameOverDialog.getButton(IDC_MainMenu)->connectToClick( boost::bind(&Chess::onMainMenuClicked, this, _1) );
+}
+
+//-----------------------------------------------------------------------------
 // Name : renderGUI
 //-----------------------------------------------------------------------------
 void Chess::renderGUI()
 {
       m_mainMenuDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
       m_optionDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
+      m_creditsDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
       m_promotionGUI.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
       m_keysDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
+      m_gameOverDialog.OnRender(m_sprites, m_topSprites, m_asset, m_timer.getCurrentTime());
 }
 
 //-----------------------------------------------------------------------------
@@ -168,8 +205,10 @@ void Chess::sendKeyEvent(unsigned char key, bool down)
         
     m_mainMenuDialog.handleKeyEvent(key, down);
     m_optionDialog.handleKeyEvent(key, down);
+    m_creditsDialog.handleKeyEvent(key, down);
     m_promotionGUI.handleKeyEvent(key, down);
     m_keysDialog.handleKeyEvent(key, down);
+    m_gameOverDialog.handleKeyEvent(key, down);
 }
 
 //-----------------------------------------------------------------------------
@@ -179,8 +218,10 @@ void Chess::sendVirtualKeyEvent(GK_VirtualKey virtualKey, bool down, const Modif
 {
     m_mainMenuDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
     m_optionDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
+    m_creditsDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
     m_promotionGUI.handleVirtualKeyEvent(virtualKey, down, modifierStates);
     m_keysDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
+    m_gameOverDialog.handleVirtualKeyEvent(virtualKey, down, modifierStates);
 }
 
 //-----------------------------------------------------------------------------
@@ -191,8 +232,10 @@ void Chess::sendMouseEvent(MouseEvent event, const ModifierKeysStates &modifierS
     BaseGame::sendMouseEvent(event, modifierStates);
     m_mainMenuDialog.handleMouseEvent(event, modifierStates);
     m_optionDialog.handleMouseEvent(event, modifierStates);
+    m_creditsDialog.handleMouseEvent(event, modifierStates);
     m_promotionGUI.handleMouseEvent(event, modifierStates);
     m_keysDialog.handleMouseEvent(event, modifierStates);
+    m_gameOverDialog.handleMouseEvent(event, modifierStates);
 }
 
 //-----------------------------------------------------------------------------
@@ -203,7 +246,9 @@ void Chess::onSizeChanged()
     m_mainMenuDialog.setLocation( (m_window->getWidth() / 2) - (m_mainMenuDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_mainMenuDialog.getHeight() / 2) );
     m_promotionGUI.setLocation( (m_window->getWidth() / 2) - (m_promotionGUI.getWidth() / 2), (m_window->getHeight() / 2) - (m_promotionGUI.getHeight() / 2) );
     m_optionDialog.setLocation( (m_window->getWidth() / 2) - (m_optionDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_optionDialog.getHeight() / 2) );
+    m_creditsDialog.setLocation( (m_window->getWidth() / 2) - (m_creditsDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_creditsDialog.getHeight() / 2) );
     m_keysDialog.setLocation( m_window->getWidth() - 400,  (m_window->getHeight() / 2) - (m_keysDialog.getHeight() / 2) - 130 );
+    m_gameOverDialog.setLocation( (m_window->getWidth() / 2) - (m_gameOverDialog.getWidth() / 2), (m_window->getHeight() / 2) - (m_gameOverDialog.getHeight() / 2) );
 }
 
 //-----------------------------------------------------------------------------
@@ -245,8 +290,9 @@ void Chess::onOptions(ButtonUI* optionsButton)
 //-----------------------------------------------------------------------------
 void Chess::onCredits(ButtonUI* creditsButton)
 {
-    Point windowPos = m_window->getWindowPosition();
-    std::cout << "Window Position is " << windowPos.x << "," << windowPos.y << "\n";
+    m_creditsDialog.setVisible(true);
+    m_mainMenuDialog.setVisible(false);
+    m_keysDialog.setVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -295,4 +341,25 @@ void Chess::onOptionMenuOK(ButtonUI* okButton)
     else
         static_cast<ChessScene*>(m_scene)->setCameraRotaion(false);
     
+}
+
+//-----------------------------------------------------------------------------
+// Name : onCreditsOkClicked
+//-----------------------------------------------------------------------------
+void Chess::onCreditsOkClicked(ButtonUI* okbutton)
+{
+    m_creditsDialog.setVisible(false);
+    m_mainMenuDialog.setVisible(true);
+    m_keysDialog.setVisible(true);
+}
+
+//-----------------------------------------------------------------------------
+// Name : onMainMenuClicked
+//-----------------------------------------------------------------------------
+void Chess::onMainMenuClicked(ButtonUI* mainMenuButton)
+{
+    m_gameOverDialog.setVisible(false);
+    m_mainMenuDialog.setVisible(true);
+    m_keysDialog.setVisible(true);
+    static_cast<ChessScene*>(m_scene)->setCameraRotationMode(ChessScene::RotationMode::Infinite);
 }

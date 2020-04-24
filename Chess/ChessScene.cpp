@@ -1,9 +1,10 @@
 #include "ChessScene.h" 
+#include "gameoverDef.h"
 
 //-----------------------------------------------------------------------------
 // Name : ChessScene
 //-----------------------------------------------------------------------------
-ChessScene::ChessScene(DialogUI& promotionDialog) : m_promotionDialog(promotionDialog)
+ChessScene::ChessScene(DialogUI& promotionDialog, DialogUI& gameOverDialog) : m_promotionDialog(promotionDialog), m_gameOverDialog(gameOverDialog)
 {
     m_rotationMode = RotationMode::Infinite;
     m_rotationAngle = 0;
@@ -83,15 +84,6 @@ void ChessScene::InitObjects()
     
     m_lastIndex++;
         
-//     std::vector<unsigned int> cubeAttribute;
-//     Material skyboxMaterial(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(2.0f, 2.0f, 2.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1);
-//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/posx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negx.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negy.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));
-//     cubeAttribute.push_back(m_assetManager.getAttribute("data/textures/skybox/negz.jpg", GL_CLAMP_TO_EDGE, skyboxMaterial, s_meshShaderPath2 ));  
-//     m_objects[m_objects.size() - 1].SetObjectAttributes(cubeAttribute);
     skyboxIndex = m_objects.size() - 1;
         
     // get attribute needed for the board pawns and highlighted squares
@@ -130,6 +122,7 @@ void ChessScene::InitObjects()
     gameBoard = new board();
     gameBoard->connectToPieceCreated(boost::bind(&ChessScene::onChessPieceCreated, this, _1));
     gameBoard->connectToPieceMoved(boost::bind(&ChessScene::onChessPieceMoved, this, _1, _2, _3));
+    gameBoard->connectToGameOver(boost::bind(&ChessScene::ShowGameOver, this , _1));
     
     gameBoard->init();
     
@@ -575,6 +568,15 @@ void ChessScene::onPromotionSelected(ButtonUI* selectedPieceButton)
     m_promotionDialog.setVisible(false);
     setCameraRotationMode(RotationMode::ReturnToWhite);
     highLightSquares();
+}
+
+//-----------------------------------------------------------------------------
+// Name : ShowGameOver() 
+//-----------------------------------------------------------------------------
+void ChessScene::ShowGameOver(std::string gameOverStatus)
+{
+    m_gameOverDialog.setVisible(true);
+    m_gameOverDialog.getStatic(IDC_ENDREASON)->setText(gameOverStatus.c_str());
 }
 
 //-----------------------------------------------------------------------------

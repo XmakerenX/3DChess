@@ -11,7 +11,7 @@ class ChessScene : public Scene
 public:
     enum class RotationMode{Infinite, ReturnToWhite, ReturnToBlack, RotateCW, RotateCCW, Stoped};
     
-    ChessScene(DialogUI& promotionDialog);
+    ChessScene(DialogUI& promotionDialog, DialogUI& gameOverDialog);
     ~ChessScene();
     
     virtual void InitScene(int width, int height, const glm::vec3& cameraPos, const glm::vec3& cameraLookat);
@@ -31,6 +31,7 @@ public:
     void onChessPieceMoved(piece* pPiece, BOARD_POINT pieceOldBoardPoint, BOARD_POINT pieceNewBoardPoint);
     void onChessPieceKilled(piece* pPiece);
     void onPromotionSelected(ButtonUI* selectedPieceButton);
+    void ShowGameOver(std::string gameOverStatus);
     
     void highLightSquares();
     void hightlightBoardSquare(Point squareToHightlight, GLuint attributeID);
@@ -62,6 +63,7 @@ private:
     int pieceObjects[8][8];
     
     DialogUI& m_promotionDialog;
+    DialogUI& m_gameOverDialog;
     
     static const int nCellHigh = 8;
     static const int nCellWide = 8;
