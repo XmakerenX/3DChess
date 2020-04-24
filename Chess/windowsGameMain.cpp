@@ -37,7 +37,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     std::string fontName = "NotoMono";
     std::string path;
 
-    CreateConsoleWindow();
+    //CreateConsoleWindow();
 
     SetProcessDPIAware();
 
